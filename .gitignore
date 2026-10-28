@@ -36,6 +36,7 @@ packages/db/src/generated/
 /ROADMAP.md
 /CONVENTIONS.md
 /CLAUDE.md
+/COMMITS.md
 /.claude/
 /brand/
 /.vscode/

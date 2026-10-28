@@ -1,4 +1,6 @@
-// models are added in the schema design step, see USE_CASES.md and DATA_SOURCES.md
+// first delivery: Câmara dos Deputados, 57th legislature, see USE_CASES.md and DATA_SOURCES.md
+// every model maps to snake_case names so the raw SQL used by ingestion stays unquoted
+// high volume tables (individual votes, orientations, attendances, expenses) store only collectedAt; the source is derived from the parent row
 
 generator client {
     provider = "prisma-client"
@@ -7,4 +9,323 @@ generator client {
 
 datasource db {
     provider = "postgresql"
+}
+
+enum VoteChoice {
+    YES
+    NO
+    ABSTENTION
+    OBSTRUCTION
+    ARTICLE_17
+
+    @@map("vote_choice")
+}
+
+enum OrientationChoice {
+    YES
+    NO
+    LIBERATED
+    ABSTENTION
+    OBSTRUCTION
+    ARTICLE_17
+
+    @@map("orientation_choice")
+}
+
+enum BancadaKind {
+    PARTY
+    BLOC
+    GOVERNMENT
+    MAJORITY
+    MINORITY
+    OPPOSITION
+
+    @@map("bancada_kind")
+}
+
+enum SupplierKind {
+    COMPANY
+    PERSON
+
+    @@map("supplier_kind")
+}
+
+model Party {
+    id          Int      @id // Câmara id
+    acronym     String
+    name        String
+    sourceUrl   String   @map("source_url")
+    collectedAt DateTime @map("collected_at")
+
+    deputies Deputy[]
+
+    @@map("parties")
+}
+
+model Deputy {
+    id            Int      @id // Câmara id (ideCadastro in the CEAP files)
+    politicalName String   @map("political_name")
+    civilName     String?  @map("civil_name")
+    // lowercase and without accents, built at ingestion; a pg_trgm index is created by hand in the migration
+    searchName    String   @map("search_name")
+    photoUrl      String?  @map("photo_url")
+    stateCode     String   @map("state_code")
+    partyId       Int?     @map("party_id")
+    isInOffice    Boolean  @map("is_in_office")
+    sourceUrl     String   @map("source_url")
+    collectedAt   DateTime @map("collected_at")
+
+    party         Party?                @relation(fields: [partyId], references: [id])
+    statusHistory DeputyStatusChange[]
+    votes         IndividualVote[]
+    attendances   EventAttendance[]
+    organs        OrganMembership[]
+    fronts        FrontMembership[]
+    expenses      Expense[]
+    flightSummary DeputyFlightSummary[]
+
+    @@index([stateCode])
+    @@index([partyId])
+    @@map("deputies")
+}
+
+// feeds the party history within the legislature and the party changes metric
+model DeputyStatusChange {
+    deputyId    Int      @map("deputy_id")
+    changedAt   DateTime @map("changed_at")
+    situation   String // for example "Exercício" or "Licença"
+    condition   String // "Titular" or "Suplente"
+    partyId     Int?     @map("party_id")
+    stateCode   String   @map("state_code")
+    collectedAt DateTime @map("collected_at")
+
+    deputy Deputy @relation(fields: [deputyId], references: [id])
+
+    @@id([deputyId, changedAt, situation])
+    @@map("deputy_status_changes")
+}
+
+model Proposition {
+    id          Int       @id // Câmara id
+    typeCode    String    @map("type_code") // PL, PEC, MPV and so on
+    number      Int
+    year        Int
+    summary     String // official ementa
+    presentedAt DateTime? @map("presented_at")
+    sourceUrl   String    @map("source_url")
+    collectedAt DateTime  @map("collected_at")
+
+    votes Vote[]
+
+    @@map("propositions")
+}
+
+model Vote {
+    id            String   @id // Câmara id, for example "2367548-117"
+    occurredAt    DateTime @map("occurred_at")
+    organAcronym  String   @map("organ_acronym")
+    description   String // official text
+    approved      Boolean? // null when the Câmara does not record the result
+    isNominal     Boolean  @map("is_nominal") // false for symbolic votes, which have no individual votes
+    propositionId Int?     @map("proposition_id")
+    sourceUrl     String   @map("source_url")
+    collectedAt   DateTime @map("collected_at")
+
+    proposition     Proposition?      @relation(fields: [propositionId], references: [id])
+    individualVotes IndividualVote[]
+    orientations    VoteOrientation[]
+
+    @@index([occurredAt])
+    @@index([propositionId])
+    @@map("votes")
+}
+
+model IndividualVote {
+    voteId       String     @map("vote_id")
+    deputyId     Int        @map("deputy_id")
+    choice       VoteChoice
+    registeredAt DateTime   @map("registered_at")
+    collectedAt  DateTime   @map("collected_at")
+
+    vote   Vote   @relation(fields: [voteId], references: [id])
+    deputy Deputy @relation(fields: [deputyId], references: [id])
+
+    @@id([voteId, deputyId])
+    @@index([deputyId])
+    @@map("individual_votes")
+}
+
+model VoteOrientation {
+    voteId      String            @map("vote_id")
+    bancada     String // acronym as published: party, bloc, "Governo", "Oposição" and so on
+    kind        BancadaKind
+    choice      OrientationChoice
+    collectedAt DateTime          @map("collected_at")
+
+    vote Vote @relation(fields: [voteId], references: [id])
+
+    @@id([voteId, bancada])
+    @@map("vote_orientations")
+}
+
+// committees and the plenary
+model Organ {
+    id          Int      @id // Câmara id
+    acronym     String
+    name        String
+    kind        String
+    sourceUrl   String   @map("source_url")
+    collectedAt DateTime @map("collected_at")
+
+    members OrganMembership[]
+    events  EventOrgan[]
+
+    @@map("organs")
+}
+
+model OrganMembership {
+    organId     Int       @map("organ_id")
+    deputyId    Int       @map("deputy_id")
+    role        String
+    startsAt    DateTime  @map("starts_at")
+    endsAt      DateTime? @map("ends_at")
+    collectedAt DateTime  @map("collected_at")
+
+    organ  Organ  @relation(fields: [organId], references: [id])
+    deputy Deputy @relation(fields: [deputyId], references: [id])
+
+    @@id([organId, deputyId, startsAt])
+    @@index([deputyId])
+    @@map("organ_memberships")
+}
+
+model Front {
+    id          Int      @id // Câmara id
+    title       String
+    sourceUrl   String   @map("source_url")
+    collectedAt DateTime @map("collected_at")
+
+    members FrontMembership[]
+
+    @@map("fronts")
+}
+
+model FrontMembership {
+    frontId     Int      @map("front_id")
+    deputyId    Int      @map("deputy_id")
+    role        String?
+    collectedAt DateTime @map("collected_at")
+
+    front  Front  @relation(fields: [frontId], references: [id])
+    deputy Deputy @relation(fields: [deputyId], references: [id])
+
+    @@id([frontId, deputyId])
+    @@index([deputyId])
+    @@map("front_memberships")
+}
+
+model Event {
+    id          Int       @id // Câmara id
+    startsAt    DateTime  @map("starts_at")
+    endsAt      DateTime? @map("ends_at")
+    typeName    String    @map("type_name")
+    situation   String
+    description String
+    sourceUrl   String    @map("source_url")
+    collectedAt DateTime  @map("collected_at")
+
+    organs      EventOrgan[]
+    attendances EventAttendance[]
+
+    @@index([startsAt])
+    @@map("events")
+}
+
+model EventOrgan {
+    eventId Int @map("event_id")
+    organId Int @map("organ_id")
+
+    event Event @relation(fields: [eventId], references: [id])
+    organ Organ @relation(fields: [organId], references: [id])
+
+    @@id([eventId, organId])
+    @@index([organId])
+    @@map("event_organs")
+}
+
+// only presences are published; absences are derived as the members of the organ who are not listed
+model EventAttendance {
+    eventId     Int      @map("event_id")
+    deputyId    Int      @map("deputy_id")
+    collectedAt DateTime @map("collected_at")
+
+    event  Event  @relation(fields: [eventId], references: [id])
+    deputy Deputy @relation(fields: [deputyId], references: [id])
+
+    @@id([eventId, deputyId])
+    @@index([deputyId])
+    @@map("event_attendances")
+}
+
+model ExpenseType {
+    code        Int    @id // numSubCota in the CEAP files
+    description String
+
+    expenses Expense[]
+
+    @@map("expense_types")
+}
+
+model Supplier {
+    id       Int          @id @default(autoincrement())
+    kind     SupplierKind
+    // full CNPJ for companies; CPF masked at ingestion for people, so it is not unique
+    document String
+    name     String
+
+    expenses Expense[]
+
+    @@unique([document, name])
+    @@map("suppliers")
+}
+
+// the CEAP files have no reliable row key (ideDocumento repeats on adjustments and is 0 for telephony),
+// so ingestion replaces every expense of a year in one transaction; rows without a deputy (party leadership) are skipped
+model Expense {
+    id              Int       @id @default(autoincrement())
+    deputyId        Int       @map("deputy_id")
+    expenseTypeCode Int       @map("expense_type_code")
+    supplierId      Int       @map("supplier_id")
+    year            Int       @db.SmallInt
+    month           Int       @db.SmallInt
+    issuedAt        DateTime? @map("issued_at")
+    documentNumber  String?   @map("document_number")
+    grossValue      Decimal   @map("gross_value") @db.Decimal(12, 2)
+    disallowedValue Decimal   @map("disallowed_value") @db.Decimal(12, 2) // glosa
+    netValue        Decimal   @map("net_value") @db.Decimal(12, 2) // negative on adjustments and cancellations
+    documentUrl     String?   @map("document_url")
+    collectedAt     DateTime  @map("collected_at")
+
+    deputy      Deputy      @relation(fields: [deputyId], references: [id])
+    expenseType ExpenseType @relation(fields: [expenseTypeCode], references: [code])
+    supplier    Supplier    @relation(fields: [supplierId], references: [id])
+
+    @@index([deputyId, year, month])
+    @@index([supplierId])
+    @@index([expenseTypeCode])
+    @@map("expenses")
+}
+
+// flight ticket counts computed at ingestion from the CEAP passenger column; passenger names are never stored
+model DeputyFlightSummary {
+    deputyId       Int      @map("deputy_id")
+    year           Int      @db.SmallInt
+    ticketCount    Int      @map("ticket_count")
+    passengerCount Int      @map("passenger_count") // distinct people
+    collectedAt    DateTime @map("collected_at")
+
+    deputy Deputy @relation(fields: [deputyId], references: [id])
+
+    @@id([deputyId, year])
+    @@map("deputy_flight_summaries")
 }
