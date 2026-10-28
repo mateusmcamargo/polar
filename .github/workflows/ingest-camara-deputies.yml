@@ -15,6 +15,9 @@ jobs:
     ingest:
         runs-on: ubuntu-latest
         timeout-minutes: 30
+        # prisma generate also loads the config, which requires the variable
+        env:
+            DATABASE_URL: ${{ secrets.DATABASE_URL }}
         steps:
             - uses: actions/checkout@v4
 
@@ -30,5 +33,3 @@ jobs:
             - run: pnpm db:generate
 
             - run: pnpm ingest camara-deputies
-              env:
-                  DATABASE_URL: ${{ secrets.DATABASE_URL }}
