@@ -1,12 +1,14 @@
 import { prisma } from "@polar/db";
 import type { CollectionContext, SourceAdapter } from "../sourceAdapter";
 import { splitIntoBatches } from "../splitIntoBatches";
+import { toUtcText } from "../toUtcText";
 import { extractIdFromUri, fetchCamaraList, fetchCamaraObject } from "./camaraClient";
 
 const CURRENT_LEGISLATURE_ID = 57;
 const IN_OFFICE_SITUATION = "Exercício";
 const START_OF_LEGISLATURE_SITUATION = "Início da legislatura";
-const WRITE_BATCH_SIZE = 100;
+const WRITE_BATCH_SIZE = 5000;
+const TRANSACTION_TIMEOUT_MS = 10 * 60 * 1000;
 
 interface PartyListItem {
     id: number;
@@ -191,25 +193,62 @@ export const camaraDeputiesAdapter: SourceAdapter<
             throw new Error("camara-deputies: nothing to write");
         }
 
-        // parties first, deputies hold a foreign key to them
-        for (const batch of splitIntoBatches(records.parties, WRITE_BATCH_SIZE)) {
-            await prisma.$transaction(
-                batch.map((party) => prisma.party.upsert({ where: { id: party.id }, create: party, update: party })),
-            );
-        }
-        for (const batch of splitIntoBatches(records.deputies, WRITE_BATCH_SIZE)) {
-            await prisma.$transaction(
-                batch.map((deputy) =>
-                    prisma.deputy.upsert({ where: { id: deputy.id }, create: deputy, update: deputy }),
-                ),
-            );
-        }
+        // one statement per batch, because a round trip per row exceeds the transaction timeout on a remote database
+        await prisma.$transaction(
+            async (transaction) => {
+                // parties first, deputies hold a foreign key to them
+                for (const batch of splitIntoBatches(records.parties, WRITE_BATCH_SIZE)) {
+                    await transaction.$executeRaw`
+                        INSERT INTO parties (id, acronym, name, source_url, collected_at)
+                        SELECT * FROM unnest(
+                            ${batch.map((row) => row.id)}::int[],
+                            ${batch.map((row) => row.acronym)}::text[],
+                            ${batch.map((row) => row.name)}::text[],
+                            ${batch.map((row) => row.sourceUrl)}::text[],
+                            ${batch.map((row) => toUtcText(row.collectedAt))}::timestamp[]
+                        )
+                        ON CONFLICT (id) DO UPDATE SET
+                            acronym = EXCLUDED.acronym,
+                            name = EXCLUDED.name,
+                            source_url = EXCLUDED.source_url,
+                            collected_at = EXCLUDED.collected_at`;
+                }
 
-        // history rows have no stable key beyond their content, so the whole table is replaced in one transaction
-        await prisma.$transaction([
-            prisma.deputyStatusChange.deleteMany(),
-            prisma.deputyStatusChange.createMany({ data: records.statusChanges }),
-        ]);
+                for (const batch of splitIntoBatches(records.deputies, WRITE_BATCH_SIZE)) {
+                    await transaction.$executeRaw`
+                        INSERT INTO deputies (id, political_name, civil_name, search_name, photo_url, state_code, party_id, is_in_office, source_url, collected_at)
+                        SELECT * FROM unnest(
+                            ${batch.map((row) => row.id)}::int[],
+                            ${batch.map((row) => row.politicalName)}::text[],
+                            ${batch.map((row) => row.civilName)}::text[],
+                            ${batch.map((row) => row.searchName)}::text[],
+                            ${batch.map((row) => row.photoUrl)}::text[],
+                            ${batch.map((row) => row.stateCode)}::text[],
+                            ${batch.map((row) => row.partyId)}::int[],
+                            ${batch.map((row) => row.isInOffice)}::boolean[],
+                            ${batch.map((row) => row.sourceUrl)}::text[],
+                            ${batch.map((row) => toUtcText(row.collectedAt))}::timestamp[]
+                        )
+                        ON CONFLICT (id) DO UPDATE SET
+                            political_name = EXCLUDED.political_name,
+                            civil_name = EXCLUDED.civil_name,
+                            search_name = EXCLUDED.search_name,
+                            photo_url = EXCLUDED.photo_url,
+                            state_code = EXCLUDED.state_code,
+                            party_id = EXCLUDED.party_id,
+                            is_in_office = EXCLUDED.is_in_office,
+                            source_url = EXCLUDED.source_url,
+                            collected_at = EXCLUDED.collected_at`;
+                }
+
+                // history rows have no stable key beyond their content, so the whole table is replaced
+                await transaction.deputyStatusChange.deleteMany();
+                for (const batch of splitIntoBatches(records.statusChanges, WRITE_BATCH_SIZE)) {
+                    await transaction.deputyStatusChange.createMany({ data: batch });
+                }
+            },
+            { timeout: TRANSACTION_TIMEOUT_MS },
+        );
 
         return {
             insertedOrUpdatedCount:

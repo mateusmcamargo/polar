@@ -2,6 +2,7 @@ import { parse as parseCsv } from "csv-parse/sync";
 import { prisma } from "@polar/db";
 import type { CollectionContext, SourceAdapter } from "../sourceAdapter";
 import { splitIntoBatches } from "../splitIntoBatches";
+import { toUtcText } from "../toUtcText";
 import { fetchCamaraBulkCsv } from "./camaraClient";
 
 const WRITE_BATCH_SIZE = 5000;
@@ -102,11 +103,6 @@ interface NormalizedCamaraVotes {
 // source timestamps have no zone and are in Brasília time
 function parseBrasiliaDateTime(dateTime: string): Date {
     return new Date(`${dateTime}-03:00`);
-}
-
-// timestamp columns hold UTC without zone, so arrays are sent as zone free UTC text
-function toUtcText(date: Date): string {
-    return date.toISOString().replace("Z", "");
 }
 
 function mapChoice(choices: Record<string, string>, sourceValue: string): string {
