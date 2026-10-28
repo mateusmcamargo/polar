@@ -1,7 +1,10 @@
+import { camaraDeputiesAdapter } from "./sources/camara/deputies";
 import { runSourceAdapter, type SourceAdapter } from "./sources/sourceAdapter";
 
 // adapters are registered here as each data source is implemented
-const registeredAdapters: Record<string, SourceAdapter<unknown, unknown, unknown>> = {};
+const registeredAdapters: Record<string, SourceAdapter<any, any, any>> = {
+    [camaraDeputiesAdapter.name]: camaraDeputiesAdapter,
+};
 
 async function main(): Promise<void> {
     const requestedAdapterName = process.argv[2];
