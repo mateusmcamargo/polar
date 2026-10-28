@@ -1,0 +1,6 @@
+{
+    "typescript.tsdk": "src/web/node_modules/typescript/lib",
+    "js/ts.tsdk.path": "src/web/node_modules/typescript/lib",
+    "liveSassCompile.settings.watchOnLaunch": false,
+    "liveSassCompile.settings.excludeList": ["**/node_modules/**", "**/.next/**", "src/web/src/**"]
+}

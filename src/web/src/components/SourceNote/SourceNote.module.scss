@@ -1,0 +1,10 @@
+p.note {
+    padding-top: var(--space-3);
+    box-shadow: inset 0 1px 0 var(--color-line);
+    color: var(--color-fg-3);
+    font-size: var(--text-micro);
+
+    a {
+        color: inherit;
+    }
+}

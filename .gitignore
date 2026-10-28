@@ -1,6 +1,3 @@
-# third party reference material
-examples/
-
 # secrets
 .env
 .env.*
@@ -17,7 +14,7 @@ dist/
 next-env.d.ts
 
 # generated prisma client
-packages/db/src/generated/
+src/db/src/generated/
 
 # tooling
 .DS_Store
@@ -28,15 +25,7 @@ packages/db/src/generated/
 .playwright-mcp/
 
 # private project notes and tooling, kept local
-/ARCHITECTURE.md
-/AUDIENCE.md
-/DATA_SOURCES.md
-/DESIGN.md
-/USE_CASES.md
-/ROADMAP.md
-/CONVENTIONS.md
+/docs/
+/.local/
 /CLAUDE.md
-/COMMITS.md
 /.claude/
-/brand/
-/.vscode/

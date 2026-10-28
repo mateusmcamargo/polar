@@ -1,0 +1,112 @@
+@use "mixins" as *;
+
+div.map {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+
+    // party scale: each step mixes the party color into the empty color, so it works in both themes
+    &.colorScale {
+        --map-scale-top: color-mix(in oklab, var(--map-scale-color), var(--color-on-data-dark) var(--map-party-tint));
+        --map-1: color-mix(in oklab, var(--map-scale-top) 30%, var(--map-0));
+        --map-2: color-mix(in oklab, var(--map-scale-top) 48%, var(--map-0));
+        --map-3: color-mix(in oklab, var(--map-scale-top) 66%, var(--map-0));
+        --map-4: color-mix(in oklab, var(--map-scale-top) 84%, var(--map-0));
+        --map-5: var(--map-scale-top);
+        --map-on-light-steps: var(--color-fg);
+        --map-on-dark-steps: var(--color-fg);
+
+        // any party color can sit under a label, an outline in the page color keeps it readable
+        text.label {
+            paint-order: stroke;
+            stroke: var(--color-bg);
+            stroke-width: 3px;
+            stroke-linejoin: round;
+        }
+    }
+
+    div.frame {
+        position: relative;
+    }
+
+    svg.drawing {
+        width: 100%;
+        height: auto;
+    }
+
+    path.state,
+    path.selectedState {
+        stroke: var(--color-bg);
+        stroke-width: 1;
+        stroke-linejoin: round;
+        cursor: pointer;
+        transition: fill var(--duration-fast) var(--ease-standard);
+
+        &:hover {
+            stroke: var(--color-ink);
+            stroke-width: 1.5;
+        }
+    }
+
+    path.selectedState,
+    path.selectedState:hover {
+        stroke: var(--color-ink);
+        stroke-width: 3;
+    }
+
+    text.label {
+        font-family: var(--font-sans);
+        font-size: 16px;
+        font-weight: 700;
+        text-anchor: middle;
+        dominant-baseline: central;
+        pointer-events: none;
+    }
+
+    div.tooltip {
+        @include hairline-border(--color-line-3);
+        position: absolute;
+        padding: var(--space-2) var(--space-3);
+        border-radius: var(--radius-small);
+        background: var(--color-panel);
+        font-size: var(--text-micro);
+        white-space: nowrap;
+        pointer-events: none;
+        transform: translate(-50%, calc(-100% - 12px));
+    }
+
+    div.legend {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+    }
+
+    p.legendTitle {
+        color: var(--color-fg-2);
+        font-size: var(--text-micro);
+    }
+
+    ol.legendSteps {
+        display: grid;
+        grid-auto-columns: 1fr;
+        grid-auto-flow: column;
+        gap: 2px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    li.legendStep {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-1);
+        color: var(--color-fg-2);
+        font-size: var(--text-micro);
+        font-variant-numeric: tabular-nums;
+    }
+
+    span.swatch {
+        @include hairline-border(--color-line);
+        height: 12px;
+    }
+}

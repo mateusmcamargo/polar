@@ -1,0 +1,276 @@
+@use "mixins" as *;
+@use "comic";
+
+div.hemicycle {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+
+    figure.figure {
+        position: relative;
+        margin: 0;
+    }
+
+    svg.drawing {
+        width: 100%;
+        height: auto;
+    }
+
+    rect.seat,
+    rect.dimmedSeat {
+        transition: opacity var(--duration-fast) var(--ease-standard);
+
+        // the outline comes from css, so hovering does not touch react state
+        @include from("medium") {
+            cursor: pointer;
+
+            &:hover {
+                stroke: var(--color-ink);
+                stroke-width: 1.4;
+            }
+        }
+    }
+
+    rect.dimmedSeat {
+        opacity: 0.14;
+    }
+
+    text.total {
+        fill: var(--color-fg);
+        font-family: var(--font-sans);
+        font-size: 38px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        text-anchor: middle;
+    }
+
+    text.totalLabel {
+        fill: var(--color-fg-3);
+        font-family: var(--font-sans);
+        font-size: 14px;
+        text-anchor: middle;
+    }
+
+    div.tooltip {
+        @include hairline-border(--color-line-3);
+        position: absolute;
+        z-index: 5;
+        display: flex;
+        flex-direction: column;
+        padding: var(--space-2) var(--space-3);
+        border-radius: var(--radius-small);
+        background: var(--color-panel);
+        font-size: var(--text-micro);
+        white-space: nowrap;
+        pointer-events: none;
+        transform: translate(-50%, calc(-100% - 14px));
+
+        &[hidden] {
+            display: none;
+        }
+    }
+
+    strong.tooltipName {
+        font-size: var(--text-label);
+    }
+
+    div.axis {
+        display: flex;
+        justify-content: space-between;
+        gap: var(--space-4);
+        color: var(--color-fg-2);
+        font-size: var(--text-micro);
+    }
+
+    span.axisEnd {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-1);
+
+        svg {
+            width: 16px;
+            height: 16px;
+            flex: none;
+        }
+    }
+
+    ul.legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    button.legendButton {
+        @include control;
+        @include hairline-border(--color-line-2);
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-2);
+        padding: 0 var(--space-3) 0 var(--space-2);
+
+        &[aria-pressed="true"] {
+            background: var(--color-panel-2);
+            box-shadow: inset 0 0 0 2px var(--color-ink);
+        }
+    }
+
+    span.swatch {
+        flex: none;
+        width: 14px;
+        height: 14px;
+        border-radius: 3px;
+    }
+
+    span.legendAcronym {
+        font-weight: 700;
+        letter-spacing: 0.02em;
+    }
+
+    span.legendSeats {
+        color: var(--color-fg-2);
+        font-variant-numeric: tabular-nums;
+    }
+
+    span.legendFlag {
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+    }
+
+    p.hint {
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+    }
+
+    div.detailArea:empty {
+        display: none;
+    }
+
+    div.detail {
+        @include hairline-border;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-3) var(--space-5);
+        padding: var(--space-4) var(--space-5);
+        border-radius: var(--radius-card);
+        background: var(--color-panel);
+    }
+
+    div.facts {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-1);
+    }
+
+    p.detailName {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        font-size: var(--text-name);
+        font-weight: 600;
+    }
+
+    p.fact {
+        color: var(--color-fg-2);
+
+        strong {
+            color: var(--color-fg);
+            font-variant-numeric: tabular-nums;
+        }
+    }
+
+    a.goButton {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-2);
+        min-height: 44px;
+        padding: 0 var(--space-4);
+        border-radius: var(--radius-small);
+        background: var(--color-fg);
+        color: var(--color-bg);
+        font-size: var(--text-label);
+        font-weight: 700;
+        text-decoration: none;
+
+        svg {
+            width: 20px;
+            height: 20px;
+        }
+    }
+
+    div.actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2);
+    }
+
+    button.control {
+        @include control;
+        padding: 0 var(--space-4);
+    }
+
+    // speech balloon of the comic accent, the tail points to the buttons above
+    div.balloon {
+        @include comic.comic-panel;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        max-width: 52ch;
+        margin-top: var(--space-3);
+        padding: var(--space-4) var(--space-5);
+
+        &::before {
+            content: "";
+            position: absolute;
+            top: -17px;
+            left: 28px;
+            border-style: solid;
+            border-width: 0 12px 14px 0;
+            border-color: transparent var(--color-ink) transparent transparent;
+        }
+    }
+
+    p.balloonLabel {
+        @include comic.comic-label;
+    }
+
+    div.tableScroll {
+        max-height: min(640px, 62svh);
+        overflow: auto;
+        box-shadow:
+            inset 0 1px 0 var(--color-line-2),
+            inset 0 -1px 0 var(--color-line-2);
+    }
+
+    table.table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: var(--text-label);
+
+        th,
+        td {
+            padding: var(--space-3) var(--space-2);
+            box-shadow: inset 0 -1px 0 var(--color-line);
+            text-align: left;
+        }
+
+        th {
+            position: sticky;
+            top: 0;
+            background: var(--color-bg);
+            color: var(--color-fg-2);
+            font-size: var(--text-micro);
+            font-weight: 700;
+        }
+
+        th.number,
+        td.number {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+    }
+}

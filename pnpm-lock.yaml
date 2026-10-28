@@ -166,11 +166,52 @@ importers:
 
   .: {}
 
-  apps/web:
+  src/db:
+    dependencies:
+      '@prisma/adapter-pg':
+        specifier: 7.10.1
+        version: 7.10.1
+      '@prisma/client':
+        specifier: 7.10.1
+        version: 7.10.1(prisma@7.10.1(@types/node@26.6.5)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3))(typescript@6.0.3)
+    devDependencies:
+      '@types/node':
+        specifier: 26.6.5
+        version: 26.6.5
+      dotenv:
+        specifier: 18.0.9
+        version: 18.0.9
+      prisma:
+        specifier: 7.10.1
+        version: 7.10.1(@types/node@26.6.5)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3)
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+
+  src/ingestion:
     dependencies:
       '@polar/db':
         specifier: workspace:*
-        version: link:../../packages/db
+        version: link:../db
+      csv-parse:
+        specifier: 7.0.3
+        version: 7.0.3
+    devDependencies:
+      '@types/node':
+        specifier: 26.6.5
+        version: 26.6.5
+      tsx:
+        specifier: 4.23.15
+        version: 4.23.15
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+
+  src/web:
+    dependencies:
+      '@polar/db':
+        specifier: workspace:*
+        version: link:../db
       lucide-react:
         specifier: 1.61.0
         version: 1.61.0(@types/react@19.3.0)(react@19.3.1)
@@ -202,47 +243,6 @@ importers:
       sass:
         specifier: 1.106.1
         version: 1.106.1
-      typescript:
-        specifier: 6.0.3
-        version: 6.0.3
-
-  packages/db:
-    dependencies:
-      '@prisma/adapter-pg':
-        specifier: 7.10.1
-        version: 7.10.1
-      '@prisma/client':
-        specifier: 7.10.1
-        version: 7.10.1(prisma@7.10.1(@types/node@26.6.5)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3))(typescript@6.0.3)
-    devDependencies:
-      '@types/node':
-        specifier: 26.6.5
-        version: 26.6.5
-      dotenv:
-        specifier: 18.0.9
-        version: 18.0.9
-      prisma:
-        specifier: 7.10.1
-        version: 7.10.1(@types/node@26.6.5)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3)
-      typescript:
-        specifier: 6.0.3
-        version: 6.0.3
-
-  packages/ingestion:
-    dependencies:
-      '@polar/db':
-        specifier: workspace:*
-        version: link:../db
-      csv-parse:
-        specifier: 7.0.3
-        version: 7.0.3
-    devDependencies:
-      '@types/node':
-        specifier: 26.6.5
-        version: 26.6.5
-      tsx:
-        specifier: 4.23.15
-        version: 4.23.15
       typescript:
         specifier: 6.0.3
         version: 6.0.3

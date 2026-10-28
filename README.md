@@ -54,15 +54,3 @@ pnpm dev
 ```
 
 O site fica disponível em `http://localhost:3000`.
-
-## Para desenvolvedores
-
-A documentação técnica está em inglês:
-
-- [Target audience](AUDIENCE.md)
-- [Use cases](USE_CASES.md)
-- [Design](DESIGN.md)
-- [Architecture](ARCHITECTURE.md)
-- [Conventions](CONVENTIONS.md)
-- [Data sources](DATA_SOURCES.md)
-- [Roadmap](ROADMAP.md)

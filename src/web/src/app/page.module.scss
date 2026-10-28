@@ -1,0 +1,116 @@
+@use "mixins" as *;
+@use "comic";
+
+main.page {
+    @include page-gutter;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-7);
+    max-width: calc(var(--content-width-reading) + 2 * var(--page-gutter));
+    margin: 0 auto;
+    padding-block: var(--space-6) var(--space-8);
+
+    section.intro {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+
+        h1.title {
+            font-size: var(--text-title);
+        }
+
+        p.lead {
+            color: var(--color-fg-2);
+            max-width: 60ch;
+        }
+    }
+
+    form.search {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+
+        label.searchLabel {
+            font-size: var(--text-name);
+            font-weight: 600;
+        }
+
+        div.searchRow {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-2);
+        }
+
+        div.searchBox {
+            position: relative;
+            flex: 1 1 16rem;
+        }
+
+        svg.searchIcon {
+            @include search-icon;
+        }
+
+        input.searchInput {
+            @include search-input;
+        }
+
+        button.searchButton {
+            @include control;
+            min-height: 60px;
+            padding: 0 var(--space-6);
+            background: var(--color-fg);
+            color: var(--color-bg);
+            font-weight: 700;
+            box-shadow: none;
+
+            &:hover {
+                background: var(--color-fg-2);
+            }
+        }
+
+        p.searchHint {
+            font-size: var(--text-label);
+            color: var(--color-fg-2);
+        }
+    }
+
+    section.chamber {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+
+        div.blockLabel {
+            @include block-label-row;
+        }
+
+        h2.blockTitle {
+            @include block-label-title;
+        }
+
+        span.blockCount {
+            @include block-label-count;
+        }
+
+        p.chamberLead {
+            max-width: 60ch;
+            color: var(--color-fg-2);
+        }
+    }
+
+    div.noticeField {
+        padding: var(--space-6) var(--space-4) var(--space-7);
+
+        div.notice {
+            @include comic.comic-panel;
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+            max-width: 34ch;
+            padding: var(--space-4) var(--space-5);
+
+            p.noticeLabel {
+                @include comic.comic-label;
+            }
+        }
+    }
+}

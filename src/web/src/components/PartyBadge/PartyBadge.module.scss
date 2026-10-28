@@ -1,0 +1,28 @@
+@use "mixins" as *;
+
+@mixin badge-shape {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    padding: 0 var(--space-2);
+    border-radius: var(--radius-tag);
+    font-size: var(--text-micro);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+span.badge {
+    @include badge-shape;
+
+    // keeps the badge visible when forced colors drop the background
+    @media (forced-colors: active) {
+        border: 1px solid CanvasText;
+    }
+}
+
+span.neutral {
+    @include badge-shape;
+    @include hairline-border(--color-line-3);
+    color: var(--color-fg);
+}
