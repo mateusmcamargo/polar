@@ -1,5 +1,6 @@
 import { prisma } from "@polar/db";
 import type { CollectionContext, SourceAdapter } from "../sourceAdapter";
+import { splitIntoBatches } from "../splitIntoBatches";
 import { extractIdFromUri, fetchCamaraList, fetchCamaraObject } from "./camaraClient";
 
 const CURRENT_LEGISLATURE_ID = 57;
@@ -92,14 +93,6 @@ function buildSearchName(...names: (string | null)[]): string {
 // source timestamps have no zone and are in Brasília time
 function parseBrasiliaDateTime(dateTime: string): Date {
     return new Date(`${dateTime}:00-03:00`);
-}
-
-function splitIntoBatches<Item>(items: Item[]): Item[][] {
-    const batches: Item[][] = [];
-    for (let start = 0; start < items.length; start += WRITE_BATCH_SIZE) {
-        batches.push(items.slice(start, start + WRITE_BATCH_SIZE));
-    }
-    return batches;
 }
 
 export const camaraDeputiesAdapter: SourceAdapter<
@@ -199,12 +192,12 @@ export const camaraDeputiesAdapter: SourceAdapter<
         }
 
         // parties first, deputies hold a foreign key to them
-        for (const batch of splitIntoBatches(records.parties)) {
+        for (const batch of splitIntoBatches(records.parties, WRITE_BATCH_SIZE)) {
             await prisma.$transaction(
                 batch.map((party) => prisma.party.upsert({ where: { id: party.id }, create: party, update: party })),
             );
         }
-        for (const batch of splitIntoBatches(records.deputies)) {
+        for (const batch of splitIntoBatches(records.deputies, WRITE_BATCH_SIZE)) {
             await prisma.$transaction(
                 batch.map((deputy) =>
                     prisma.deputy.upsert({ where: { id: deputy.id }, create: deputy, update: deputy }),

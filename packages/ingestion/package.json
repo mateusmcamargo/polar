@@ -8,7 +8,8 @@
         "lint": "echo \"no lint configured for @polar/ingestion\""
     },
     "dependencies": {
-        "@polar/db": "workspace:*"
+        "@polar/db": "workspace:*",
+        "csv-parse": "7.0.3"
     },
     "devDependencies": {
         "@types/node": "26.6.5",

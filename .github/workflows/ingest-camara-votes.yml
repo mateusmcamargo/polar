@@ -1,0 +1,41 @@
+name: Ingest Câmara votes
+
+on:
+    schedule:
+        # every day at 08:00 UTC, after the deputies workflow
+        - cron: "0 8 * * *"
+    workflow_dispatch:
+        inputs:
+            year:
+                description: "Year of the vote files, empty for the current year"
+                required: false
+
+# a manual run must not overlap with a scheduled one, both write the same vote tables
+concurrency:
+    group: ingest-camara-votes
+    cancel-in-progress: false
+
+jobs:
+    ingest:
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+        # prisma generate also loads the config, which requires the variable
+        env:
+            DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: pnpm/action-setup@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version-file: .nvmrc
+                  cache: pnpm
+
+            - run: pnpm install --frozen-lockfile
+
+            - run: pnpm db:generate
+
+            - run: pnpm ingest camara-votes "${YEAR:-$(date +%Y)}"
+              env:
+                  YEAR: ${{ inputs.year }}

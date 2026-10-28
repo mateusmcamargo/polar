@@ -12,16 +12,10 @@ function sleep(milliseconds: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
-async function fetchJsonWithRetry<Data>(url: string): Promise<CamaraResponse<Data>> {
+async function withRetry<Result>(request: () => Promise<Result>): Promise<Result> {
     for (let attempt = 1; ; attempt++) {
         try {
-            const response = await fetch(url, {
-                headers: { accept: "application/json", "user-agent": USER_AGENT },
-            });
-            if (!response.ok) {
-                throw new Error(`${url} answered ${response.status}`);
-            }
-            return (await response.json()) as CamaraResponse<Data>;
+            return await request();
         } catch (error) {
             if (attempt >= MAX_ATTEMPTS) {
                 throw error;
@@ -30,6 +24,24 @@ async function fetchJsonWithRetry<Data>(url: string): Promise<CamaraResponse<Dat
             await sleep(1000 * 2 ** (attempt - 1));
         }
     }
+}
+
+async function fetchOk(url: string, accept: string): Promise<Response> {
+    const response = await fetch(url, { headers: { accept, "user-agent": USER_AGENT } });
+    if (!response.ok) {
+        throw new Error(`${url} answered ${response.status}`);
+    }
+    return response;
+}
+
+function fetchJsonWithRetry<Data>(url: string): Promise<CamaraResponse<Data>> {
+    return withRetry(async () => (await fetchOk(url, "application/json")).json() as Promise<CamaraResponse<Data>>);
+}
+
+// yearly bulk files, for example votacoes-2025.csv
+export function fetchCamaraBulkCsv(dataset: string, year: number): Promise<string> {
+    const url = `https://dadosabertos.camara.leg.br/arquivos/${dataset}/csv/${dataset}-${year}.csv`;
+    return withRetry(async () => (await fetchOk(url, "text/csv")).text());
 }
 
 export function buildCamaraUrl(path: string, query: Record<string, string | number> = {}): string {

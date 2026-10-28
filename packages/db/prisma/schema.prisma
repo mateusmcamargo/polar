@@ -115,7 +115,7 @@ model Proposition {
     sourceUrl   String    @map("source_url")
     collectedAt DateTime  @map("collected_at")
 
-    votes Vote[]
+    votes VoteProposition[]
 
     @@map("propositions")
 }
@@ -127,17 +127,29 @@ model Vote {
     description   String // official text
     approved      Boolean? // null when the Câmara does not record the result
     isNominal     Boolean  @map("is_nominal") // false for symbolic votes, which have no individual votes
-    propositionId Int?     @map("proposition_id")
     sourceUrl     String   @map("source_url")
     collectedAt   DateTime @map("collected_at")
 
-    proposition     Proposition?      @relation(fields: [propositionId], references: [id])
+    propositions    VoteProposition[]
     individualVotes IndividualVote[]
     orientations    VoteOrientation[]
 
     @@index([occurredAt])
-    @@index([propositionId])
     @@map("votes")
+}
+
+// a vote can decide several propositions, for example an urgency request that covers a bill and a request
+model VoteProposition {
+    voteId        String   @map("vote_id")
+    propositionId Int      @map("proposition_id")
+    collectedAt   DateTime @map("collected_at")
+
+    vote        Vote        @relation(fields: [voteId], references: [id])
+    proposition Proposition @relation(fields: [propositionId], references: [id])
+
+    @@id([voteId, propositionId])
+    @@index([propositionId])
+    @@map("vote_propositions")
 }
 
 model IndividualVote {
