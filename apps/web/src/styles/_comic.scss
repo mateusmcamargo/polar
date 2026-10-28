@@ -1,0 +1,44 @@
+// comic accent from DESIGN.md: at most one comic block per screen area
+
+@mixin dot-texture($dot-color-token) {
+    background-image: radial-gradient(circle, var(#{$dot-color-token}) 0.9px, transparent 1.4px);
+    background-size: 5px 5px;
+
+    @media (forced-colors: active) {
+        background-image: none;
+    }
+}
+
+@mixin comic-panel {
+    position: relative;
+    background-color: var(--color-panel);
+    @include dot-texture(--comic-dot);
+    border: 3px solid var(--color-ink);
+    border-radius: 0;
+    box-shadow: 7px 7px 0 var(--color-ink);
+    color: var(--color-fg);
+
+    @media (forced-colors: active) {
+        box-shadow: none;
+    }
+}
+
+@mixin comic-field {
+    background-color: var(--color-field);
+    @include dot-texture(--color-field-dot);
+}
+
+@mixin comic-sticker {
+    @include comic-panel;
+    background-color: var(--color-sticker);
+    @include dot-texture(--color-sticker-dot);
+    color: var(--color-on-sticker);
+}
+
+// uppercase only for short labels, never for sentences
+@mixin comic-label {
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: var(--text-label);
+    line-height: 1.6;
+}

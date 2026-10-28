@@ -1,0 +1,10 @@
+// models are added in the schema design step, see USE_CASES.md and DATA_SOURCES.md
+
+generator client {
+    provider = "prisma-client"
+    output   = "../src/generated/prisma"
+}
+
+datasource db {
+    provider = "postgresql"
+}

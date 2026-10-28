@@ -1,0 +1,52 @@
+@use "mixins" as *;
+
+.toggle {
+    @include touch-target;
+    @include hairline-border(--color-line-3);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--color-fg);
+    cursor: pointer;
+    transition: background-color var(--duration-fast) var(--ease-standard);
+
+    &:hover {
+        background: var(--color-panel-2);
+    }
+
+    svg {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+// the icon shows the theme the button switches to: moon in the light theme, sun in the dark theme
+.sun {
+    display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        .moon {
+            display: none;
+        }
+
+        .sun {
+            display: block;
+        }
+    }
+}
+
+:root[data-theme="dark"] {
+    .moon {
+        display: none;
+    }
+
+    .sun {
+        display: block;
+    }
+}

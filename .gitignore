@@ -1,0 +1,41 @@
+# third party reference material
+examples/
+
+# secrets
+.env
+.env.*
+!.env.example
+
+# dependencies
+node_modules/
+
+# build output
+.next/
+out/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# generated prisma client
+packages/db/src/generated/
+
+# tooling
+.DS_Store
+*.log
+.vercel/
+
+# playwright mcp screenshots and logs
+.playwright-mcp/
+
+# private project notes and tooling, kept local
+/ARCHITECTURE.md
+/AUDIENCE.md
+/DATA_SOURCES.md
+/DESIGN.md
+/USE_CASES.md
+/ROADMAP.md
+/CONVENTIONS.md
+/CLAUDE.md
+/.claude/
+/brand/
+/.vscode/

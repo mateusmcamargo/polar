@@ -1,0 +1,22 @@
+{
+    "name": "polar",
+    "private": true,
+    "type": "module",
+    "packageManager": "pnpm@12.15.0",
+    "engines": {
+        "node": ">=24"
+    },
+    "scripts": {
+        "dev": "pnpm --filter @polar/web dev",
+        "build": "pnpm --filter @polar/web build",
+        "start": "pnpm --filter @polar/web start",
+        "lint": "pnpm -r lint",
+        "typecheck": "pnpm -r typecheck",
+        "db:up": "docker compose up -d --wait",
+        "db:down": "docker compose down",
+        "db:generate": "pnpm --filter @polar/db generate",
+        "db:migrate": "pnpm --filter @polar/db migrate",
+        "db:studio": "pnpm --filter @polar/db studio",
+        "ingest": "pnpm --filter @polar/ingestion start"
+    }
+}

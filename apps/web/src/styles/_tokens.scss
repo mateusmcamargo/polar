@@ -1,0 +1,118 @@
+// design tokens from DESIGN.md, exposed as css custom properties so the theme can change at runtime
+
+@mixin light-color-tokens {
+    --color-bg: #F3F2EF;
+    --color-panel: #FAF9F7;
+    --color-panel-2: #ECEAE6;
+    --color-fg: #121110;
+    --color-fg-2: #3A3836;
+    --color-fg-3: #5C5956;
+    --color-line: rgb(18 17 16 / 0.10);
+    --color-line-2: rgb(18 17 16 / 0.18);
+    --color-line-3: rgb(18 17 16 / 0.40);
+    --color-focus: #121110;
+
+    --vote-yes: #1E7F4F;
+    --vote-no: #C42B2B;
+    --vote-abstain: #A15C00;
+    --vote-obstruct: #6B4BC4;
+    --vote-absent: #5C5956;
+
+    --color-ink: #121110;
+    --comic-dot: rgb(18 17 16 / 0.13);
+    --color-field: #ECEAE6;
+    --color-field-dot: rgb(18 17 16 / 0.16);
+    --color-sticker: #F2C230;
+    --color-sticker-dot: rgb(18 17 16 / 0.12);
+    --color-on-sticker: #121110;
+
+    color-scheme: light;
+}
+
+@mixin dark-color-tokens {
+    --color-bg: #100F0E;
+    --color-panel: #171614;
+    --color-panel-2: #1F1D1B;
+    --color-fg: #FAFAF9;
+    --color-fg-2: #D6D4CF;
+    --color-fg-3: #A6A39C;
+    --color-line: rgb(250 250 249 / 0.10);
+    --color-line-2: rgb(250 250 249 / 0.18);
+    --color-line-3: rgb(250 250 249 / 0.40);
+    --color-focus: #FAFAF9;
+
+    --vote-yes: #3DD68C;
+    --vote-no: #FF6B6B;
+    --vote-abstain: #F2B04B;
+    --vote-obstruct: #B39DFF;
+    --vote-absent: #A6A39C;
+
+    --color-ink: #FAFAF9;
+    --comic-dot: rgb(250 250 249 / 0.09);
+    --color-field: #1F1D1B;
+    --color-field-dot: rgb(250 250 249 / 0.10);
+    --color-sticker: #F2C230;
+    --color-sticker-dot: rgb(18 17 16 / 0.12);
+    --color-on-sticker: #121110;
+
+    color-scheme: dark;
+}
+
+:root {
+    @include light-color-tokens;
+
+    --font-sans: var(--font-atkinson), "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+    --text-micro: 0.875rem;
+    --text-label: 1rem;
+    --text-body: 1.125rem;
+    --text-name: 1.25rem;
+    --text-title: 1.625rem;
+    --text-figure: 2rem;
+
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+    --space-6: 32px;
+    --space-7: 48px;
+    --space-8: 64px;
+
+    --page-gutter: 16px;
+    --content-width-reading: 720px;
+    --content-width-wide: 1200px;
+
+    --radius-small: 8px;
+    --radius-card: 12px;
+    --radius-pill: 999px;
+
+    --duration-fast: 120ms;
+    --duration-medium: 200ms;
+    --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (min-width: 600px) {
+    :root {
+        --page-gutter: 24px;
+    }
+}
+
+@media (min-width: 900px) {
+    :root {
+        --page-gutter: 32px;
+        --text-name: 1.375rem;
+        --text-title: 2rem;
+        --text-figure: 2.75rem;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        @include dark-color-tokens;
+    }
+}
+
+:root[data-theme="dark"] {
+    @include dark-color-tokens;
+}
