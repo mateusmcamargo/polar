@@ -1,0 +1,52 @@
+name: Ingest Câmara deputy pages
+
+on:
+    schedule:
+        # every Sunday at 10:00 UTC; the pages are read slowly, about 15 minutes per year
+        - cron: "0 10 * * 0"
+    workflow_dispatch:
+        inputs:
+            years:
+                description: "Years separated by spaces, empty for the current year (and the previous one in January)"
+                required: false
+
+# a manual run must not overlap with a scheduled one, both write the same summary table
+concurrency:
+    group: ingest-camara-deputy-pages
+    cancel-in-progress: false
+
+jobs:
+    ingest:
+        runs-on: ubuntu-latest
+        timeout-minutes: 90
+        # prisma generate also loads the config, which requires the variable
+        env:
+            DATABASE_URL: ${{ secrets.DATABASE_URL }}
+            # after writing, the runner asks the site to refresh its pages
+            REVALIDATE_URL: ${{ vars.REVALIDATE_URL }}
+            REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: pnpm/action-setup@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version-file: .nvmrc
+                  cache: pnpm
+
+            - run: pnpm install --frozen-lockfile
+
+            - run: pnpm db:generate
+
+            # in January the previous year is read once more, so its final figures are kept
+            - run: |
+                  if [ -z "$YEARS" ]; then
+                      YEARS="$(date +%Y)"
+                      if [ "$(date +%m)" = "01" ]; then
+                          YEARS="$(( $(date +%Y) - 1 )) $YEARS"
+                      fi
+                  fi
+                  pnpm ingest camara-deputy-pages $YEARS
+              env:
+                  YEARS: ${{ inputs.years }}

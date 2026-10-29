@@ -75,14 +75,15 @@ model Deputy {
     sourceUrl     String   @map("source_url")
     collectedAt   DateTime @map("collected_at")
 
-    party         Party?                @relation(fields: [partyId], references: [id])
-    statusHistory DeputyStatusChange[]
-    votes         IndividualVote[]
-    attendances   EventAttendance[]
-    organs        OrganMembership[]
-    fronts        FrontMembership[]
-    expenses      Expense[]
-    flightSummary DeputyFlightSummary[]
+    party           Party?                @relation(fields: [partyId], references: [id])
+    statusHistory   DeputyStatusChange[]
+    votes           IndividualVote[]
+    attendances     EventAttendance[]
+    organs          OrganMembership[]
+    fronts          FrontMembership[]
+    expenses        Expense[]
+    flightSummary   DeputyFlightSummary[]
+    annualSummaries DeputyAnnualSummary[]
 
     @@index([stateCode])
     @@index([partyId])
@@ -340,4 +341,33 @@ model DeputyFlightSummary {
 
     @@id([deputyId, year])
     @@map("deputy_flight_summaries")
+}
+
+// yearly figures published only on the deputy page (camara.leg.br/deputados/{id}?ano={year}), collected weekly
+model DeputyAnnualSummary {
+    deputyId                        Int       @map("deputy_id")
+    year                            Int       @db.SmallInt
+    plenaryPresentDays              Int       @map("plenary_present_days")
+    plenaryJustifiedAbsenceDays     Int       @map("plenary_justified_absence_days")
+    plenaryUnjustifiedAbsenceDays   Int       @map("plenary_unjustified_absence_days")
+    committeePresentMeetings        Int       @map("committee_present_meetings")
+    committeeJustifiedAbsences      Int       @map("committee_justified_absences")
+    committeeUnjustifiedAbsences    Int       @map("committee_unjustified_absences")
+    officeStaffCount                Int       @map("office_staff_count") // people who worked in the office during the year
+    // verba de gabinete; both empty when the page shows no spending block for the year
+    officeBudgetSpent               Decimal?  @map("office_budget_spent") @db.Decimal(12, 2)
+    officeBudgetUnused              Decimal?  @map("office_budget_unused") @db.Decimal(12, 2)
+    // both empty when the deputy did not use a functional apartment; only the end empty while in use
+    functionalApartmentSince        DateTime? @map("functional_apartment_since")
+    functionalApartmentUntil        DateTime? @map("functional_apartment_until")
+    housingAllowanceReceived        Decimal   @map("housing_allowance_received") @db.Decimal(12, 2) // 0 when not received
+    officialTripCount               Int       @map("official_trip_count")
+    hasDiplomaticPassport           Boolean   @map("has_diplomatic_passport")
+    sourceUrl                       String    @map("source_url")
+    collectedAt                     DateTime  @map("collected_at")
+
+    deputy Deputy @relation(fields: [deputyId], references: [id])
+
+    @@id([deputyId, year])
+    @@map("deputy_annual_summaries")
 }

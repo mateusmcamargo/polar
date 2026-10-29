@@ -2,6 +2,8 @@ const CAMARA_API_URL = "https://dadosabertos.camara.leg.br/api/v2";
 const USER_AGENT = "polar-ingestion (open data platform, contact via repository)";
 const MAX_ATTEMPTS = 4;
 const PAUSE_BETWEEN_REQUESTS_MS = 100;
+// the website is not meant for automated access, so pages are requested slowly
+const PAUSE_BETWEEN_PAGES_MS = 1000;
 
 interface CamaraResponse<Data> {
     dados: Data;
@@ -80,6 +82,13 @@ export async function fetchCamaraBulkCsv(dataset: string, year?: number): Promis
     const yearSuffix = year === undefined ? "" : `-${year}`;
     const url = `https://dadosabertos.camara.leg.br/arquivos/${dataset}/csv/${dataset}${yearSuffix}.csv`;
     return (await fetchResumable(url, "text/csv")).toString("utf8");
+}
+
+// html pages of the Câmara website, for data that has no API or bulk file
+export async function fetchCamaraPage(url: string): Promise<string> {
+    const page = await withRetry(async () => (await fetchOk(url, "text/html")).text());
+    await sleep(PAUSE_BETWEEN_PAGES_MS);
+    return page;
 }
 
 export function buildCamaraUrl(path: string, query: Record<string, string | number> = {}): string {

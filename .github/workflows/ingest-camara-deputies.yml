@@ -18,6 +18,9 @@ jobs:
         # prisma generate also loads the config, which requires the variable
         env:
             DATABASE_URL: ${{ secrets.DATABASE_URL }}
+            # after writing, the runner asks the site to refresh its pages
+            REVALIDATE_URL: ${{ vars.REVALIDATE_URL }}
+            REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
         steps:
             - uses: actions/checkout@v4
 
