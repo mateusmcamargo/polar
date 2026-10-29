@@ -1,4 +1,5 @@
 import { camaraDeputiesAdapter } from "./sources/camara/deputies";
+import { createCamaraEventsAdapter } from "./sources/camara/events";
 import { createCamaraExpensesAdapter } from "./sources/camara/expenses";
 import { camaraFrontsAdapter } from "./sources/camara/fronts";
 import { camaraOrgansAdapter } from "./sources/camara/organs";
@@ -8,6 +9,12 @@ import { runSourceAdapter, type SourceAdapter } from "./sources/sourceAdapter";
 // adapters are registered here as each data source is implemented; the arguments after the adapter name are passed on
 const registeredAdapters: Record<string, (adapterArguments: string[]) => SourceAdapter<any, any, any>> = {
     "camara-deputies": () => camaraDeputiesAdapter,
+    "camara-events": ([year]) => {
+        if (!/^\d{4}$/.test(year ?? "")) {
+            throw new Error("usage: pnpm ingest camara-events <year>");
+        }
+        return createCamaraEventsAdapter(Number(year));
+    },
     "camara-expenses": ([year]) => {
         if (!/^\d{4}$/.test(year ?? "")) {
             throw new Error("usage: pnpm ingest camara-expenses <year>");
