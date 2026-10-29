@@ -206,7 +206,7 @@ model OrganMembership {
     organ  Organ  @relation(fields: [organId], references: [id])
     deputy Deputy @relation(fields: [deputyId], references: [id])
 
-    @@id([organId, deputyId, startsAt])
+    @@id([organId, deputyId, role, startsAt])
     @@index([deputyId])
     @@map("organ_memberships")
 }

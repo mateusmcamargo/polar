@@ -1,5 +1,7 @@
 import { camaraDeputiesAdapter } from "./sources/camara/deputies";
 import { createCamaraExpensesAdapter } from "./sources/camara/expenses";
+import { camaraFrontsAdapter } from "./sources/camara/fronts";
+import { camaraOrgansAdapter } from "./sources/camara/organs";
 import { createCamaraVotesAdapter } from "./sources/camara/votes";
 import { runSourceAdapter, type SourceAdapter } from "./sources/sourceAdapter";
 
@@ -12,6 +14,8 @@ const registeredAdapters: Record<string, (adapterArguments: string[]) => SourceA
         }
         return createCamaraExpensesAdapter(Number(year));
     },
+    "camara-fronts": () => camaraFrontsAdapter,
+    "camara-organs": () => camaraOrgansAdapter,
     "camara-votes": ([year]) => {
         if (!/^\d{4}$/.test(year ?? "")) {
             throw new Error("usage: pnpm ingest camara-votes <year>");

@@ -38,10 +38,48 @@ function fetchJsonWithRetry<Data>(url: string): Promise<CamaraResponse<Data>> {
     return withRetry(async () => (await fetchOk(url, "application/json")).json() as Promise<CamaraResponse<Data>>);
 }
 
-// yearly bulk files, for example votacoes-2025.csv
-export function fetchCamaraBulkCsv(dataset: string, year: number): Promise<string> {
-    const url = `https://dadosabertos.camara.leg.br/arquivos/${dataset}/csv/${dataset}-${year}.csv`;
-    return withRetry(async () => (await fetchOk(url, "text/csv")).text());
+// the server closes long downloads midway, so each attempt resumes from the last byte received
+async function fetchResumable(url: string, accept: string): Promise<Buffer> {
+    const chunks: Uint8Array[] = [];
+    let receivedBytes = 0;
+    let totalBytes: number | null = null;
+
+    await withRetry(async () => {
+        while (totalBytes === null || receivedBytes < totalBytes) {
+            const headers: Record<string, string> = { accept, "user-agent": USER_AGENT };
+            if (receivedBytes > 0) {
+                headers.range = `bytes=${receivedBytes}-`;
+            }
+            const response = await fetch(url, { headers });
+            if (!response.ok || !response.body || (receivedBytes > 0 && response.status !== 206)) {
+                throw new Error(`${url} answered ${response.status}`);
+            }
+            totalBytes ??= Number(response.headers.get("content-length"));
+
+            const bytesBefore = receivedBytes;
+            try {
+                for await (const chunk of response.body) {
+                    chunks.push(chunk);
+                    receivedBytes += chunk.length;
+                }
+            } catch (error) {
+                // a cut that still brought data resumes at once; only a cut without progress counts as a failed attempt
+                if (receivedBytes === bytesBefore) {
+                    throw error;
+                }
+                console.log(`${url}: connection closed at ${receivedBytes} of ${totalBytes} bytes, resuming`);
+            }
+        }
+    });
+
+    return Buffer.concat(chunks);
+}
+
+// bulk files per year (votacoes-2025.csv) or whole (orgaos.csv)
+export async function fetchCamaraBulkCsv(dataset: string, year?: number): Promise<string> {
+    const yearSuffix = year === undefined ? "" : `-${year}`;
+    const url = `https://dadosabertos.camara.leg.br/arquivos/${dataset}/csv/${dataset}${yearSuffix}.csv`;
+    return (await fetchResumable(url, "text/csv")).toString("utf8");
 }
 
 export function buildCamaraUrl(path: string, query: Record<string, string | number> = {}): string {
