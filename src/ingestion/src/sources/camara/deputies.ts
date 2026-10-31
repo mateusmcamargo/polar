@@ -7,7 +7,10 @@ import { extractIdFromUri, fetchCamaraList, fetchCamaraObject } from "./camaraCl
 const CURRENT_LEGISLATURE_ID = 57;
 const IN_OFFICE_SITUATION = "Exercício";
 const START_OF_LEGISLATURE_SITUATION = "Início da legislatura";
+const SEX_BY_SOURCE_CODE: Readonly<Record<string, "FEMALE" | "MALE">> = { F: "FEMALE", M: "MALE" };
 const WRITE_BATCH_SIZE = 5000;
+// beyond this the API itself is failing, and the run stops instead of keeping old details
+const MAX_DETAILS_FROM_DATABASE = 10;
 const TRANSACTION_TIMEOUT_MS = 10 * 60 * 1000;
 
 interface PartyListItem {
@@ -28,10 +31,12 @@ interface DeputyListItem {
 
 interface DeputyDetail {
     nomeCivil: string | null;
+    sexo: string | null;
     ultimoStatus: { situacao: string | null };
 }
 
 interface DeputyHistoryItem {
+    idLegislatura: number;
     dataHora: string;
     situacao: string | null;
     condicaoEleitoral: string | null;
@@ -60,6 +65,7 @@ interface NormalizedDeputy {
     civilName: string | null;
     searchName: string;
     photoUrl: string | null;
+    sex: "FEMALE" | "MALE" | null;
     stateCode: string;
     partyId: number | null;
     isInOffice: boolean;
@@ -97,6 +103,29 @@ function parseBrasiliaDateTime(dateTime: string): Date {
     return new Date(`${dateTime}:00-03:00`);
 }
 
+// some records answer 504 on every attempt (deputy 89536 on 2026-10-30) while the rest of the API works;
+// the details already stored are kept for them, so one broken record does not stop the daily run
+async function fetchDetailOrStored(deputyId: number, detailsFromDatabase: number[]): Promise<DeputyDetail> {
+    try {
+        return await fetchCamaraObject<DeputyDetail>(`/deputados/${deputyId}`);
+    } catch (error) {
+        const stored = await prisma.deputy.findUnique({
+            where: { id: deputyId },
+            select: { civilName: true, sex: true, isInOffice: true },
+        });
+        if (!stored || detailsFromDatabase.length >= MAX_DETAILS_FROM_DATABASE) {
+            throw error;
+        }
+        detailsFromDatabase.push(deputyId);
+        console.log(`camara-deputies: details of deputy ${deputyId} could not be fetched, keeping the stored ones`);
+        return {
+            nomeCivil: stored.civilName,
+            sexo: stored.sex === "FEMALE" ? "F" : stored.sex === "MALE" ? "M" : null,
+            ultimoStatus: { situacao: stored.isInOffice ? IN_OFFICE_SITUATION : null },
+        };
+    }
+}
+
 export const camaraDeputiesAdapter: SourceAdapter<
     RawCamaraDeputies,
     RawCamaraDeputies,
@@ -113,14 +142,35 @@ export const camaraDeputiesAdapter: SourceAdapter<
 
         const detailsByDeputyId = new Map<number, DeputyDetail>();
         const historyByDeputyId = new Map<number, DeputyHistoryItem[]>();
+        const detailsFromDatabase: number[] = [];
         for (const [index, deputy] of deputies.entries()) {
-            detailsByDeputyId.set(deputy.id, await fetchCamaraObject<DeputyDetail>(`/deputados/${deputy.id}`));
+            detailsByDeputyId.set(deputy.id, await fetchDetailOrStored(deputy.id, detailsFromDatabase));
+            // the history covers every legislature of the deputy, and each one has a start entry dated on the start
+            // of the current legislature, so entries of other legislatures would overwrite the current one
+            const history = await fetchCamaraObject<DeputyHistoryItem[]>(`/deputados/${deputy.id}/historico`);
             historyByDeputyId.set(
                 deputy.id,
-                await fetchCamaraObject<DeputyHistoryItem[]>(`/deputados/${deputy.id}/historico`),
+                history.filter((entry) => entry.idLegislatura === CURRENT_LEGISLATURE_ID),
             );
             if ((index + 1) % 100 === 0) {
                 console.log(`camara-deputies: fetched ${index + 1} of ${deputies.length} deputies`);
+            }
+        }
+
+        // parties that ended or merged during the legislature are missing from the list but appear in the history
+        const listedPartyIds = new Set(parties.map((party) => party.id));
+        const historyPartyIds = new Set(
+            [...historyByDeputyId.values()].flat().map((entry) => extractIdFromUri(entry.uriPartido)),
+        );
+        for (const partyId of historyPartyIds) {
+            if (partyId === null || listedPartyIds.has(partyId)) {
+                continue;
+            }
+            // a missing party only loses its name on the profile, so it does not stop the run
+            try {
+                parties.push(await fetchCamaraObject<PartyListItem>(`/partidos/${partyId}`));
+            } catch (error) {
+                console.log(`camara-deputies: party ${partyId} from the history could not be fetched`, error);
             }
         }
 
@@ -158,6 +208,7 @@ export const camaraDeputiesAdapter: SourceAdapter<
                 civilName: detail?.nomeCivil ?? null,
                 searchName: buildSearchName(deputy.nome, detail?.nomeCivil ?? null),
                 photoUrl: deputy.urlFoto,
+                sex: SEX_BY_SOURCE_CODE[detail?.sexo ?? ""] ?? null,
                 stateCode: deputy.siglaUf,
                 partyId: partyId !== null && knownPartyIds.has(partyId) ? partyId : null,
                 isInOffice: detail?.ultimoStatus.situacao === IN_OFFICE_SITUATION,
@@ -216,13 +267,14 @@ export const camaraDeputiesAdapter: SourceAdapter<
 
                 for (const batch of splitIntoBatches(records.deputies, WRITE_BATCH_SIZE)) {
                     await transaction.$executeRaw`
-                        INSERT INTO deputies (id, political_name, civil_name, search_name, photo_url, state_code, party_id, is_in_office, source_url, collected_at)
+                        INSERT INTO deputies (id, political_name, civil_name, search_name, photo_url, sex, state_code, party_id, is_in_office, source_url, collected_at)
                         SELECT * FROM unnest(
                             ${batch.map((row) => row.id)}::int[],
                             ${batch.map((row) => row.politicalName)}::text[],
                             ${batch.map((row) => row.civilName)}::text[],
                             ${batch.map((row) => row.searchName)}::text[],
                             ${batch.map((row) => row.photoUrl)}::text[],
+                            ${batch.map((row) => row.sex)}::deputy_sex[],
                             ${batch.map((row) => row.stateCode)}::text[],
                             ${batch.map((row) => row.partyId)}::int[],
                             ${batch.map((row) => row.isInOffice)}::boolean[],
@@ -234,6 +286,7 @@ export const camaraDeputiesAdapter: SourceAdapter<
                             civil_name = EXCLUDED.civil_name,
                             search_name = EXCLUDED.search_name,
                             photo_url = EXCLUDED.photo_url,
+                            sex = EXCLUDED.sex,
                             state_code = EXCLUDED.state_code,
                             party_id = EXCLUDED.party_id,
                             is_in_office = EXCLUDED.is_in_office,

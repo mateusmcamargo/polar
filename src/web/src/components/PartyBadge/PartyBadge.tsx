@@ -13,11 +13,15 @@ function relativeLuminance(hexColor: string): number {
 }
 
 // black or white text, whichever has the higher contrast against the party color
-function textTokenFor(hexColor: string): string {
+export function prefersWhiteText(hexColor: string): boolean {
     const luminance = relativeLuminance(hexColor);
     const contrastWithWhite = 1.05 / (luminance + 0.05);
     const contrastWithBlack = (luminance + 0.05) / (relativeLuminance("#121110") + 0.05);
-    return contrastWithWhite >= contrastWithBlack ? "var(--color-on-data-dark)" : "var(--color-on-data-light)";
+    return contrastWithWhite >= contrastWithBlack;
+}
+
+function textTokenFor(hexColor: string): string {
+    return prefersWhiteText(hexColor) ? "var(--color-on-data-dark)" : "var(--color-on-data-light)";
 }
 
 interface PartyBadgeProps {

@@ -1,0 +1,49 @@
+span.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-height: 32px;
+    padding: 0 var(--space-3) 0 var(--space-2);
+    border: 2px solid currentColor;
+    border-radius: var(--radius-small);
+    font-size: var(--text-label);
+    font-weight: 700;
+    white-space: nowrap;
+
+    svg {
+        width: 18px;
+        height: 18px;
+        stroke-width: 3;
+    }
+
+    &.small {
+        min-height: 28px;
+        font-size: var(--text-micro);
+
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+
+    &.yes {
+        color: var(--vote-yes);
+    }
+
+    &.no {
+        color: var(--vote-no);
+    }
+
+    &.abstain {
+        color: var(--vote-abstain);
+    }
+
+    &.obstruct {
+        color: var(--vote-obstruct);
+    }
+
+    &.absent {
+        color: var(--vote-absent);
+        border-style: dashed;
+    }
+}

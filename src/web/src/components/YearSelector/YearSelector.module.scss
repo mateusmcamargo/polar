@@ -1,0 +1,41 @@
+@use "mixins" as *;
+
+div.selector {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    color: var(--color-fg-2);
+    font-size: var(--text-label);
+
+    nav.years {
+        display: inline-flex;
+        overflow: hidden;
+        border-radius: var(--radius-small);
+        box-shadow: inset 0 0 0 1px var(--color-line-3);
+
+        a {
+            @include touch-target;
+            display: grid;
+            min-width: 72px;
+            padding: 0 var(--space-4);
+            place-items: center;
+            color: var(--color-fg);
+            text-decoration: none;
+
+            & + a {
+                box-shadow: inset 1px 0 0 var(--color-line-3);
+            }
+
+            &:hover {
+                background: var(--color-panel-2);
+            }
+
+            &[aria-current="page"] {
+                background: var(--color-fg);
+                color: var(--color-bg);
+                font-weight: 700;
+            }
+        }
+    }
+}

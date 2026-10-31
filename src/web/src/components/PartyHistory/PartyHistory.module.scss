@@ -1,0 +1,56 @@
+ol.timeline {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+        position: relative;
+        display: grid;
+        grid-template-columns: 20px 1fr;
+        gap: var(--space-3);
+        padding-bottom: var(--space-4);
+
+        &::before {
+            content: "";
+            position: absolute;
+            top: 22px;
+            bottom: 0;
+            left: 9px;
+            width: 2px;
+            background: var(--color-line-2);
+        }
+
+        &:last-child::before {
+            display: none;
+        }
+    }
+
+    span.pin {
+        width: 20px;
+        height: 20px;
+        margin-top: 2px;
+        border: 3px solid var(--color-fg);
+        border-radius: var(--radius-pill);
+        background: var(--color-bg);
+    }
+
+    li.current span.pin {
+        background: var(--color-fg);
+    }
+
+    p.when {
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+        font-variant-numeric: tabular-nums;
+    }
+
+    p.what {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-2);
+        font-size: var(--text-label);
+    }
+}

@@ -13,6 +13,10 @@ const nextConfig: NextConfig = {
     // standalone output keeps the app portable to any docker host, see ARCHITECTURE.md
     output: "standalone",
     outputFileTracingRoot: repositoryRoot,
+    // the share image reads its fonts from disk, which file tracing does not detect on its own
+    outputFileTracingIncludes: {
+        "/deputados/[id]/opengraph-image": ["./assets/fonts/*.ttf"],
+    },
     transpilePackages: ["@polar/db"],
     images: {
         // official deputy photos published by the Câmara

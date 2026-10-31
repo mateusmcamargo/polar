@@ -98,7 +98,7 @@ export function Hemicycle({ seats, periodText }: Readonly<HemicycleProps>) {
     function handleClick(event: MouseEvent<SVGSVGElement>) {
         const seat = seatFromEvent(event.target);
         if (seat && window.matchMedia(DESKTOP_QUERY).matches) {
-            router.push(`/deputados?nome=${encodeURIComponent(seat.politicalName)}`);
+            router.push(`/deputados/${seat.id}`);
         }
     }
 

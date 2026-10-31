@@ -1,6 +1,7 @@
 const CAMARA_API_URL = "https://dadosabertos.camara.leg.br/api/v2";
 const USER_AGENT = "polar-ingestion (open data platform, contact via repository)";
-const MAX_ATTEMPTS = 4;
+// network drops (dns or route failures) can last tens of seconds, so the last wait is 16 seconds
+const MAX_ATTEMPTS = 6;
 const PAUSE_BETWEEN_REQUESTS_MS = 100;
 // the website is not meant for automated access, so pages are requested slowly
 const PAUSE_BETWEEN_PAGES_MS = 1000;
@@ -22,7 +23,7 @@ async function withRetry<Result>(request: () => Promise<Result>): Promise<Result
             if (attempt >= MAX_ATTEMPTS) {
                 throw error;
             }
-            // exponential backoff: 1s, 2s, 4s
+            // exponential backoff: 1s, 2s, 4s, 8s, 16s
             await sleep(1000 * 2 ** (attempt - 1));
         }
     }

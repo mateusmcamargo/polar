@@ -43,6 +43,13 @@ enum BancadaKind {
     @@map("bancada_kind")
 }
 
+enum DeputySex {
+    FEMALE
+    MALE
+
+    @@map("deputy_sex")
+}
+
 enum SupplierKind {
     COMPANY
     PERSON
@@ -69,6 +76,7 @@ model Deputy {
     // lowercase and without accents, built at ingestion; a pg_trgm index is created by hand in the migration
     searchName    String   @map("search_name")
     photoUrl      String?  @map("photo_url")
+    sex           DeputySex? // used only to write "Deputado" or "Deputada"; null when the source omits it
     stateCode     String   @map("state_code")
     partyId       Int?     @map("party_id")
     isInOffice    Boolean  @map("is_in_office")
