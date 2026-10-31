@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CircleAlert } from "lucide-react";
-import type { DeputyProfile, DeputyYear } from "@polar/db";
+import { METRICS_START_DATE, type DeputyProfile, type DeputyYear } from "@polar/db";
 import { AttendanceSummary } from "@/components/AttendanceSummary/AttendanceSummary";
 import { BRAZILIAN_STATES } from "@/components/DeputySearch/brazilianStates";
 import { FrontList } from "@/components/FrontList/FrontList";
@@ -255,8 +255,8 @@ export default async function DeputyProfilePage({ params }: ProfilePageProps) {
                         <CircleAlert aria-hidden="true" />
                         <span>
                             <strong>Fora do cargo desde {dateFormat.format(profile.outOfOffice.since)}.</strong>
-                            {outOfOfficeReason && ` Motivo registrado pela Câmara: ${outOfOfficeReason}.`} Os dados abaixo cobrem
-                            o período no cargo.
+                            {outOfOfficeReason && ` Motivo registrado pela Câmara: ${outOfOfficeReason}.`}
+                            {profile.years.length > 0 && " Os dados abaixo cobrem o período no cargo."}
                         </span>
                     </p>
                 )}
@@ -295,7 +295,7 @@ export default async function DeputyProfilePage({ params }: ProfilePageProps) {
                             Últimas votações de {yearData.year}
                         </h2>
                         <p className={styles.lead}>
-                            Os votos nas últimas decisões do plenário. Toque em uma linha para ver cada votação sobre aquela proposta.
+                            Os votos nas últimas decisões do plenário. Escolha uma linha para ver cada votação sobre aquela proposta.
                         </p>
                         {yearData.latestVoteGroups.length > 0 ? (
                             <RecentVotes groups={yearData.latestVoteGroups} />
@@ -364,7 +364,11 @@ export default async function DeputyProfilePage({ params }: ProfilePageProps) {
                     </section>
                 </>
             ) : (
-                <p className={styles.empty}>Ainda não há votos, presença ou gastos carregados para este deputado.</p>
+                <p className={styles.empty}>
+                    {profile.isInOffice
+                        ? "Ainda não há votos, presença ou gastos carregados para este deputado."
+                        : `O polar tem votos, presença e gastos a partir de ${METRICS_START_DATE.slice(0, 4)}, e o período no cargo terminou antes.`}
+                </p>
             )}
 
             <section className={styles.block} aria-labelledby="organs-title">
@@ -391,7 +395,7 @@ export default async function DeputyProfilePage({ params }: ProfilePageProps) {
                     Grupos de deputados que se juntam em torno de um tema. Participar de uma frente não é uma votação.
                 </p>
                 {profile.fronts.length > 0 ? (
-                    <FrontList fronts={profile.fronts} />
+                    <FrontList fronts={profile.fronts} isInOffice={profile.isInOffice} />
                 ) : (
                     <p className={styles.empty}>Não participa de nenhuma frente parlamentar nesta legislatura.</p>
                 )}

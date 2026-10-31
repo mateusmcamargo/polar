@@ -12,9 +12,11 @@ function normalize(text: string): string {
 
 interface FrontListProps {
     fronts: DeputyFrontRow[];
+    // a deputy out of office keeps the fronts of the legislature, described in the past tense
+    isInOffice: boolean;
 }
 
-export function FrontList({ fronts }: Readonly<FrontListProps>) {
+export function FrontList({ fronts, isInOffice }: Readonly<FrontListProps>) {
     const [query, setQuery] = useState("");
     const coordinated = fronts.filter((front) => front.isCoordinator);
     const words = normalize(query).split(/\s+/).filter(Boolean);
@@ -23,8 +25,9 @@ export function FrontList({ fronts }: Readonly<FrontListProps>) {
     return (
         <div className={styles.fronts}>
             <p className={styles.count}>
-                Participa de <strong>{fronts.length}</strong> {fronts.length === 1 ? "frente" : "frentes"}.
-                {coordinated.length > 0 && ` Coordena ${coordinated.length === 1 ? "1 delas" : `${coordinated.length} delas`}.`}
+                {isInOffice ? "Participa" : "Participou"} de <strong>{fronts.length}</strong> {fronts.length === 1 ? "frente" : "frentes"}.
+                {coordinated.length > 0 &&
+                    ` ${isInOffice ? "Coordena" : "Coordenou"} ${coordinated.length === 1 ? "1 delas" : `${coordinated.length} delas`}.`}
             </p>
             {coordinated.length > 0 && (
                 <ul className={styles.rows}>
@@ -55,7 +58,7 @@ export function FrontList({ fronts }: Readonly<FrontListProps>) {
                       : `${shown.length} ${shown.length === 1 ? "frente" : "frentes"}.`}
             </p>
             {shown.length > 0 && (
-                <div className={styles.scroll} tabIndex={0} role="region" aria-label="Frentes de que participa">
+                <div className={styles.scroll} tabIndex={0} role="region" aria-label={isInOffice ? "Frentes de que participa" : "Frentes de que participou"}>
                     <ul className={styles.rows}>
                         {shown.map((front) => (
                             <li key={front.id}>
