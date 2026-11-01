@@ -93,8 +93,8 @@ export interface DeputyBenefits {
     officeStaffCount: number;
     officeBudgetSpent: number | null;
     officeBudgetUnused: number | null;
-    functionalApartmentSince: Date | null;
-    functionalApartmentUntil: Date | null;
+    // oldest first; dates as yyyy-mm-dd in Brasília time, "until" null while in use
+    functionalApartmentPeriods: { since: string; until: string | null }[];
     housingAllowanceReceived: number;
     officialTripCount: number;
     hasDiplomaticPassport: boolean;
@@ -436,7 +436,7 @@ async function readLatestVoteGroups(deputyId: number, year: number): Promise<Dep
 }
 
 // averages consider every deputy with at least one expense in the year
-async function readQuotaSpending(deputyId: number, stateCode: string, year: number): Promise<DeputyQuotaSpending | null> {
+export async function readQuotaSpending(deputyId: number, stateCode: string, year: number): Promise<DeputyQuotaSpending | null> {
     const [totalsRows, categoryRows] = await Promise.all([
         prisma.$queryRaw<QuotaRow[]>`
             with totals as (
@@ -501,8 +501,7 @@ async function readAnnualPage(deputyId: number, year: number): Promise<DeputyAnn
             officeStaffCount: summary.officeStaffCount,
             officeBudgetSpent: summary.officeBudgetSpent === null ? null : Number(summary.officeBudgetSpent),
             officeBudgetUnused: summary.officeBudgetUnused === null ? null : Number(summary.officeBudgetUnused),
-            functionalApartmentSince: summary.functionalApartmentSince,
-            functionalApartmentUntil: summary.functionalApartmentUntil,
+            functionalApartmentPeriods: summary.functionalApartmentPeriods as DeputyBenefits["functionalApartmentPeriods"],
             housingAllowanceReceived: Number(summary.housingAllowanceReceived),
             officialTripCount: summary.officialTripCount,
             hasDiplomaticPassport: summary.hasDiplomaticPassport,

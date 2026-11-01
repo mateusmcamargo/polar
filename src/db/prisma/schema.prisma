@@ -365,9 +365,9 @@ model DeputyAnnualSummary {
     // verba de gabinete; both empty when the page shows no spending block for the year
     officeBudgetSpent               Decimal?  @map("office_budget_spent") @db.Decimal(12, 2)
     officeBudgetUnused              Decimal?  @map("office_budget_unused") @db.Decimal(12, 2)
-    // both empty when the deputy did not use a functional apartment; only the end empty while in use
-    functionalApartmentSince        DateTime? @map("functional_apartment_since")
-    functionalApartmentUntil        DateTime? @map("functional_apartment_until")
+    // periods of use of a functional apartment, oldest first, as [{ "since": "yyyy-mm-dd", "until": "yyyy-mm-dd" | null }];
+    // empty when not used, "until" null while in use; a page can list more than one period in a year
+    functionalApartmentPeriods      Json      @default("[]") @map("functional_apartment_periods")
     housingAllowanceReceived        Decimal   @map("housing_allowance_received") @db.Decimal(12, 2) // 0 when not received
     officialTripCount               Int       @map("official_trip_count")
     hasDiplomaticPassport           Boolean   @map("has_diplomatic_passport")

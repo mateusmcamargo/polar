@@ -17,3 +17,11 @@ export {
     type DeputyVoteMetrics,
     type DeputyYear,
 } from "./queries/deputyProfile";
+export {
+    getDeputySpending,
+    type DeputyQuotaLimit,
+    type DeputyReceipt,
+    type DeputySpending,
+    type DeputySpendingCategory,
+    type DeputySpendingSupplier,
+} from "./queries/deputySpending";
