@@ -1,0 +1,43 @@
+@use "mixins" as *;
+@use "comic";
+
+details.explanation {
+    font-size: var(--text-label);
+
+    summary {
+        @include touch-target;
+        display: inline-flex;
+        align-items: center;
+        color: var(--color-fg-2);
+        font-size: var(--text-micro);
+        text-decoration: underline dotted;
+        text-underline-offset: 4px;
+        cursor: pointer;
+        list-style: none;
+
+        &::-webkit-details-marker {
+            display: none;
+        }
+    }
+
+    // speech balloon of the comic accent, the tail points to the toggle above
+    div.balloon {
+        @include comic.comic-panel;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        max-width: 62ch;
+        margin: var(--space-3) 7px var(--space-3) 0;
+        padding: var(--space-4) var(--space-5);
+
+        &::before {
+            content: "";
+            position: absolute;
+            top: -17px;
+            left: 28px;
+            border-style: solid;
+            border-width: 0 12px 14px 0;
+            border-color: transparent var(--color-ink) transparent transparent;
+        }
+    }
+}

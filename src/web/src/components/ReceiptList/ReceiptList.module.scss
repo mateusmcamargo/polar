@@ -1,0 +1,182 @@
+@use "mixins" as *;
+
+div.receipts {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    font-variant-numeric: tabular-nums;
+
+    div.filters {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--space-3);
+
+        @include from("small") {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    label.field {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-1);
+        color: var(--color-fg-2);
+        font-size: var(--text-micro);
+    }
+
+    span.selectBox {
+        position: relative;
+        display: block;
+    }
+
+    select.select {
+        @include control;
+        width: 100%;
+        padding: 0 40px 0 var(--space-4);
+        text-overflow: ellipsis;
+        appearance: none;
+    }
+
+    svg.selectIcon {
+        position: absolute;
+        top: 50%;
+        right: 12px;
+        width: 20px;
+        height: 20px;
+        color: var(--color-fg-3);
+        pointer-events: none;
+        transform: translateY(-50%);
+    }
+
+    div.status {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-2) var(--space-4);
+        font-size: var(--text-label);
+    }
+
+    button.clear {
+        @include control;
+        padding: 0 var(--space-4);
+    }
+
+    div.legend {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-2) var(--space-3);
+    }
+
+    span.tagRefused,
+    span.tagRefund {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        padding: 0 var(--space-2);
+        border-radius: var(--radius-tag);
+        font-size: var(--text-micro);
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    span.tagRefused {
+        box-shadow: inset 0 0 0 1px var(--vote-abstain);
+        color: var(--color-fg);
+    }
+
+    span.tagRefund {
+        box-shadow: inset 0 0 0 1px var(--color-line-3);
+        color: var(--color-fg);
+    }
+
+    p.empty {
+        color: var(--color-fg-2);
+        font-size: var(--text-label);
+    }
+
+    div.scroll {
+        max-height: min(720px, 70svh);
+        overflow-y: auto;
+        box-shadow:
+            inset 0 1px 0 var(--color-line-2),
+            inset 0 -1px 0 var(--color-line-2);
+    }
+
+    ol.rows {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+
+        li {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: var(--space-1) var(--space-4);
+            align-items: baseline;
+            padding-block: var(--space-3);
+            font-size: var(--text-label);
+
+            & + li {
+                box-shadow: inset 0 1px 0 var(--color-line);
+            }
+        }
+    }
+
+    span.supplier {
+        overflow-wrap: anywhere;
+    }
+
+    span.value,
+    span.negative {
+        font-weight: 700;
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    span.negative {
+        color: var(--color-fg-2);
+    }
+
+    span.meta {
+        grid-column: 1 / -1;
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+    }
+
+    span.tags {
+        display: flex;
+        flex-wrap: wrap;
+        grid-column: 1 / -1;
+        gap: var(--space-2);
+    }
+
+    a.document {
+        @include touch-target;
+        display: inline-flex;
+        grid-column: 1 / -1;
+        align-items: center;
+        justify-self: start;
+        gap: var(--space-1);
+        color: var(--color-fg);
+        font-size: var(--text-micro);
+        text-underline-offset: 4px;
+
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+
+    span.noDocument {
+        grid-column: 1 / -1;
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+    }
+
+    button.more {
+        @include control;
+        width: 100%;
+        margin-block: var(--space-3);
+    }
+}

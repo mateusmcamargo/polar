@@ -2,6 +2,10 @@ const CAMARA_API_URL = "https://dadosabertos.camara.leg.br/api/v2";
 const USER_AGENT = "polar-ingestion (open data platform, contact via repository)";
 // network drops (dns or route failures) can last tens of seconds, so the last wait is 16 seconds
 const MAX_ATTEMPTS = 6;
+const MAX_RETRY_WAIT_MS = 16_000;
+// the website sometimes answers 500 for a few minutes, so a page is retried for about five minutes
+const PAGE_MAX_ATTEMPTS = 11;
+const PAGE_MAX_RETRY_WAIT_MS = 60_000;
 const PAUSE_BETWEEN_REQUESTS_MS = 100;
 // the website is not meant for automated access, so pages are requested slowly
 const PAUSE_BETWEEN_PAGES_MS = 1000;
@@ -15,16 +19,20 @@ function sleep(milliseconds: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
-async function withRetry<Result>(request: () => Promise<Result>): Promise<Result> {
+// exponential backoff (1s, 2s, 4s ...) capped at maxWaitMs
+async function withRetry<Result>(
+    request: () => Promise<Result>,
+    maxAttempts = MAX_ATTEMPTS,
+    maxWaitMs = MAX_RETRY_WAIT_MS,
+): Promise<Result> {
     for (let attempt = 1; ; attempt++) {
         try {
             return await request();
         } catch (error) {
-            if (attempt >= MAX_ATTEMPTS) {
+            if (attempt >= maxAttempts) {
                 throw error;
             }
-            // exponential backoff: 1s, 2s, 4s, 8s, 16s
-            await sleep(1000 * 2 ** (attempt - 1));
+            await sleep(Math.min(1000 * 2 ** (attempt - 1), maxWaitMs));
         }
     }
 }
@@ -87,7 +95,7 @@ export async function fetchCamaraBulkCsv(dataset: string, year?: number): Promis
 
 // html pages of the Câmara website, for data that has no API or bulk file
 export async function fetchCamaraPage(url: string): Promise<string> {
-    const page = await withRetry(async () => (await fetchOk(url, "text/html")).text());
+    const page = await withRetry(async () => (await fetchOk(url, "text/html")).text(), PAGE_MAX_ATTEMPTS, PAGE_MAX_RETRY_WAIT_MS);
     await sleep(PAUSE_BETWEEN_PAGES_MS);
     return page;
 }

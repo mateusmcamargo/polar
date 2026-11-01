@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CircleAlert } from "lucide-react";
+import { ChevronRight, CircleAlert } from "lucide-react";
 import { METRICS_START_DATE, type DeputyProfile, type DeputyYear } from "@polar/db";
 import { AttendanceSummary } from "@/components/AttendanceSummary/AttendanceSummary";
 import { BRAZILIAN_STATES } from "@/components/DeputySearch/brazilianStates";
@@ -16,7 +16,7 @@ import { RecentVotes } from "@/components/RecentVotes/RecentVotes";
 import { SourceNote } from "@/components/SourceNote/SourceNote";
 import { SummaryMetrics, type SummaryMetric } from "@/components/SummaryMetrics/SummaryMetrics";
 import { YearSelector } from "@/components/YearSelector/YearSelector";
-import { loadDeputyProfile, loadDeputyYear, parseDeputyId } from "../deputyProfileData";
+import { loadDeputyYear, resolveProfileYear, type ResolvedProfile } from "../deputyProfileData";
 import styles from "./page.module.scss";
 
 // every ingestion runs at most once a day, and runs mark the pages stale through /api/revalidate
@@ -49,27 +49,9 @@ interface ProfilePageProps {
     params: Promise<{ id: string; ano?: string[] }>;
 }
 
-interface ResolvedProfile {
-    profile: DeputyProfile;
-    year: number | null;
-}
-
 async function resolveProfile(params: ProfilePageProps["params"]): Promise<ResolvedProfile | null> {
     const { id, ano } = await params;
-    const deputyId = parseDeputyId(id);
-    if (deputyId === null || (ano && ano.length > 1)) {
-        return null;
-    }
-    const profile = await loadDeputyProfile(deputyId);
-    if (!profile) {
-        return null;
-    }
-    const requestedYear = ano?.[0];
-    if (requestedYear === undefined) {
-        return { profile, year: profile.years[0] ?? null };
-    }
-    const year = Number(requestedYear);
-    return profile.years.includes(year) && String(year) === requestedYear ? { profile, year } : null;
+    return resolveProfileYear(id, ano);
 }
 
 function statePhrase(stateCode: string): string {
@@ -264,7 +246,7 @@ export default async function DeputyProfilePage({ params }: ProfilePageProps) {
                     {roleSentence(profile)} Esta página mostra os votos no plenário, a presença e o uso do dinheiro público.
                 </p>
                 <div className={styles.actions}>
-                    {year && profile.years.length > 1 && <YearSelector deputyId={profile.id} years={profile.years} selectedYear={year} />}
+                    {year && profile.years.length > 1 && <YearSelector basePath={`/deputados/${profile.id}`} years={profile.years} selectedYear={year} />}
                     <ListenButton text={listenText(profile, yearData, summaryMetrics)} />
                 </div>
             </section>
@@ -346,6 +328,17 @@ export default async function DeputyProfilePage({ params }: ProfilePageProps) {
                                     sourceUrl={QUOTA_URL}
                                     collectedAt={yearData.quota.collectedAt}
                                 />
+                                <Link
+                                    className={styles.more}
+                                    href={
+                                        yearData.year === profile.years[0]
+                                            ? `/deputados/${profile.id}/gastos`
+                                            : `/deputados/${profile.id}/gastos/${yearData.year}`
+                                    }
+                                >
+                                    Ver todos os gastos de {yearData.year}
+                                    <ChevronRight aria-hidden="true" />
+                                </Link>
                             </>
                         ) : (
                             <p className={styles.empty}>Nenhum gasto da cota parlamentar registrado neste ano.</p>

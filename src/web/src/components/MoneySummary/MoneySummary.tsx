@@ -5,7 +5,6 @@ import styles from "./MoneySummary.module.scss";
 
 const wholeMoneyFormat = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const exactMoneyFormat = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
-const dateFormat = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" });
 
 function thousandsText(value: number): string {
     return `R$ ${Math.round(value / 1000).toLocaleString("pt-BR")} mil`;
@@ -19,23 +18,36 @@ function comparisonText(total: number, average: number, groupName: string): stri
     return `${wholeMoneyFormat.format(Math.abs(difference))} ${difference > 0 ? "a mais" : "a menos"} que a média ${groupName}.`;
 }
 
+// "2024-08-16" to "16/08/2024"
+function isoDateText(isoDate: string): string {
+    const [year, month, day] = isoDate.split("-");
+    return `${day}/${month}/${year}`;
+}
+
+// "Usa desde 16/08/2024", "Usou de 28/06/2024 a 10/03/2025 e de 01/07/2025 a 30/03/2026"
 function apartmentText(benefits: DeputyBenefits): string {
-    if (!benefits.functionalApartmentSince) {
-        return "Não usou";
+    const periods = benefits.functionalApartmentPeriods;
+    const closed = periods.filter((period) => period.until !== null);
+    const open = periods.find((period) => period.until === null);
+    const parts: string[] = [];
+    if (closed.length > 0) {
+        parts.push(`Usou ${closed.map((period) => `de ${isoDateText(period.since)} a ${isoDateText(period.until ?? "")}`).join(" e ")}`);
     }
-    if (!benefits.functionalApartmentUntil) {
-        return `Usa desde ${dateFormat.format(benefits.functionalApartmentSince)}`;
+    if (open) {
+        parts.push(`${parts.length > 0 ? "usa" : "Usa"} desde ${isoDateText(open.since)}`);
     }
-    return `Usou de ${dateFormat.format(benefits.functionalApartmentSince)} a ${dateFormat.format(benefits.functionalApartmentUntil)}`;
+    return parts.length > 0 ? parts.join("; ") : "Não usou";
 }
 
 interface QuotaSummaryProps {
     deputyName: string;
     statePhrase: string;
     quota: DeputyQuotaSpending;
+    // the spending page lists every category in its own block
+    showsTopCategories?: boolean;
 }
 
-export function QuotaSummary({ deputyName, statePhrase, quota }: Readonly<QuotaSummaryProps>) {
+export function QuotaSummary({ deputyName, statePhrase, quota, showsTopCategories = true }: Readonly<QuotaSummaryProps>) {
     const largest = Math.max(quota.total, quota.stateAverage, quota.chamberAverage);
     const bars = [
         { key: "own", label: deputyName, value: quota.total, isOwn: true },
@@ -65,7 +77,7 @@ export function QuotaSummary({ deputyName, statePhrase, quota }: Readonly<QuotaS
                     </div>
                 ))}
             </div>
-            {quota.topCategories.length > 0 && (
+            {showsTopCategories && quota.topCategories.length > 0 && (
                 <>
                     <h3 className={styles.subtitle}>Onde mais gastou</h3>
                     <ul className={styles.categories}>

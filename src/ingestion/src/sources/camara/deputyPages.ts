@@ -7,6 +7,10 @@ import { toUtcText } from "../toUtcText";
 import { fetchCamaraPage } from "./camaraClient";
 
 const WRITE_BATCH_SIZE = 1000;
+// a few pages failing after retries are skipped; more than this share, or a run of failures, means the site is down
+const MAX_SKIPPED_PAGE_SHARE = 0.05;
+const MAX_CONSECUTIVE_SKIPPED_PAGES = 3;
+const NO_OFFICE_BUDGET_SPENDING_NOTICE = "Ainda não há gasto registrado neste ano.";
 
 interface DeputyPage {
     deputyId: number;
@@ -31,6 +35,12 @@ interface ParsedDeputyPage {
     officeBudget: Map<string, string> | null;
 }
 
+// Brasília dates as yyyy-mm-dd; "until" is null while the apartment is in use
+interface FunctionalApartmentPeriod {
+    since: string;
+    until: string | null;
+}
+
 interface NormalizedDeputyAnnualSummary {
     deputyId: number;
     year: number;
@@ -43,8 +53,7 @@ interface NormalizedDeputyAnnualSummary {
     officeStaffCount: number;
     officeBudgetSpent: string | null;
     officeBudgetUnused: string | null;
-    functionalApartmentSince: Date | null;
-    functionalApartmentUntil: Date | null;
+    functionalApartmentPeriods: FunctionalApartmentPeriod[];
     housingAllowanceReceived: string;
     officialTripCount: number;
     hasDiplomaticPassport: boolean;
@@ -64,15 +73,10 @@ function cleanText(element: HTMLElement): string {
 }
 
 // "1.051.128,63" or "51.036" to "1051128.63" or "51036"
+// the page drops a trailing zero of the cents, for example "45.679,4" for R$ 45.679,40
 function parseBrazilianMoney(text: string): string | null {
-    const match = /^(\d{1,3}(?:\.\d{3})*)(?:,(\d{2}))?$/.exec(text);
-    return match ? `${match[1]!.replaceAll(".", "")}${match[2] ? `.${match[2]}` : ""}` : null;
-}
-
-// "16/04/2019" in Brasília time
-function parseBrazilianDate(text: string): Date {
-    const [day, month, year] = text.split("/");
-    return new Date(`${year}-${month}-${day}T00:00:00-03:00`);
+    const match = /^(\d{1,3}(?:\.\d{3})*)(?:,(\d{1,2}))?$/.exec(text);
+    return match ? `${match[1]!.replaceAll(".", "")}${match[2] ? `.${match[2].padEnd(2, "0")}` : ""}` : null;
 }
 
 function parseAttendanceSection(section: HTMLElement, url: string): AttendanceCounts {
@@ -113,20 +117,31 @@ function parseCount(page: ParsedDeputyPage, title: string, pattern: RegExp): num
     return Number(match[1]);
 }
 
-function parseFunctionalApartment(page: ParsedDeputyPage): { since: Date | null; until: Date | null } {
+// "16/04/2019" to "2019-04-16"
+function brazilianDateToIso(text: string): string {
+    const [day, month, year] = text.split("/");
+    return `${year}-${month}-${day}`;
+}
+
+// one or more periods in the same text, for example "Fez uso de 28/06/2024 a 10/03/2025 Fez uso de 01/07/2025 a 30/03/2026"
+function parseFunctionalApartment(page: ParsedDeputyPage): FunctionalApartmentPeriod[] {
     const value = requireBenefit(page, "Imóvel funcional");
-    if (value === "Não fez uso") {
-        return { since: null, until: null };
+    // past tense on finished years, present tense on the current one
+    if (value === "Não fez uso" || value === "Não faz uso") {
+        return [];
     }
-    const inUse = /^Faz uso desde (\d{2}\/\d{2}\/\d{4})$/.exec(value);
-    if (inUse) {
-        return { since: parseBrazilianDate(inUse[1]!), until: null };
-    }
-    const used = /^Fez uso de (\d{2}\/\d{2}\/\d{4}) a (\d{2}\/\d{2}\/\d{4})$/.exec(value);
-    if (used) {
-        return { since: parseBrazilianDate(used[1]!), until: parseBrazilianDate(used[2]!) };
-    }
-    throw new PageStructureError(page.url, `Imóvel funcional "${value}"`);
+    const periods = value.split(/ (?=Fez uso de |Faz uso desde )/).map((part) => {
+        const inUse = /^Faz uso desde (\d{2}\/\d{2}\/\d{4})$/.exec(part);
+        if (inUse) {
+            return { since: brazilianDateToIso(inUse[1]!), until: null };
+        }
+        const used = /^Fez uso de (\d{2}\/\d{2}\/\d{4}) a (\d{2}\/\d{2}\/\d{4})$/.exec(part);
+        if (used) {
+            return { since: brazilianDateToIso(used[1]!), until: brazilianDateToIso(used[2]!) };
+        }
+        throw new PageStructureError(page.url, `Imóvel funcional "${value}"`);
+    });
+    return periods.sort((first, second) => first.since.localeCompare(second.since));
 }
 
 function parseHousingAllowance(page: ParsedDeputyPage): string {
@@ -186,15 +201,36 @@ export function createCamaraDeputyPagesAdapter(
             }
 
             const pages: DeputyPage[] = [];
+            const skippedUrls: string[] = [];
+            let consecutiveSkips = 0;
+            let attemptedCount = 0;
             const pageCount = deputies.length * years.length;
             for (const year of years) {
                 for (const deputy of deputies) {
                     const url = `https://www.camara.leg.br/deputados/${deputy.id}?ano=${year}`;
-                    pages.push({ deputyId: deputy.id, year, url, html: await fetchCamaraPage(url) });
-                    if (pages.length % 100 === 0) {
-                        console.log(`camara-deputy-pages: fetched ${pages.length} of ${pageCount} pages`);
+                    attemptedCount++;
+                    try {
+                        pages.push({ deputyId: deputy.id, year, url, html: await fetchCamaraPage(url) });
+                        consecutiveSkips = 0;
+                    } catch (error) {
+                        // a page that keeps failing is skipped, so the earlier summary of that deputy is kept
+                        skippedUrls.push(url);
+                        consecutiveSkips++;
+                        console.log(`camara-deputy-pages: skipping ${url} after retries: ${(error as Error).message}`);
+                        if (consecutiveSkips >= MAX_CONSECUTIVE_SKIPPED_PAGES) {
+                            throw new Error(`camara-deputy-pages: ${consecutiveSkips} pages in a row failed, the website seems to be down`);
+                        }
+                    }
+                    if (attemptedCount % 100 === 0) {
+                        console.log(`camara-deputy-pages: fetched ${attemptedCount} of ${pageCount} pages`);
                     }
                 }
+            }
+            if (skippedUrls.length > pageCount * MAX_SKIPPED_PAGE_SHARE) {
+                throw new Error(`camara-deputy-pages: ${skippedUrls.length} of ${pageCount} pages failed, nothing was written`);
+            }
+            if (skippedUrls.length > 0) {
+                console.log(`camara-deputy-pages: skipped ${skippedUrls.length} pages that kept failing: ${skippedUrls.join(" ")}`);
             }
             return pages;
         },
@@ -247,12 +283,16 @@ export function createCamaraDeputyPagesAdapter(
                     }
                 }
 
-                const officeBudget = officeBudgetTable ? new Map<string, string>() : null;
+                let officeBudget = officeBudgetTable ? new Map<string, string>() : null;
                 for (const row of officeBudgetTable?.querySelectorAll("tbody tr") ?? []) {
                     const [label, total] = row.querySelectorAll("td").map(cleanText);
                     if (label !== undefined && total !== undefined) {
                         officeBudget?.set(label, total);
                     }
+                }
+                // early in the year the table can come without rows, only with this notice, which means no spending yet
+                if (officeBudgetTable && officeBudget?.size === 0 && cleanText(officeBudgetTable).includes(NO_OFFICE_BUDGET_SPENDING_NOTICE)) {
+                    officeBudget = null;
                 }
 
                 parsedPages.push({ ...page, plenary, committees, benefits, officeBudget });
@@ -265,7 +305,6 @@ export function createCamaraDeputyPagesAdapter(
         normalize(parsedRecords: ParsedDeputyPage[], context: CollectionContext): NormalizedDeputyAnnualSummary[] {
             return parsedRecords.map((page) => {
                 checkSalary(page);
-                const functionalApartment = parseFunctionalApartment(page);
                 return {
                     deputyId: page.deputyId,
                     year: page.year,
@@ -279,8 +318,7 @@ export function createCamaraDeputyPagesAdapter(
                     officeStaffCount: parseCount(page, "Pessoal de gabinete", /^(\d+) pessoas?(?: neste ano\b.*)?$/),
                     officeBudgetSpent: parseOfficeBudget(page, "Gasto"),
                     officeBudgetUnused: parseOfficeBudget(page, "Não utilizado"),
-                    functionalApartmentSince: functionalApartment.since,
-                    functionalApartmentUntil: functionalApartment.until,
+                    functionalApartmentPeriods: parseFunctionalApartment(page),
                     housingAllowanceReceived: parseHousingAllowance(page),
                     officialTripCount: parseCount(page, "Viagens em missão oficial", /^(\d+)$/),
                     hasDiplomaticPassport: parseDiplomaticPassport(page),
@@ -299,7 +337,7 @@ export function createCamaraDeputyPagesAdapter(
                         plenary_present_days, plenary_justified_absence_days, plenary_unjustified_absence_days,
                         committee_present_meetings, committee_justified_absences, committee_unjustified_absences,
                         office_staff_count, office_budget_spent, office_budget_unused,
-                        functional_apartment_since, functional_apartment_until,
+                        functional_apartment_periods,
                         housing_allowance_received, official_trip_count, has_diplomatic_passport,
                         source_url, collected_at
                     )
@@ -315,8 +353,7 @@ export function createCamaraDeputyPagesAdapter(
                         ${batch.map((row) => row.officeStaffCount)}::int[],
                         ${batch.map((row) => row.officeBudgetSpent)}::numeric[],
                         ${batch.map((row) => row.officeBudgetUnused)}::numeric[],
-                        ${batch.map((row) => (row.functionalApartmentSince ? toUtcText(row.functionalApartmentSince) : null))}::timestamp[],
-                        ${batch.map((row) => (row.functionalApartmentUntil ? toUtcText(row.functionalApartmentUntil) : null))}::timestamp[],
+                        ${batch.map((row) => JSON.stringify(row.functionalApartmentPeriods))}::jsonb[],
                         ${batch.map((row) => row.housingAllowanceReceived)}::numeric[],
                         ${batch.map((row) => row.officialTripCount)}::int[],
                         ${batch.map((row) => row.hasDiplomaticPassport)}::boolean[],
@@ -333,8 +370,7 @@ export function createCamaraDeputyPagesAdapter(
                         office_staff_count = EXCLUDED.office_staff_count,
                         office_budget_spent = EXCLUDED.office_budget_spent,
                         office_budget_unused = EXCLUDED.office_budget_unused,
-                        functional_apartment_since = EXCLUDED.functional_apartment_since,
-                        functional_apartment_until = EXCLUDED.functional_apartment_until,
+                        functional_apartment_periods = EXCLUDED.functional_apartment_periods,
                         housing_allowance_received = EXCLUDED.housing_allowance_received,
                         official_trip_count = EXCLUDED.official_trip_count,
                         has_diplomatic_passport = EXCLUDED.has_diplomatic_passport,
