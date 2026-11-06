@@ -3,9 +3,10 @@ const USER_AGENT = "polar-ingestion (open data platform, contact via repository)
 // network drops (dns or route failures) can last tens of seconds, so the last wait is 16 seconds
 const MAX_ATTEMPTS = 6;
 const MAX_RETRY_WAIT_MS = 16_000;
-// the website sometimes answers 500 for a few minutes, so a page is retried for about five minutes
-const PAGE_MAX_ATTEMPTS = 11;
-const PAGE_MAX_RETRY_WAIT_MS = 60_000;
+// the website and the API gateway sometimes answer 500 or 504 for a few minutes, so a request without a
+// fallback (a page or a list) is retried for about five minutes
+const LONG_OUTAGE_MAX_ATTEMPTS = 11;
+const LONG_OUTAGE_MAX_RETRY_WAIT_MS = 60_000;
 const PAUSE_BETWEEN_REQUESTS_MS = 100;
 // the website is not meant for automated access, so pages are requested slowly
 const PAUSE_BETWEEN_PAGES_MS = 1000;
@@ -45,8 +46,16 @@ async function fetchOk(url: string, accept: string): Promise<Response> {
     return response;
 }
 
-function fetchJsonWithRetry<Data>(url: string): Promise<CamaraResponse<Data>> {
-    return withRetry(async () => (await fetchOk(url, "application/json")).json() as Promise<CamaraResponse<Data>>);
+function fetchJsonWithRetry<Data>(
+    url: string,
+    maxAttempts = MAX_ATTEMPTS,
+    maxWaitMs = MAX_RETRY_WAIT_MS,
+): Promise<CamaraResponse<Data>> {
+    return withRetry(
+        async () => (await fetchOk(url, "application/json")).json() as Promise<CamaraResponse<Data>>,
+        maxAttempts,
+        maxWaitMs,
+    );
 }
 
 // the server closes long downloads midway, so each attempt resumes from the last byte received
@@ -95,7 +104,7 @@ export async function fetchCamaraBulkCsv(dataset: string, year?: number): Promis
 
 // html pages of the Câmara website, for data that has no API or bulk file
 export async function fetchCamaraPage(url: string): Promise<string> {
-    const page = await withRetry(async () => (await fetchOk(url, "text/html")).text(), PAGE_MAX_ATTEMPTS, PAGE_MAX_RETRY_WAIT_MS);
+    const page = await withRetry(async () => (await fetchOk(url, "text/html")).text(), LONG_OUTAGE_MAX_ATTEMPTS, LONG_OUTAGE_MAX_RETRY_WAIT_MS);
     await sleep(PAUSE_BETWEEN_PAGES_MS);
     return page;
 }
@@ -123,7 +132,11 @@ export async function fetchCamaraList<Item>(
     let nextUrl: string | undefined = buildCamaraUrl(path, { ...query, itens: 100 });
 
     while (nextUrl) {
-        const response: CamaraResponse<Item[]> = await fetchJsonWithRetry<Item[]>(nextUrl);
+        const response: CamaraResponse<Item[]> = await fetchJsonWithRetry<Item[]>(
+            nextUrl,
+            LONG_OUTAGE_MAX_ATTEMPTS,
+            LONG_OUTAGE_MAX_RETRY_WAIT_MS,
+        );
         items.push(...response.dados);
         nextUrl = response.links?.find((link) => link.rel === "next")?.href;
         await sleep(PAUSE_BETWEEN_REQUESTS_MS);
