@@ -1,14 +1,24 @@
+import Image from "next/image";
 import type { PlenaryVote, Statement, TimelineEntry } from "@polar/db/rulers";
 import { EditorialSources } from "@/components/EditorialSources/EditorialSources";
 import { GlossaryText } from "@/components/GlossaryText/GlossaryText";
 import styles from "./EditorialTimeline.module.scss";
 
 export function StatementText({ statement }: Readonly<{ statement: Statement }>) {
+    const { image } = statement;
     return (
         <div className={styles.statement}>
             <p>
                 {statement.lead && <strong>{statement.lead}</strong>} <GlossaryText text={statement.text} />
             </p>
+            {image && (
+                <figure className={styles.photo}>
+                    <Image src={image.file} alt={image.alt} width={320} height={451} sizes="(min-width: 600px) 320px, 80vw" />
+                    <figcaption>
+                        {image.caption} Foto: <a href={image.sourceUrl}>{image.author}</a>, licença {image.license}, via Wikimedia Commons.
+                    </figcaption>
+                </figure>
+            )}
             <EditorialSources sources={statement.sources} />
         </div>
     );

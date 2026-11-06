@@ -48,7 +48,12 @@ export function GlossaryList({ groups, idPrefix, termNames, currentId = null, se
                                 className={entry.id === currentId ? `${styles.entry} ${styles.current}` : styles.entry}
                                 tabIndex={-1}
                             >
-                                {entry.id === currentId && <p className={styles.flag}>Você tocou aqui</p>}
+                                {entry.id === currentId && (
+                                    <p className={styles.flag}>
+                                        <span className={styles.onTouch}>Você tocou aqui</span>
+                                        <span className={styles.onPointer}>Você clicou aqui</span>
+                                    </p>
+                                )}
                                 <dt className={styles.term}>
                                     {entry.term}
                                     {entry.alsoKnownAs && <span className={styles.alias}> {entry.alsoKnownAs}</span>}

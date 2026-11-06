@@ -6,7 +6,7 @@ export function GlossaryHint() {
     return (
         <p className={styles.hint}>
             <BookOpen aria-hidden="true" />
-            Palavras com fundo amarelo e o desenho de um livro têm explicação no glossário. Toque nelas.
+            Palavras com fundo amarelo e o desenho de um livro têm explicação no dicionário. Toque nelas.
         </p>
     );
 }

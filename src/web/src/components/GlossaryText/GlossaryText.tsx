@@ -28,7 +28,7 @@ export function GlossaryText({ text }: Readonly<GlossaryTextProps>) {
                         aria-haspopup="dialog"
                     >
                         {segment.label}
-                        <span className="visually-hidden"> (explicação no glossário)</span>
+                        <span className="visually-hidden"> (explicação no dicionário)</span>
                     </a>
                 ),
             )}

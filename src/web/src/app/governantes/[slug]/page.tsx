@@ -63,6 +63,7 @@ export default async function RulerDetailPage({ params }: RulerPageProps) {
         { id: "dados", label: "Dados" },
         { id: "antes", label: "Antes da presidência" },
         { id: "politicas", label: "Políticas" },
+        { id: "economia", label: "Economia" },
         { id: "mundo", label: "Outros países" },
         { id: "opiniao", label: "O que a população achava" },
         { id: "investigacoes", label: "Investigações" },
@@ -83,7 +84,7 @@ export default async function RulerDetailPage({ params }: RulerPageProps) {
                     <div className={styles.identity}>
                         {entry.portrait && (
                             <figure className={styles.portrait}>
-                                <Image src={entry.portrait.file} alt={`Retrato oficial de ${entry.name}`} width={240} height={320} sizes="140px" priority />
+                                <Image src={entry.portrait.file} alt={`Retrato de ${entry.name}`} width={240} height={320} sizes="140px" priority />
                             </figure>
                         )}
                         <div className={styles.names}>
@@ -141,6 +142,15 @@ export default async function RulerDetailPage({ params }: RulerPageProps) {
                     </h2>
                     <p className={styles.text}>{page.policies.intro}</p>
                     <EditorialTimeline entries={page.policies.entries} />
+                </section>
+
+                <section id="economia" className={styles.block} aria-labelledby="economia-title">
+                    <p className={styles.sectionKicker}>O governo</p>
+                    <h2 id="economia-title" className={styles.title}>
+                        A economia no período
+                    </h2>
+                    <p className={styles.text}>{page.economy.intro}</p>
+                    <EditorialTimeline entries={page.economy.entries} />
                 </section>
 
                 <section id="mundo" className={styles.block} aria-labelledby="mundo-title">
@@ -249,8 +259,7 @@ export default async function RulerDetailPage({ params }: RulerPageProps) {
                         com fonte, e opiniões sempre com o nome de quem as defende.
                     </p>
                     <p>
-                        <a href={`${REPOSITORY_URL}/commits/main/${page.contentFile}`}>Ver o histórico de alterações deste texto</a> no repositório
-                        público do polar.
+                        <a href={`${REPOSITORY_URL}/commits/main/${page.contentFile}`}>Ver quem alterou este texto e quando</a>, no GitHub.
                     </p>
                     {entry.portrait && (
                         <p>

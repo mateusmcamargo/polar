@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import type { ChamberSeat } from "@polar/db";
 import { PARTY_COLORS } from "@polar/db/party-colors";
+import { GlossaryText } from "@/components/GlossaryText/GlossaryText";
 import { NAV_FORWARD } from "@/components/PageTransition/PageTransition";
 import { PartyBadge } from "@/components/PartyBadge/PartyBadge";
 import { ScrollSlider } from "@/components/ScrollSlider/ScrollSlider";
@@ -277,8 +278,7 @@ export function Hemicycle({ seats, periodText, highlightedIds, highlightText, se
                         <strong>Como calculamos</strong>
                     </p>
                     <p>
-                        Em cada votação do Plenário, o líder do governo diz como os deputados aliados devem votar. Contamos em quantas dessas votações
-                        cada deputado votou do mesmo jeito.
+                        <GlossaryText text="Em cada votação do [[plenario|Plenário]], o líder do governo diz como os deputados aliados devem votar. Contamos em quantas dessas votações cada deputado votou do mesmo jeito." />
                     </p>
                     <p>&quot;Com o partido&quot; conta em quantas votações o deputado votou igual à maioria dos deputados do seu partido naquele dia.</p>
                     <p>

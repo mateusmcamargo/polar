@@ -28,8 +28,8 @@ const SHORTCUTS: readonly Shortcut[] = [
     },
     {
         href: "/glossario",
-        label: "Dicionário",
-        title: "Glossário",
+        label: "Palavras da política",
+        title: "Dicionário",
         text: "O significado das palavras difíceis da política, em linguagem simples.",
         icon: BookOpen,
     },

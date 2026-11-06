@@ -59,7 +59,7 @@ export function GlossaryContent({ idPrefix, currentId }: Readonly<GlossaryConten
                     <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Procurar uma palavra" autoComplete="off" />
                 </label>
                 {groups.length > 0 && (
-                    <nav className={styles.letters} aria-label="Letras do glossário">
+                    <nav className={styles.letters} aria-label="Letras do dicionário">
                         {groups.map((group) => (
                             <button key={group.letter} type="button" onClick={() => scrollListTo(document.getElementById(`${idPrefix}letra-${group.letter}`))}>
                                 {group.letter}
@@ -81,7 +81,7 @@ export function GlossaryContent({ idPrefix, currentId }: Readonly<GlossaryConten
                     <p className={styles.empty}>Nenhuma palavra encontrada. Tente escrever de outro jeito.</p>
                 )}
                 <p className={styles.more}>
-                    <a href={GLOSSARY_PAGE_PATH}>Abrir o glossário completo numa página</a>
+                    <a href={GLOSSARY_PAGE_PATH}>Abrir o dicionário completo numa página</a>
                 </p>
             </ScrollSlider>
         </div>

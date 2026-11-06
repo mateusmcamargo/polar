@@ -82,9 +82,9 @@ export function GlossaryDialog() {
             <header className={styles.header}>
                 <h2 id="glossary-title" className={styles.title}>
                     <BookOpen aria-hidden="true" />
-                    Glossário
+                    Dicionário
                 </h2>
-                <button type="button" className={styles.close} onClick={close} aria-label="Fechar o glossário">
+                <button type="button" className={styles.close} onClick={close} aria-label="Fechar o dicionário">
                     <X aria-hidden="true" />
                 </button>
             </header>

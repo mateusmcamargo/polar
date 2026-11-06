@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { GALLERY_ACCESSED_ON, GALLERY_SOURCES, RULER_GALLERY, RULER_PAGES } from "@polar/db/rulers";
+import { GlossaryHint } from "@/components/GlossaryHint/GlossaryHint";
+import { GlossaryText } from "@/components/GlossaryText/GlossaryText";
 import { ListenButton } from "@/components/ListenButton/ListenButton";
 import { PageMap } from "@/components/PageMap/PageMap";
 import { EditorialSources } from "@/components/EditorialSources/EditorialSources";
@@ -45,16 +47,18 @@ export default function RulersPage() {
                         Governantes do Brasil
                     </h1>
                     <p className={styles.lead}>
-                        Quem governou o país desde {FIRST_YEAR}, quando a corte portuguesa chegou ao Rio de Janeiro: rei, imperadores, regentes,
-                        presidentes e primeiros-ministros. Dos mais recentes para os mais antigos. Toque no retrato para ver a história de cada um.
+                        <GlossaryText
+                            text={`Quem governou o país desde ${FIRST_YEAR}, quando a corte portuguesa chegou ao Rio de Janeiro: rei, imperadores, [[regencia|regentes]], presidentes, [[junta-militar|juntas militares]] e primeiros-ministros. Dos mais recentes para os mais antigos. Toque no retrato para ver a história de cada um.`}
+                        />
                     </p>
+                    <GlossaryHint />
                     <dl className={styles.counts}>
                         <div>
                             <dt>governantes</dt>
                             <dd>{PEOPLE_COUNT}</dd>
                         </div>
                         <div>
-                            <dt>{PAGE_COUNT === 1 ? "história pronta" : "histórias prontas"}</dt>
+                            <dt>{PAGE_COUNT === 1 ? "com história completa" : "com histórias completas"}</dt>
                             <dd>{PAGE_COUNT}</dd>
                         </div>
                     </dl>
@@ -94,7 +98,7 @@ export default function RulersPage() {
                     <EditorialSources sources={GALLERY_SOURCES} />
                     <p className={styles.note}>Consultado em {ACCESSED_ON_TEXT}.</p>
                     <p className={styles.note}>
-                        Retratos: Wikimedia Commons. Os da República são, na maioria, fotos oficiais da Presidência; os do Império e da corte são
+                        Retratos: Wikimedia Commons. Os da República, que inclui a <GlossaryText text="[[nova-republica|Nova República]]" />, são, na maioria, fotos oficiais da Presidência; os do Império e da corte são
                         pinturas e fotos antigas em domínio público. O autor e a licença de cada retrato estão na página da pessoa. Juntas militares e
                         regências de três pessoas aparecem porque governaram o país no lugar de um presidente ou de um imperador. De 1961 a 1963 o
                         país teve presidente e primeiro-ministro ao mesmo tempo, por isso os dois aparecem.

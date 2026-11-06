@@ -63,6 +63,21 @@ div.list {
         font-weight: 700;
         letter-spacing: 0.14em;
         text-transform: uppercase;
+
+        // touch screens say "tocou", a mouse says "clicou"; css picks one, so the server html stays the same for everyone
+        span.onPointer {
+            display: none;
+        }
+
+        @media (pointer: fine) {
+            span.onTouch {
+                display: none;
+            }
+
+            span.onPointer {
+                display: inline;
+            }
+        }
     }
 
     dt.term {

@@ -294,7 +294,7 @@ export function DeputySearch({ deputies, chamber, sourceNote }: Readonly<DeputyS
                         type="search"
                         autoComplete="off"
                         spellCheck={false}
-                        placeholder="Exemplo: Maria, Silva, Joao"
+                        placeholder="Exemplo: Maria, Silva, João"
                         value={filters.name}
                         onChange={(event) => updateFilters({ name: event.target.value })}
                     />

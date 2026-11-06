@@ -123,7 +123,7 @@ export function SiteHeader() {
                     )}
                     <p className={styles.glossaryTitle}>
                         <BookOpen aria-hidden="true" />
-                        Glossário
+                        Dicionário
                     </p>
                 </div>
 
@@ -132,7 +132,7 @@ export function SiteHeader() {
                 <div className={styles.tools}>
                     <button type="button" className={styles.glossaryButton} onClick={(event) => openGlossary(null, event.currentTarget)}>
                         <BookOpen aria-hidden="true" />
-                        Glossário
+                        Dicionário
                     </button>
                     <ThemeToggle />
                 </div>
@@ -161,7 +161,7 @@ export function SiteHeader() {
                                     <button type="button" className={styles.menuRow} onClick={(event) => openGlossary(null, event.currentTarget)}>
                                         <BookOpen aria-hidden="true" />
                                         <span>
-                                            Glossário
+                                            Dicionário
                                             <span className={styles.hint}>O que significam as palavras difíceis</span>
                                         </span>
                                     </button>
