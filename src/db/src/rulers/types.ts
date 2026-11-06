@@ -6,11 +6,22 @@ import type { Source, Sources } from "../sources";
 
 export type { Source, Sources };
 
+// photo shown under a statement; the author and the license are always shown with it
+export interface StatementImage {
+    file: string;
+    alt: string;
+    caption: string;
+    author: string;
+    license: string;
+    sourceUrl: string;
+}
+
 export interface Statement {
     // short bold lead, such as the name of a law
     lead?: string;
     text: string;
     sources: Sources;
+    image?: StatementImage;
 }
 
 export interface TimelineEntry {
@@ -89,6 +100,8 @@ export interface RulerPage {
     facts: { rows: readonly FactRow[]; sources: Sources };
     before: readonly TimelineEntry[];
     policies: { intro: string; entries: readonly TimelineEntry[] };
+    // official economic indicators of the years in office, not tied to any law
+    economy: { intro: string; entries: readonly TimelineEntry[] };
     world: readonly TimelineEntry[];
     opinion: { intro: string; points: readonly PollPoint[]; note: string };
     cases: { intro: string; items: readonly Case[] };
