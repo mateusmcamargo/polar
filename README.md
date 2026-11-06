@@ -1,6 +1,6 @@
-# polar
+Obrigado, At.te# <img src="brand/readme-banner.svg" alt="polar" width="100%">
 
-**A política brasileira, clara e direta, na palma da mão.**
+**A política brasileira na palma da sua mão.**
 
 O polar é uma plataforma gratuita e comunitária que reúne, em um só lugar, informações sobre quem representa o eleitorado brasileiro e como essas pessoas decidem. Todos os dados vêm de fontes oficiais e públicas do governo federal, sempre acompanhados do link de origem e da data de coleta.
 
