@@ -1,0 +1,11 @@
+@use "mixins" as *;
+
+p.sources {
+    color: var(--color-fg-3);
+    font-size: var(--text-micro);
+
+    a {
+        @include text-link-target;
+        color: inherit;
+    }
+}

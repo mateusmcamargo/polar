@@ -1,0 +1,112 @@
+@use "mixins" as *;
+
+figure.chart {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: 0;
+
+    svg {
+        display: block;
+        width: 100%;
+        height: auto;
+    }
+
+    // phones draw the tall layout (360 × 320) and larger text, computers the wide one (640 × 240)
+    svg.wide {
+        display: none;
+
+        @include from("small") {
+            display: block;
+        }
+    }
+
+    svg.narrow {
+        @include from("small") {
+            display: none;
+        }
+
+        text.tick {
+            font-size: 14px;
+        }
+
+        text.value {
+            font-size: 16px;
+        }
+
+        polyline.line {
+            stroke-width: 3;
+        }
+    }
+
+    line.axis {
+        stroke: var(--color-line-3);
+    }
+
+    line.grid {
+        stroke: var(--color-line);
+    }
+
+    text.tick {
+        fill: var(--color-fg-3);
+        font-family: var(--font-sans);
+        font-size: 13px;
+    }
+
+    text.value {
+        fill: var(--color-fg);
+        font-family: var(--font-sans);
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    polyline.line {
+        fill: none;
+        stroke: var(--color-fg);
+        stroke-width: 2.5;
+    }
+
+    circle.dot {
+        fill: var(--color-fg);
+    }
+
+    figcaption.caption {
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+    }
+
+    details.table {
+        summary {
+            @include touch-target;
+            display: flex;
+            align-items: center;
+            font-size: var(--text-label);
+            font-weight: 600;
+            cursor: pointer;
+        }
+    }
+
+    div.tableScroll {
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: var(--text-label);
+        font-variant-numeric: tabular-nums;
+
+        th,
+        td {
+            padding: var(--space-2);
+            text-align: left;
+            vertical-align: top;
+            box-shadow: inset 0 1px 0 var(--color-line);
+        }
+
+        th {
+            color: var(--color-fg-3);
+            font-size: var(--text-micro);
+        }
+    }
+}

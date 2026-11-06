@@ -13,10 +13,17 @@ const nextConfig: NextConfig = {
     // standalone output keeps the app portable to any docker host, see ARCHITECTURE.md
     output: "standalone",
     outputFileTracingRoot: repositoryRoot,
-    // the share image reads its fonts from disk, which file tracing does not detect on its own
+    // the share images read their fonts and portraits from disk, which file tracing does not detect on its own
     outputFileTracingIncludes: {
         "/deputados/[id]/opengraph-image": ["./assets/fonts/*.ttf"],
+        "/governantes/[slug]/opengraph-image": ["./assets/fonts/*.ttf", "./public/rulers/*.jpg"],
     },
+    // the gallery was renamed from presidentes to governantes on 2026-11-05, old links keep working
+    redirects() {
+        return [{ source: "/presidentes/:path*", destination: "/governantes/:path*", permanent: true }];
+    },
+    // debug mode: DEBUG_MODE=true in the root .env shows the switch that turns the data off, see DESIGN.md
+    env: { NEXT_PUBLIC_DEBUG_MODE: process.env.DEBUG_MODE ?? "" },
     transpilePackages: ["@polar/db"],
     images: {
         // official deputy photos published by the Câmara

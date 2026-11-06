@@ -1,0 +1,235 @@
+@use "mixins" as *;
+@use "comic";
+
+main.page {
+    @include page-gutter;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-7);
+    max-width: calc(var(--content-width-reading) + 2 * var(--page-gutter));
+    margin: 0 auto;
+    padding-block: var(--space-5) var(--space-8);
+
+    nav.crumb {
+        margin-bottom: calc(-1 * var(--space-5));
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+
+        a {
+            @include text-link-target;
+            color: inherit;
+        }
+    }
+
+    section.intro {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-4);
+    }
+
+    div.identity {
+        display: grid;
+        grid-template-columns: 104px 1fr;
+        gap: var(--space-4);
+        align-items: start;
+
+        @include from("small") {
+            grid-template-columns: 140px 1fr;
+            gap: var(--space-5);
+        }
+    }
+
+    figure.portrait {
+        margin: 0;
+
+        img {
+            display: block;
+            width: 100%;
+            height: auto;
+            border: 3px solid var(--color-ink);
+            border-radius: var(--radius-small);
+        }
+    }
+
+    div.names {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+    }
+
+    p.kicker {
+        @include block-label-title;
+        color: var(--color-fg-3);
+    }
+
+    h1.name {
+        font-size: var(--text-title);
+    }
+
+    p.civil {
+        color: var(--color-fg-2);
+        font-size: var(--text-label);
+    }
+
+    div.tags {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-2);
+    }
+
+    span.tag {
+        display: inline-flex;
+        align-items: center;
+        min-height: 26px;
+        padding: 0 var(--space-2);
+        border-radius: var(--radius-tag);
+        box-shadow: inset 0 0 0 1px var(--color-line-2);
+        font-size: var(--text-micro);
+    }
+
+    p.lead {
+        max-width: 62ch;
+    }
+
+    section.block {
+        @include section-opening;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+        // clears the sticky header
+        scroll-margin-top: 88px;
+    }
+
+    p.sectionKicker {
+        @include section-kicker;
+    }
+
+    h2.title {
+        @include section-title;
+    }
+
+    h3.subtitle {
+        font-size: var(--text-label);
+    }
+
+    p.text {
+        max-width: 62ch;
+        color: var(--color-fg-2);
+    }
+
+    dl.facts {
+        @include hairline-border;
+        margin: 0;
+        border-radius: var(--radius-card);
+        background: var(--color-panel);
+
+        div {
+            display: grid;
+            gap: 2px;
+            padding: var(--space-3) var(--space-4);
+            box-shadow: inset 0 -1px 0 var(--color-line);
+
+            &:last-child {
+                box-shadow: none;
+            }
+
+            @include from("small") {
+                grid-template-columns: 12rem 1fr;
+                gap: var(--space-4);
+            }
+        }
+
+        dt {
+            color: var(--color-fg-3);
+            font-size: var(--text-micro);
+            font-weight: 600;
+        }
+
+        dd {
+            margin: 0;
+        }
+    }
+
+    div.decided {
+        @include hairline-border;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+        padding: var(--space-4);
+        border-radius: var(--radius-card);
+        background: var(--color-panel);
+
+        ul {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+            margin: 0;
+            padding-left: var(--space-5);
+        }
+    }
+
+    div.money {
+        @include hairline-border;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+        padding: var(--space-4);
+        border-radius: var(--radius-card);
+        background: var(--color-panel);
+    }
+
+    h3.moneyLabel {
+        @include block-label-title;
+        color: var(--color-fg-3);
+    }
+
+    div.figures {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-4);
+    }
+
+    p.figure {
+        color: var(--color-fg-2);
+
+        strong {
+            display: block;
+            color: var(--color-fg);
+            font-size: var(--text-figure);
+            line-height: 1.2;
+            font-variant-numeric: tabular-nums;
+        }
+    }
+
+    // the only comic block of the page
+    div.field {
+        @include comic.comic-field;
+        padding: var(--space-5);
+    }
+
+    ul.trivia {
+        @include comic.comic-panel;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+        margin: 0;
+        padding: var(--space-4) var(--space-4) var(--space-4) var(--space-6);
+    }
+
+    footer.review {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        padding-top: var(--space-3);
+        box-shadow: inset 0 1px 0 var(--color-line-2);
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+
+        a {
+            @include text-link-target;
+            color: inherit;
+        }
+    }
+}

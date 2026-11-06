@@ -1,0 +1,190 @@
+// the snake trail of the rulers page (DESIGN.md, "Era trail"): sizes are custom properties so the drawing in SnakeTrail.tsx reads them
+div.snake {
+    // the rail of a computer is narrower, so it asks for smaller nodes and rows; the surface is what the trail sits on
+    --trail-node: var(--trail-node-size, 44px);
+    --trail-row: var(--trail-row-size, 84px);
+    position: relative;
+    // the last label can be taller than its node, so the box leaves room under it
+    height: calc(var(--trail-row) * (var(--count) - 1) + var(--trail-node) + var(--space-6));
+
+    svg.path {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+        pointer-events: none;
+
+        path {
+            fill: none;
+            stroke-width: 2px;
+        }
+
+        path.track {
+            stroke: var(--color-line-2);
+        }
+
+        // pathLength is 1, so the offset is the share of the path still empty, set on the page by HeaderProvider
+        path.fill {
+            stroke: var(--color-ink);
+            stroke-dasharray: 1;
+            stroke-dashoffset: var(--trail-offset, 1);
+            transition: stroke-dashoffset var(--duration-fast) var(--ease-standard);
+        }
+    }
+
+    ol.nodes {
+        position: absolute;
+        inset: 0;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+
+        li {
+            position: absolute;
+            top: calc(var(--index) * var(--trail-row));
+            max-width: 100%;
+        }
+
+        li.left {
+            left: 0;
+        }
+
+        li.right {
+            right: 0;
+
+            a {
+                flex-direction: row-reverse;
+                text-align: right;
+            }
+
+            span.label {
+                align-items: flex-end;
+            }
+        }
+
+        a {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            min-height: var(--trail-node);
+            color: var(--color-fg-2);
+            text-decoration: none;
+
+            &:hover {
+                span.name {
+                    text-decoration: underline;
+                }
+
+                span.node {
+                    box-shadow: inset 0 0 0 2px var(--color-ink);
+                }
+            }
+        }
+
+        // round nodes with a fixed size: the era being read is filled and its inner ring pulses, the ones already passed have an ink outline
+        span.node {
+            display: grid;
+            position: relative;
+            flex: none;
+            place-items: center;
+            width: var(--trail-node);
+            height: var(--trail-node);
+            border-radius: 50%;
+            background: var(--trail-surface, var(--color-panel));
+            box-shadow: inset 0 0 0 2px var(--color-line-3);
+            color: var(--color-fg-3);
+            transition:
+                background-color var(--duration-fast) var(--ease-standard),
+                box-shadow var(--duration-fast) var(--ease-standard),
+                color var(--duration-fast) var(--ease-standard);
+
+            svg {
+                width: 22px;
+                height: 22px;
+            }
+        }
+
+        li.passed span.node {
+            box-shadow: inset 0 0 0 2px var(--color-ink);
+            color: var(--color-fg);
+        }
+
+        a[aria-current="location"] span.node {
+            background: var(--color-ink);
+            box-shadow: inset 0 0 0 2px var(--color-ink);
+            color: var(--color-bg);
+
+            // ring inside the node, so the size never changes
+            &::after {
+                content: "";
+                position: absolute;
+                inset: 3px;
+                border: 1px solid var(--color-bg);
+                border-radius: 50%;
+                pointer-events: none;
+                animation: trail-pulse 2s var(--ease-standard) infinite;
+            }
+        }
+
+        // the label hides the path behind it, so the text never sits on the line
+        span.label {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            padding: var(--space-1) var(--space-2);
+            background: var(--trail-surface, var(--color-panel));
+            line-height: 1.25;
+        }
+
+        span.name {
+            font-size: var(--text-label);
+        }
+
+        li.passed span.name {
+            color: var(--color-fg);
+        }
+
+        a[aria-current="location"] span.name {
+            color: var(--color-fg);
+            font-weight: 700;
+        }
+
+        span.years {
+            color: var(--color-fg-3);
+            font-size: var(--text-micro);
+        }
+
+        span.here {
+            align-self: flex-start;
+            margin-top: 2px;
+            padding: 0 6px;
+            background: var(--color-sticker);
+            color: var(--color-on-sticker);
+            font-size: var(--text-micro);
+            font-weight: 700;
+        }
+
+        li.right span.here {
+            align-self: flex-end;
+        }
+    }
+}
+
+@keyframes trail-pulse {
+    0%,
+    100% {
+        opacity: 0.15;
+    }
+
+    50% {
+        opacity: 0.9;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    div.snake ol.nodes a[aria-current="location"] span.node::after {
+        animation: none;
+        opacity: 0.6;
+    }
+}

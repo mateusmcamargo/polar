@@ -1,0 +1,131 @@
+@use "mixins" as *;
+
+// from computers: the map sits in the empty space left of the 720 px reading column of the profile pages
+nav.map {
+    display: none;
+
+    @include from("large") {
+        display: block;
+        position: fixed;
+        // under the sticky header
+        top: calc(60px + var(--space-5));
+        // right edge 24 px before the column, which is centered with its page gutter
+        right: calc(50% + (var(--content-width-reading) + 2 * var(--page-gutter)) / 2 + var(--space-5));
+        width: 176px;
+        max-height: calc(100dvh - 60px - 2 * var(--space-5));
+        overflow-y: auto;
+        // the snake trail of the rulers page sits on the page, and its nodes and rows are smaller than in the header panel
+        --trail-surface: var(--color-bg);
+        --trail-node-size: 40px;
+        --trail-row-size: 80px;
+    }
+
+    // the era trail of the rulers page: the gallery is wide, so the page reserves a 240 px column at its left (page.module.scss of
+    // /governantes) and the trail, 240 px minus the page gutter wide, is fixed over that column instead of beside a 720 px reading column
+    &.beside {
+        @include from("large") {
+            right: auto;
+            // the gap to the content equals the page gutter, which is also the space at the left, so the trail sits centered between the edge and the content
+            width: calc(240px - var(--page-gutter));
+            // on short windows the trail scrolls with the wheel; its scrollbar is hidden because it ate the right side and pushed the trail off center
+            scrollbar-width: none;
+            // the page is centered up to its maximum width (wide column, 240 px and gutters), so its content starts this far from the middle
+            left: max(var(--page-gutter), calc(50% - var(--content-width-wide) / 2 - 240px / 2));
+        }
+    }
+
+    // arrow pinned to the bottom of the scrolling trail, over a fade so the labels under it stay readable
+    span.more {
+        display: none;
+        position: sticky;
+        bottom: 0;
+        justify-content: center;
+        margin-top: calc(-1 * var(--space-6));
+        padding-top: var(--space-4);
+        background: linear-gradient(to bottom, transparent, var(--color-bg) 70%);
+        color: var(--color-ink);
+        pointer-events: none;
+
+        svg {
+            width: 24px;
+            height: 24px;
+            animation: map-more-bob 1.6s var(--ease-standard) infinite;
+        }
+    }
+
+    &.beside span.more {
+        @include from("large") {
+            display: flex;
+        }
+    }
+
+    p.title {
+        @include block-label-title;
+        padding-bottom: var(--space-3);
+        color: var(--color-fg-2);
+    }
+
+    ol.list {
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+        padding: 0;
+        // the rail that the current mark slides over
+        box-shadow: inset 3px 0 0 var(--color-line-2);
+        list-style: none;
+
+        a {
+            display: block;
+            position: relative;
+            padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
+            color: var(--color-fg-3);
+            font-size: var(--text-micro);
+            line-height: 1.3;
+            text-decoration: none;
+            transition: color var(--duration-fast) var(--ease-standard);
+
+            &::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                width: 3px;
+                background: var(--color-ink);
+                opacity: 0;
+                transition: opacity var(--duration-fast) var(--ease-standard);
+            }
+
+            &:hover {
+                color: var(--color-fg);
+                text-decoration: underline;
+            }
+
+            &[aria-current="location"] {
+                color: var(--color-fg);
+                font-weight: 700;
+
+                &::before {
+                    opacity: 1;
+                }
+            }
+        }
+    }
+}
+
+@keyframes map-more-bob {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(4px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    nav.map span.more svg {
+        animation: none;
+    }
+}

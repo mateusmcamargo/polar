@@ -1,0 +1,112 @@
+// chronological clock of the era trail (DESIGN.md, "Era trail"): year over a dial like a compass tape, with no box around it
+div.clock {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding-bottom: var(--space-4);
+
+    // the year sits at the exact center; "est" hangs at its left and does not count in the centering
+    div.readout {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: baseline;
+
+        span.est {
+            justify-self: end;
+            padding-right: var(--space-2);
+            color: var(--color-fg-3);
+            font-size: var(--text-micro);
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        span.year {
+            font-size: var(--text-figure);
+            font-variant-numeric: tabular-nums;
+            font-weight: 700;
+            line-height: 1;
+        }
+    }
+
+    // vertical swipes still scroll the panel; only horizontal ones reach the dial
+    div.dial {
+        position: relative;
+        height: 48px;
+        overflow: hidden;
+        cursor: grab;
+        touch-action: pan-y;
+        user-select: none;
+
+        &:active {
+            cursor: grabbing;
+        }
+    }
+
+    // the ends of the tape fade out
+    div.mask {
+        position: absolute;
+        inset: 0;
+        mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
+    }
+
+    div.tape {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        width: max-content;
+        height: 100%;
+        will-change: transform;
+
+        // the drawing keeps its own width, so the global limit on svg width does not squeeze the tape
+        svg {
+            display: block;
+            max-width: none;
+            overflow: visible;
+
+            path {
+                fill: none;
+            }
+
+            path.dot {
+                stroke: var(--color-line-2);
+                stroke-width: 2px;
+            }
+
+            path.mid {
+                stroke: var(--color-line-3);
+                stroke-width: 2px;
+            }
+
+            path.major {
+                stroke: var(--color-fg-3);
+                stroke-width: 2px;
+            }
+
+            text {
+                fill: var(--color-fg-3);
+                font-size: 11px;
+                font-variant-numeric: tabular-nums;
+                font-weight: 700;
+                text-anchor: middle;
+            }
+        }
+    }
+
+    div.needle {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 50%;
+        width: 2px;
+        margin-left: -1px;
+        background: var(--color-ink);
+        pointer-events: none;
+    }
+
+    p.hint {
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+        text-align: center;
+    }
+}

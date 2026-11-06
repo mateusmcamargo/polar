@@ -1,0 +1,83 @@
+@use "mixins" as *;
+
+ul.list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li.case {
+        @include hairline-border;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+        padding: var(--space-4);
+        border-radius: var(--radius-card);
+        background: var(--color-panel);
+    }
+
+    div.head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: var(--space-2);
+    }
+
+    h3.title {
+        font-size: var(--text-label);
+    }
+
+    // stage in neutral ink, never a vote color, so no stage reads as good or bad
+    span.stage {
+        display: inline-flex;
+        align-items: center;
+        min-height: 28px;
+        padding: 0 var(--space-2);
+        border-radius: var(--radius-tag);
+        box-shadow: inset 0 0 0 2px var(--color-fg);
+        font-size: var(--text-micro);
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    ol.steps {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-1);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+
+        li + li::before {
+            content: "→ ";
+        }
+
+        li[aria-current="step"] {
+            color: var(--color-fg);
+            font-weight: 700;
+        }
+    }
+
+    div.defense {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-1);
+        padding-left: var(--space-3);
+        box-shadow: inset 3px 0 0 var(--color-line-3);
+        color: var(--color-fg-2);
+    }
+
+    p.defenseLabel {
+        font-size: var(--text-micro);
+        font-weight: 700;
+    }
+}
+
+p.empty {
+    color: var(--color-fg-2);
+}
