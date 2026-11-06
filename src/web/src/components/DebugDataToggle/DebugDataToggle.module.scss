@@ -1,0 +1,60 @@
+@use "mixins" as *;
+
+// above the bottom navigation on phones
+button.toggle {
+    @include control;
+    position: fixed;
+    right: max(var(--space-4), env(safe-area-inset-right, 0px));
+    bottom: calc(var(--bottom-nav-height) + var(--space-3) + env(safe-area-inset-bottom, 0px));
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 0 var(--space-3);
+    box-shadow: inset 0 0 0 2px var(--color-ink);
+
+    @include from("medium") {
+        bottom: var(--space-4);
+    }
+
+    svg {
+        flex: none;
+        width: 20px;
+        height: 20px;
+    }
+
+    span.text {
+        font-size: var(--text-micro);
+        font-weight: 700;
+    }
+
+    // the position of the thumb and the text carry the state, not the color
+    span.track {
+        position: relative;
+        width: 40px;
+        height: 20px;
+        box-shadow: inset 0 0 0 2px var(--color-ink);
+    }
+
+    span.thumb {
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        width: 12px;
+        height: 12px;
+        background: var(--color-ink);
+        transition: transform var(--duration-fast) var(--ease-standard);
+
+        @media (prefers-reduced-motion: reduce) {
+            transition: none;
+        }
+    }
+
+    &[aria-checked="true"] span.track {
+        background: var(--color-panel-2);
+    }
+
+    &[aria-checked="true"] span.thumb {
+        transform: translateX(20px);
+    }
+}

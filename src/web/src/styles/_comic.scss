@@ -9,17 +9,29 @@
     }
 }
 
+// the ink outline and the offset shadow are both box shadows, so they never change the size of the box or of its content:
+// a comic panel takes exactly the space of the same box in the main standard
+$comic-outline: inset 0 0 0 3px var(--color-ink);
+
+@mixin comic-shadow($offset: 7px) {
+    box-shadow:
+        $comic-outline,
+        $offset $offset 0 var(--color-ink);
+}
+
 @mixin comic-panel {
     position: relative;
+    border: 0;
+    border-radius: 0;
     background-color: var(--color-panel);
     @include dot-texture(--comic-dot);
-    border: 3px solid var(--color-ink);
-    border-radius: 0;
-    box-shadow: 7px 7px 0 var(--color-ink);
+    @include comic-shadow;
     color: var(--color-fg);
 
     @media (forced-colors: active) {
         box-shadow: none;
+        outline: 3px solid CanvasText;
+        outline-offset: -3px;
     }
 }
 
@@ -41,4 +53,31 @@
     letter-spacing: 0.14em;
     font-size: var(--text-label);
     line-height: 1.6;
+}
+
+// a comic panel that is a link or a button: hover lifts it off its shadow, a press pushes it into the shadow. Only one
+// element moves at a time, so the shadow can follow with a transition
+@mixin comic-pressable($offset: 7px) {
+    transition:
+        transform var(--duration-fast) var(--ease-standard),
+        box-shadow var(--duration-fast) var(--ease-standard);
+
+    &:hover {
+        transform: translate(-2px, -2px);
+        @include comic-shadow($offset + 2px);
+    }
+
+    // the push into the shadow replaces the global press
+    &:active {
+        scale: none;
+        transform: translate(4px, 4px);
+        @include comic-shadow($offset - 4px);
+    }
+
+    @media (forced-colors: active) {
+        &:hover,
+        &:active {
+            box-shadow: none;
+        }
+    }
 }

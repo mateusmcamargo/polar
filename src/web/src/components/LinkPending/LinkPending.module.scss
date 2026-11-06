@@ -1,0 +1,31 @@
+// covers the link; hidden until the navigation takes longer than a quick tap, so fast navigations never flicker
+span.sweep {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    background: linear-gradient(90deg, transparent 30%, var(--color-line-2) 50%, transparent 70%) 0 0 / 300% 100%;
+    animation: sweep 1.2s linear infinite;
+    transition: opacity var(--duration-fast) var(--ease-standard);
+
+    &.pending {
+        opacity: 1;
+        transition-delay: 150ms;
+    }
+
+    // a still tint instead of the sweep
+    @media (prefers-reduced-motion: reduce) {
+        background: var(--color-line);
+        animation: none;
+    }
+}
+
+@keyframes sweep {
+    from {
+        background-position: 100% 0;
+    }
+
+    to {
+        background-position: 0 0;
+    }
+}

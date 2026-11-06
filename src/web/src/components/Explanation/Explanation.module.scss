@@ -27,17 +27,26 @@ details.explanation {
         flex-direction: column;
         gap: var(--space-2);
         max-width: 62ch;
-        margin: var(--space-3) 7px var(--space-3) 0;
+        margin-block: var(--space-3);
         padding: var(--space-4) var(--space-5);
+        // the content of a closed details stays rendered in some browsers, so the entry is an animation, not @starting-style
+        animation: balloon-in var(--duration-slide) var(--ease-out);
 
         &::before {
             content: "";
             position: absolute;
-            top: -17px;
+            top: -14px;
             left: 28px;
             border-style: solid;
             border-width: 0 12px 14px 0;
             border-color: transparent var(--color-ink) transparent transparent;
         }
+    }
+}
+
+@keyframes balloon-in {
+    from {
+        opacity: 0;
+        transform: translateY(calc(-1 * var(--slide-distance)));
     }
 }

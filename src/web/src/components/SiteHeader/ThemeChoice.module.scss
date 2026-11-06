@@ -1,0 +1,23 @@
+@use "mixins" as *;
+
+div.choice {
+    @include hairline-border(--color-line-3);
+    display: inline-flex;
+
+    button {
+        @include touch-target;
+        padding: 0 var(--space-4);
+        border: 0;
+        background: transparent;
+        color: var(--color-fg);
+        font: inherit;
+        font-size: var(--text-label);
+        cursor: pointer;
+
+        &[aria-pressed="true"] {
+            background: var(--color-ink);
+            color: var(--color-bg);
+            font-weight: 700;
+        }
+    }
+}

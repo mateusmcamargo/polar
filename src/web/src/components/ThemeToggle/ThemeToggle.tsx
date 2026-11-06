@@ -6,13 +6,24 @@ import styles from "./ThemeToggle.module.scss";
 
 export const THEME_STORAGE_KEY = "theme";
 
-function readEffectiveTheme(): "light" | "dark" {
+export type Theme = "light" | "dark";
+
+export function readEffectiveTheme(): Theme {
     const root = document.documentElement;
     const explicitTheme = root.getAttribute("data-theme");
     if (explicitTheme === "light" || explicitTheme === "dark") {
         return explicitTheme;
     }
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+export function applyTheme(theme: Theme) {
+    document.documentElement.setAttribute("data-theme", theme);
+    try {
+        localStorage.setItem(THEME_STORAGE_KEY, theme);
+    } catch {
+        // the choice still applies until the page is closed
+    }
 }
 
 export function ThemeToggle() {
@@ -29,13 +40,7 @@ export function ThemeToggle() {
     }, []);
 
     function toggleTheme() {
-        const nextTheme = readEffectiveTheme() === "dark" ? "light" : "dark";
-        document.documentElement.setAttribute("data-theme", nextTheme);
-        try {
-            localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
-        } catch {
-            // the choice still applies until the page is closed
-        }
+        applyTheme(readEffectiveTheme() === "dark" ? "light" : "dark");
     }
 
     // both icons are rendered and css shows the right one, so the markup is the same on server and client

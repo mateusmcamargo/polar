@@ -36,12 +36,17 @@ $breakpoints: (
     min-height: 44px;
 }
 
-// large search field shared by the home page and the deputy search
+// link inside a line of text: the padding grows the tap area to 24 px tall (WCAG 2.2 target size) without changing the line height
+@mixin text-link-target {
+    padding-block: 3px;
+}
+
+// search field of the deputy search (name and state), as tall as the other fields, with the search icon at the left
 @mixin search-input {
     @include hairline-border(--color-line-3);
     width: 100%;
-    min-height: 60px;
-    padding: 0 var(--space-4) 0 54px;
+    min-height: 44px;
+    padding: 0 var(--space-4) 0 44px;
     border: 0;
     border-radius: var(--radius-card);
     background: var(--color-panel);
@@ -80,10 +85,17 @@ $breakpoints: (
     font: inherit;
     font-size: var(--text-label);
     cursor: pointer;
-    transition: background-color var(--duration-fast) var(--ease-standard);
+    transition:
+        background-color var(--duration-fast) var(--ease-standard),
+        scale var(--duration-fast) var(--ease-standard);
 
     &:hover {
         background: var(--color-panel-2);
+    }
+
+    // a light press, the same as every other button (globals.scss)
+    &:active {
+        scale: 0.97;
     }
 }
 
@@ -97,20 +109,23 @@ $breakpoints: (
     box-shadow: inset 0 -1px 0 var(--color-line-2);
 }
 
+// the marker is drawn behind non breaking spaces, so it stays glued to the last word when a long label wraps
+// (the gradient has one color and hard edges, it only paints the square)
 @mixin block-label-title {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
+    display: block;
     font-size: var(--text-micro);
     font-weight: 700;
     letter-spacing: 0.14em;
     text-transform: uppercase;
 
     &::after {
-        content: "";
-        width: 6px;
-        height: 6px;
-        background: var(--color-ink);
+        content: "\00a0\00a0\00a0";
+        background: linear-gradient(var(--color-ink), var(--color-ink)) no-repeat right center / 6px 6px;
+
+        @media (forced-colors: active) {
+            content: "\00a0\25a0";
+            background: none;
+        }
     }
 }
 
@@ -123,5 +138,43 @@ $breakpoints: (
 
     strong {
         color: var(--color-fg);
+    }
+}
+
+// opening of a page section: a full width ink rule above a short kicker and the title, so it is clear where each section
+// starts (DESIGN.md, "Sections")
+@mixin section-opening {
+    padding-top: var(--space-5);
+    box-shadow: inset 0 3px 0 var(--color-ink);
+}
+
+@mixin section-kicker {
+    @include block-label-title;
+    margin-bottom: calc(-1 * var(--space-2));
+    color: var(--color-fg-2);
+}
+
+@mixin section-title {
+    font-size: var(--text-name);
+    font-weight: 700;
+
+    @include from("small") {
+        font-size: 1.5rem;
+    }
+}
+
+// row of items that scrolls sideways on phones instead of wrapping, used as the className of ScrollSlider, which draws the bar;
+// the items keep their size and the next one shows cut at the edge, which tells there is more to see. The padding keeps room
+// for the 2 px focus outline, which the scroll would clip
+@mixin horizontal-slider {
+    margin: -4px;
+    padding: 4px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 4px;
+
+    > * {
+        scroll-snap-align: start;
     }
 }

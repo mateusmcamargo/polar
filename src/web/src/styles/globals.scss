@@ -58,6 +58,58 @@ button {
     font: inherit;
 }
 
+// links and buttons change color gradually and a pressed button shrinks a little. The press uses the scale property, so it
+// adds to any transform of the component; a component that sets its own transition replaces this list
+a,
+button,
+summary {
+    transition:
+        color var(--duration-fast) var(--ease-standard),
+        background-color var(--duration-fast) var(--ease-standard),
+        text-decoration-color var(--duration-fast) var(--ease-standard),
+        text-underline-offset var(--duration-fast) var(--ease-standard),
+        scale var(--duration-fast) var(--ease-standard);
+}
+
+a:hover {
+    text-underline-offset: 5px;
+}
+
+button:not(:disabled):active {
+    scale: 0.97;
+}
+
+// native scrollbars of the page and of every scrolling list: thick, ink thumb on a light rail, the look of ScrollSlider.
+// Chromium and Safari read the ::-webkit-scrollbar rules, which also set the size; Firefox only reads the standard properties
+// (colors only: it keeps its own width and shape). They stay apart because Chromium ignores the ::-webkit-scrollbar rules once
+// scrollbar-color is set. Phones that draw overlay scrollbars keep their own
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+    background: var(--color-panel-2);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-ink);
+}
+
+::-webkit-scrollbar-corner {
+    background: var(--color-panel-2);
+}
+
+@supports not selector(::-webkit-scrollbar) {
+    * {
+        scrollbar-color: var(--color-ink) var(--color-panel-2);
+    }
+}
+
+// the page stays still while the phone header is open (SiteHeader)
+@media (max-width: 899px) {
+    html[data-header-open] {
+        overflow: hidden;
+    }
+}
+
 :focus-visible {
     outline: 2px solid var(--color-focus);
     outline-offset: 2px;
@@ -83,13 +135,128 @@ button {
     @include visually-hidden;
 }
 
+// entry animations: the reveal script of the root layout pauses them and plays each one once, when it comes into view.
+// Without that script they play at load, so the content always ends in place. fill: a bar grows from the left;
+// rise: a row or a card comes up a little; draw: a chart line
+[data-reveal="fill"] {
+    transform-origin: left center;
+    animation: reveal-fill var(--duration-fill) var(--ease-out) both;
+}
+
+[data-reveal="rise"] {
+    animation: reveal-rise var(--duration-slide) var(--ease-out) both;
+}
+
+// a chart line drawn from start to end; the line needs pathLength="1"
+[data-reveal="draw"] {
+    stroke-dasharray: 1;
+    animation: reveal-draw calc(2 * var(--duration-fill)) var(--ease-out) both;
+}
+
+@keyframes reveal-draw {
+    from {
+        stroke-dashoffset: 1;
+    }
+}
+
+@keyframes reveal-fill {
+    from {
+        transform: scaleX(0);
+    }
+}
+
+@keyframes reveal-rise {
+    from {
+        opacity: 0;
+        transform: translateY(var(--slide-distance));
+    }
+}
+
+// page changes (PageTransition): the content slides by direction, the header and the bottom navigation stay still
+::view-transition {
+    pointer-events: none;
+}
+
+::view-transition-group(site-header),
+::view-transition-group(bottom-nav) {
+    z-index: 100;
+    animation: none;
+}
+
+::view-transition-old(site-header),
+::view-transition-old(bottom-nav) {
+    display: none;
+}
+
+::view-transition-new(site-header),
+::view-transition-new(bottom-nav) {
+    animation: none;
+}
+
+::view-transition-old(.page-exit),
+::view-transition-old(.nav-forward),
+::view-transition-old(.nav-back) {
+    animation: page-out var(--duration-medium) var(--ease-standard) both;
+}
+
+::view-transition-new(.page-enter),
+::view-transition-new(.nav-forward),
+::view-transition-new(.nav-back) {
+    animation: page-in var(--duration-slide) var(--ease-out) var(--duration-fast) both;
+}
+
+::view-transition-old(.page-exit),
+::view-transition-new(.page-enter) {
+    --page-shift-x: 0px;
+    --page-shift-y: var(--slide-distance);
+}
+
+::view-transition-old(.nav-forward) {
+    --page-shift-x: calc(-1 * var(--slide-distance));
+}
+
+::view-transition-new(.nav-forward) {
+    --page-shift-x: var(--slide-distance);
+}
+
+::view-transition-old(.nav-back) {
+    --page-shift-x: var(--slide-distance);
+}
+
+::view-transition-new(.nav-back) {
+    --page-shift-x: calc(-1 * var(--slide-distance));
+}
+
+@keyframes page-out {
+    to {
+        opacity: 0;
+        transform: translate(var(--page-shift-x, 0px), 0);
+    }
+}
+
+@keyframes page-in {
+    from {
+        opacity: 0;
+        transform: translate(var(--page-shift-x, 0px), var(--page-shift-y, 0px));
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
     *::after {
         animation-duration: 0.01ms !important;
+        animation-delay: 0s !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
+        transition-delay: 0s !important;
         scroll-behavior: auto !important;
+    }
+
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+        animation-duration: 0s !important;
+        animation-delay: 0s !important;
     }
 }

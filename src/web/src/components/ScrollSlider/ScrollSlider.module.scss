@@ -1,0 +1,102 @@
+@use "mixins" as *;
+
+// the native scrollbar of the area gives way to the bar of the component
+div.slider {
+    min-width: 0;
+
+    div.viewport {
+        scrollbar-width: none;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+    }
+
+    div.track {
+        position: relative;
+        cursor: pointer;
+        touch-action: none;
+        user-select: none;
+
+        // the rail and the thumb paint their visible 12 px with ::before, the rest of the box is touch area
+        &::before {
+            content: "";
+            position: absolute;
+            background: var(--color-panel-2);
+            box-shadow: inset 0 0 0 1px var(--color-line-2);
+        }
+    }
+
+    div.thumb {
+        position: relative;
+        cursor: grab;
+
+        &::before {
+            content: "";
+            position: absolute;
+            background: var(--color-ink);
+        }
+
+        &:active {
+            cursor: grabbing;
+        }
+    }
+
+    @media (forced-colors: active) {
+        div.track::before {
+            outline: 1px solid CanvasText;
+        }
+
+        div.thumb::before {
+            background: CanvasText;
+        }
+    }
+}
+
+// below the area: 44 px tall to touch, the minimum touch target. Horizontal sliders are phone only: from 900 px their items wrap
+div.horizontal {
+    div.track {
+        height: 44px;
+
+        @include from("medium") {
+            display: none;
+        }
+
+        &::before {
+            inset: 16px 0;
+        }
+    }
+
+    div.thumb {
+        height: 100%;
+        // until the first measure sets the real width
+        width: 25%;
+
+        &::before {
+            inset: 16px 0;
+        }
+    }
+}
+
+// beside a list: 24 px wide (the WCAG minimum target), so the bar takes little of the row width on phones
+div.vertical {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    min-height: 0;
+
+    div.track {
+        width: 24px;
+
+        &::before {
+            inset: 0 0 0 12px;
+        }
+    }
+
+    div.thumb {
+        width: 100%;
+
+        &::before {
+            inset: 0 0 0 12px;
+        }
+    }
+}

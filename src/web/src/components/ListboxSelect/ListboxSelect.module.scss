@@ -1,0 +1,121 @@
+@use "mixins" as *;
+
+div.field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+
+    span.label {
+        color: var(--color-fg-2);
+        font-size: var(--text-micro);
+    }
+
+    div.box {
+        position: relative;
+    }
+
+    // the same box as the other fields (control mixin), with the chosen option inside
+    button.button {
+        @include control;
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        width: 100%;
+        padding: 0 var(--space-3);
+        text-align: left;
+
+        &[aria-expanded="true"] {
+            box-shadow: inset 0 0 0 2px var(--color-ink);
+        }
+    }
+
+    svg.chevron {
+        flex: none;
+        width: 20px;
+        height: 20px;
+        margin-left: auto;
+        color: var(--color-fg-3);
+    }
+
+    // the badge, the name and the count of an option, set by the parent
+    span.optionContent {
+        display: flex;
+        flex: 1;
+        align-items: center;
+        gap: var(--space-2);
+        min-width: 0;
+    }
+
+    // the ScrollSlider frame, open right below the button and over the content after it
+    div.popup {
+        position: absolute;
+        top: calc(100% + var(--space-1));
+        right: 0;
+        left: 0;
+        z-index: 20;
+        // keeps the ink outline visible beside the scroll bar
+        padding: 2px;
+        background: var(--color-panel);
+        box-shadow: inset 0 0 0 2px var(--color-ink);
+        // opens with a short drop, half the usual distance because it sits right below the button
+        transition:
+            opacity var(--duration-medium) var(--ease-out),
+            transform var(--duration-medium) var(--ease-out);
+
+        @starting-style {
+            opacity: 0;
+            transform: translateY(calc(-0.5 * var(--slide-distance)));
+        }
+    }
+
+    div.listbox {
+        max-height: min(360px, 50svh);
+        padding: var(--space-1) 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+
+        &:focus-visible {
+            outline: none;
+        }
+    }
+
+    div.groupName {
+        padding: var(--space-2) var(--space-3) var(--space-1);
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+    }
+
+    div.option {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        min-height: 44px;
+        padding: 0 var(--space-3);
+        font-size: var(--text-label);
+        cursor: pointer;
+    }
+
+    // the option under the keyboard or the pointer: fill and an ink bar at the left, not color alone
+    div.active {
+        background: var(--color-panel-2);
+        box-shadow: inset 4px 0 0 var(--color-ink);
+    }
+
+    div.option[aria-selected="true"] {
+        font-weight: 700;
+    }
+
+    svg.check {
+        flex: none;
+        width: 20px;
+        height: 20px;
+    }
+
+    @media (forced-colors: active) {
+        div.active {
+            outline: 2px solid Highlight;
+            outline-offset: -2px;
+        }
+    }
+}

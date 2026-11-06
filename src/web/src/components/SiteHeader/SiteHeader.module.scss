@@ -1,16 +1,420 @@
 @use "mixins" as *;
 
+// room for a panel that opens in the header: what is left between the bar and the bottom navigation
+$panel-room: calc(100dvh - var(--header-bar-height) - var(--bottom-nav-height) - env(safe-area-inset-bottom, 0px));
+
 header.header {
-    box-shadow: inset 0 -1px 0 var(--color-line);
+    --header-bar-height: 64px;
+
+    // the header sticks to the top at every width, with a light shadow that sets it apart from the page. Below 900 px its
+    // panels open under the bar; its own stacking context keeps the dark layer under the bar and over the page
+    position: sticky;
+    top: 0;
+    z-index: 25;
+    background: var(--color-panel);
+    box-shadow: var(--shadow-header);
 
     div.bar {
-        @include page-gutter;
+        position: relative;
+        display: flex;
+        align-items: stretch;
+        min-height: var(--header-bar-height);
+        padding-left: max(var(--page-gutter), env(safe-area-inset-left, 0px));
+        padding-right: env(safe-area-inset-right, 0px);
+        background: var(--color-panel);
+        box-shadow: inset 0 -1px 0 var(--color-line);
+
+        @include from("medium") {
+            @include page-gutter;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-5);
+            max-width: calc(var(--content-width-wide) + 2 * var(--page-gutter));
+            min-height: 60px;
+            margin: 0 auto;
+            background: transparent;
+        }
+    }
+
+    // the rail of the progress line, only on a page with a map
+    &[data-map="true"] div.bar {
+        box-shadow: inset 0 -3px 0 var(--color-line-2);
+
+        @include from("medium") {
+            box-shadow: none;
+        }
+    }
+
+    // the header line of computers spans the whole width, not only the bar
+    @include from("medium") {
+        box-shadow:
+            inset 0 -1px 0 var(--color-line),
+            var(--shadow-header);
+    }
+
+    div.left {
+        display: flex;
+        flex: 1;
+        align-items: stretch;
+        min-width: 0;
+
+        @include from("medium") {
+            flex: none;
+        }
+    }
+
+    // what the left side shows: the logo, the section being read, or the title of the glossary
+    div.brand {
+        display: flex;
+        align-items: center;
+    }
+
+    &[data-map="true"] div.brand,
+    &[data-panel="glossary"] div.brand {
+        display: none;
+
+        @include from("medium") {
+            display: flex;
+        }
+    }
+
+    button.where {
+        display: none;
+        flex: 1;
+        flex-direction: column;
+        justify-content: center;
+        min-width: 0;
+        padding: var(--space-1) var(--space-2) var(--space-1) 0;
+        border: 0;
+        background: transparent;
+        color: var(--color-fg);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+
+        &:hover {
+            background: var(--color-panel-2);
+        }
+
+        span.count {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+            color: var(--color-fg-3);
+            font-size: var(--text-micro);
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            font-variant-numeric: tabular-nums;
+
+            svg {
+                width: 16px;
+                height: 16px;
+                transition: rotate var(--duration-medium) var(--ease-standard);
+            }
+        }
+
+        span.name {
+            overflow: hidden;
+            font-weight: 700;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    }
+
+    &[data-map="true"]:not([data-panel="glossary"]) button.where {
+        display: flex;
+
+        @include from("medium") {
+            display: none;
+        }
+    }
+
+    &[data-panel="sections"] button.where span.count svg {
+        rotate: 180deg;
+    }
+
+    p.glossaryTitle {
+        display: none;
+        align-items: center;
+        gap: var(--space-2);
+        font-size: var(--text-name);
+        font-weight: 700;
+
+        svg {
+            width: 22px;
+            height: 22px;
+        }
+    }
+
+    &[data-panel="glossary"] p.glossaryTitle {
+        display: flex;
+
+        @include from("medium") {
+            display: none;
+        }
+    }
+
+    // computers: the glossary button and the theme button
+    div.tools {
+        display: none;
+
+        @include from("medium") {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+    }
+
+    button.glossaryButton {
+        @include control;
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-2);
+        padding: 0 var(--space-4);
+        font-weight: 600;
+
+        svg {
+            width: 20px;
+            height: 20px;
+        }
+    }
+
+    // phones: one button that opens the menu and turns into the way to close whatever is open
+    button.menuButton {
+        display: flex;
+        flex: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 68px;
+        border: 0;
+        box-shadow: inset 1px 0 0 var(--color-line-2);
+        background: transparent;
+        color: var(--color-fg);
+        font: inherit;
+        font-size: var(--text-micro);
+        font-weight: 600;
+        cursor: pointer;
+
+        &:hover {
+            background: var(--color-panel-2);
+        }
+
+        svg {
+            width: 26px;
+            height: 26px;
+        }
+
+        @include from("medium") {
+            display: none;
+        }
+    }
+
+    span.progress {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        height: 3px;
+        background: var(--color-ink);
+        transform: scaleX(var(--progress, 0));
+        transform-origin: left;
+
+        @include from("medium") {
+            display: none;
+        }
+    }
+
+    // panels: they open under the bar as if they were pulled out of the top of the screen. The row grows from 0 to the
+    // content while the content slides down from behind the bar, and a closed panel is hidden and inert
+    // they float over the page: out of the flow, so opening the header never pushes the content down
+    div.panels {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        left: 0;
+
+        @include from("medium") {
+            display: none;
+        }
+    }
+
+    div.panel {
+        display: grid;
+        grid-template-rows: 0fr;
+        background: var(--color-panel);
+        visibility: hidden;
+        transition:
+            grid-template-rows var(--duration-slide) var(--ease-out),
+            visibility 0s linear var(--duration-slide);
+    }
+
+    div.clip {
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    div.slide {
+        max-height: $panel-room;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        transform: translateY(-100%);
+        transition: transform var(--duration-slide) var(--ease-out);
+    }
+
+    &[data-panel="menu"] div.menuPanel,
+    &[data-panel="sections"] div.sectionsPanel,
+    &[data-panel="glossary"] div.glossaryPanel {
+        grid-template-rows: 1fr;
+        visibility: visible;
+        transition-delay: 0s;
+
+        div.slide {
+            transform: none;
+        }
+    }
+
+    // the glossary fills the room, and its list scrolls inside
+    div.glossarySlide {
+        display: flex;
+        flex-direction: column;
+        height: $panel-room;
+        overflow: hidden;
+    }
+
+    p.panelTitle {
+        @include block-label-title;
+        padding: var(--space-4) var(--space-4) var(--space-2);
+        color: var(--color-fg-2);
+    }
+
+    // the snake trail of the rulers page, inside the sections panel
+    div.trail {
+        padding: var(--space-2) var(--space-5) var(--space-5);
+    }
+
+    ul.menuList,
+    ol.sectionList {
+        margin: 0;
+        padding: 0 0 var(--space-3);
+        list-style: none;
+    }
+
+    button.menuRow {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        width: 100%;
+        min-height: 64px;
+        padding: 0 var(--space-4);
+        border: 0;
+        box-shadow: inset 0 -1px 0 var(--color-line);
+        background: transparent;
+        color: var(--color-fg);
+        font: inherit;
+        font-weight: 700;
+        text-align: left;
+        cursor: pointer;
+
+        &:hover {
+            background: var(--color-panel-2);
+        }
+
+        svg {
+            flex: none;
+            width: 24px;
+            height: 24px;
+        }
+
+        span.hint {
+            display: block;
+            color: var(--color-fg-3);
+            font-size: var(--text-micro);
+            font-weight: 400;
+        }
+    }
+
+    li.appearance {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: var(--space-5);
-        max-width: calc(var(--content-width-wide) + 2 * var(--page-gutter));
-        min-height: 60px;
-        margin: 0 auto;
+        gap: var(--space-3);
+        min-height: 64px;
+        padding: 0 var(--space-4);
+        box-shadow: inset 0 -1px 0 var(--color-line);
+    }
+
+    span.appearanceLabel {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        font-weight: 700;
+
+        svg {
+            width: 24px;
+            height: 24px;
+        }
+    }
+
+    ol.sectionList a {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-3);
+        min-height: 52px;
+        padding: 0 var(--space-4);
+        box-shadow: inset 0 -1px 0 var(--color-line);
+        color: var(--color-fg-2);
+        text-decoration: none;
+
+        &:hover {
+            background: var(--color-panel-2);
+        }
+
+        &[aria-current="location"] {
+            background: var(--color-panel-2);
+            color: var(--color-fg);
+            font-weight: 700;
+
+            &::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                width: 4px;
+                background: var(--color-ink);
+            }
+        }
+
+        span.here {
+            color: var(--color-fg-3);
+            font-size: var(--text-micro);
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+    }
+
+    // the dark layer covers the page under the bar while a panel is open
+    div.scrim {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        background: var(--color-scrim);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity var(--duration-slide) var(--ease-standard);
+
+        @include from("medium") {
+            display: none;
+        }
+    }
+
+    &:not([data-panel=""]) div.scrim {
+        opacity: 1;
+        pointer-events: auto;
     }
 }

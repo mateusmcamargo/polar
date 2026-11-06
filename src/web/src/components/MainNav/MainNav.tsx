@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Calendar, House, Users, Vote, type LucideIcon } from "lucide-react";
+import { Calendar, House, Landmark, Users, Vote, type LucideIcon } from "lucide-react";
 import styles from "./MainNav.module.scss";
 
 interface NavItem {
@@ -14,6 +14,7 @@ interface NavItem {
 const NAV_ITEMS: readonly NavItem[] = [
     { href: "/", label: "Início", icon: House },
     { href: "/deputados", label: "Deputados", icon: Users },
+    { href: "/governantes", label: "Governantes", icon: Landmark },
     { href: "/votacoes", label: "Votações", icon: Vote },
     { href: "/agenda", label: "Agenda", icon: Calendar },
 ];
@@ -31,7 +32,12 @@ export function MainNav({ placement }: Readonly<MainNavProps>) {
     const pathname = usePathname();
 
     return (
-        <nav className={placement === "top" ? styles.topNav : styles.bottomNav} aria-label="Principal">
+        <nav
+            className={placement === "top" ? styles.topNav : styles.bottomNav}
+            // the bottom bar stays still while the page changes (globals.scss)
+            style={placement === "bottom" ? { viewTransitionName: "bottom-nav" } : undefined}
+            aria-label="Principal"
+        >
             <ul className={styles.list}>
                 {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
                     <li key={href}>

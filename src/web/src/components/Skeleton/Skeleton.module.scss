@@ -1,0 +1,177 @@
+@use "mixins" as *;
+
+// the shape takes its size from custom properties set by the component, so every use stays fluid
+span.skeleton {
+    display: block;
+    flex: none;
+    width: var(--skeleton-width, 100%);
+    max-width: 100%;
+    background: linear-gradient(90deg, var(--color-panel-2) 30%, var(--color-line-2) 50%, var(--color-panel-2) 70%) 0 0 / 300% 100%;
+    animation: sweep 1.2s linear infinite;
+
+    @media (prefers-reduced-motion: reduce) {
+        background: var(--color-panel-2);
+        animation: none;
+    }
+
+    // forced colors drop backgrounds, the outline keeps the shape visible
+    @media (forced-colors: active) {
+        outline: 1px solid GrayText;
+        outline-offset: -1px;
+    }
+
+    &.text {
+        height: var(--skeleton-height, 1em);
+    }
+
+    &.block {
+        height: var(--skeleton-height, 3em);
+    }
+
+    &.circle {
+        height: auto;
+        aspect-ratio: 1;
+        border-radius: var(--radius-pill);
+    }
+}
+
+div.rows {
+    display: flex;
+    flex-direction: column;
+
+    &.divided div.row + div.row {
+        box-shadow: inset 0 1px 0 var(--color-line);
+    }
+
+    div.row {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        padding: var(--space-2) var(--space-3);
+
+        &.small {
+            min-height: 44px;
+        }
+
+        &.medium {
+            min-height: 56px;
+        }
+
+        &.large {
+            gap: var(--space-4);
+            min-height: 80px;
+        }
+    }
+
+    span.rowBody {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: var(--space-2);
+        min-width: 0;
+        font-size: var(--text-label);
+    }
+}
+
+span.meta {
+    font-size: var(--text-micro);
+}
+
+// the same frame as the year summary: hairlines above and below, one column on phones, side by side from small screens
+div.figures {
+    display: grid;
+    grid-template-columns: 1fr;
+    box-shadow:
+        inset 0 1px 0 var(--color-line-2),
+        inset 0 -1px 0 var(--color-line-2);
+
+    @include from("small") {
+        grid-template-columns: repeat(var(--skeleton-columns, 3), minmax(0, 1fr));
+    }
+
+    div.figure {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        padding-block: var(--space-4);
+        font-size: var(--text-label);
+
+        & + div.figure {
+            box-shadow: inset 0 1px 0 var(--color-line);
+        }
+
+        @include from("small") {
+            padding-inline: var(--space-4) 0;
+
+            &:first-child {
+                padding-left: 0;
+            }
+
+            & + div.figure {
+                padding-left: var(--space-4);
+                box-shadow: inset 1px 0 0 var(--color-line);
+            }
+        }
+    }
+
+    span.figureNumber {
+        font-size: var(--text-figure);
+    }
+}
+
+div.bars {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    font-size: var(--text-micro);
+
+    div.bar {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: var(--space-3);
+    }
+}
+
+div.stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+div.controls {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+
+    @include from("small") {
+        grid-template-columns: repeat(var(--skeleton-columns, 3), minmax(0, 1fr));
+    }
+
+    span.control {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-1);
+    }
+}
+
+span.areaFrame {
+    display: block;
+    width: 100%;
+    max-width: var(--skeleton-max-width, 100%);
+    margin-inline: auto;
+
+    span.area {
+        aspect-ratio: var(--skeleton-ratio, 16 / 9);
+    }
+}
+
+@keyframes sweep {
+    from {
+        background-position: 100% 0;
+    }
+
+    to {
+        background-position: 0 0;
+    }
+}
