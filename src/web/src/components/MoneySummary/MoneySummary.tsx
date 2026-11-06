@@ -1,6 +1,7 @@
 import type { DeputyBenefits, DeputyQuotaSpending } from "@polar/db";
 import { DEPUTY_SALARY } from "@polar/db/deputy-salary";
 import { EXPENSE_TYPE_LABELS } from "./expenseTypeLabels";
+import { Skeleton, SkeletonBars, SkeletonRows, SkeletonStack } from "@/components/Skeleton/Skeleton";
 import styles from "./MoneySummary.module.scss";
 
 const wholeMoneyFormat = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
@@ -71,7 +72,7 @@ export function QuotaSummary({ deputyName, statePhrase, quota, showsTopCategorie
                     <div key={bar.key} className={bar.isOwn ? styles.own : undefined}>
                         <span>{bar.label}</span>
                         <span className={styles.track}>
-                            <i style={{ width: `${largest === 0 ? 0 : (bar.value / largest) * 100}%` }} />
+                            <i data-reveal="fill" style={{ width: `${largest === 0 ? 0 : (bar.value / largest) * 100}%` }} />
                         </span>
                         <span>{thousandsText(bar.value)}</span>
                     </div>
@@ -86,7 +87,7 @@ export function QuotaSummary({ deputyName, statePhrase, quota, showsTopCategorie
                                 <span>{EXPENSE_TYPE_LABELS[category.expenseTypeCode] ?? category.description}</span>
                                 <span>{wholeMoneyFormat.format(category.total)}</span>
                                 <span className={styles.line} aria-hidden="true">
-                                    <i style={{ width: `${quota.total <= 0 ? 0 : Math.max(0, (category.total / quota.total) * 100)}%` }} />
+                                    <i data-reveal="fill" style={{ width: `${quota.total <= 0 ? 0 : Math.max(0, (category.total / quota.total) * 100)}%` }} />
                                 </span>
                             </li>
                         ))}
@@ -143,4 +144,20 @@ export function BenefitList({ benefits }: Readonly<BenefitListProps>) {
             </div>
         </dl>
     );
+}
+
+// the total, the three comparison bars and, on the profile, the largest expense types while they load
+export function QuotaSummarySkeleton({ showsTopCategories = true }: Readonly<{ showsTopCategories?: boolean }>) {
+    return (
+        <SkeletonStack>
+            <Skeleton width="8em" height="var(--text-figure)" />
+            <SkeletonBars count={3} />
+            {showsTopCategories && <SkeletonRows count={3} hasValue hasTrack />}
+        </SkeletonStack>
+    );
+}
+
+// the benefits of the office while they load
+export function BenefitListSkeleton() {
+    return <SkeletonRows count={5} hasValue />;
 }

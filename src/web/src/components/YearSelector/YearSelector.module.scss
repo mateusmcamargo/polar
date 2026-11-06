@@ -16,6 +16,8 @@ div.selector {
 
         a {
             @include touch-target;
+            // holds the LinkPending sweep
+            position: relative;
             display: grid;
             min-width: 72px;
             padding: 0 var(--space-4);

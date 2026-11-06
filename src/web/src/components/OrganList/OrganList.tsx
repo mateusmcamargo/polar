@@ -1,5 +1,7 @@
 import type { DeputyOrganRow } from "@polar/db";
+import { ScrollSlider } from "@/components/ScrollSlider/ScrollSlider";
 import { shortOrganName } from "./shortOrganName";
+import { SkeletonRows } from "@/components/Skeleton/Skeleton";
 import styles from "./OrganList.module.scss";
 
 const dateFormat = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" });
@@ -24,7 +26,7 @@ function OrganRows({ rows, isPast }: Readonly<{ rows: DeputyOrganRow[]; isPast: 
             {rows.map((row) => {
                 const organName = shortOrganName(row.name);
                 return (
-                    <li key={row.organId}>
+                    <li key={row.organId} data-reveal="rise">
                         <span className={styles.name}>{organName.name}</span>
                         <span className={styles.roles}>
                             {sortRoles(row.roles).map((role) => (
@@ -70,11 +72,16 @@ export function OrganList({ currentOrgans, pastOrgans }: Readonly<OrganListProps
                 <details className={styles.past}>
                     <summary>Comissões anteriores ({pastRows.length})</summary>
                     {pastRows.length >= SCROLL_HINT_MIN_ROWS && <p className={styles.hint}>Role a lista para ver todos os nomes.</p>}
-                    <div className={styles.scroll} tabIndex={0} role="region" aria-label="Comissões anteriores">
+                    <ScrollSlider direction="vertical" className={styles.scroll} tabIndex={0} role="region" aria-label="Comissões anteriores">
                         <OrganRows rows={pastRows} isPast />
-                    </div>
+                    </ScrollSlider>
                 </details>
             )}
         </div>
     );
+}
+
+// committees while they load: a name with its subject and the role at the right
+export function OrganListSkeleton() {
+    return <SkeletonRows count={4} hasMeta hasValue />;
 }

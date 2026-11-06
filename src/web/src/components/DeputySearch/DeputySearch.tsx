@@ -1,13 +1,20 @@
 "use client";
 
-import { useMemo, useSyncExternalStore, type ReactNode } from "react";
+import { startTransition, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronDown, ChevronRight, Search, X } from "lucide-react";
-import type { DeputySearchEntry } from "@polar/db";
+import { ChevronRight, Search, X } from "lucide-react";
+import type { ChamberSeat, DeputySearchEntry } from "@polar/db";
 import { PARTY_COLORS } from "@polar/db/party-colors";
+import { Hemicycle, HemicycleSkeleton } from "@/components/Hemicycle/Hemicycle";
+import { useDataEnabled } from "@/components/DebugDataToggle/debugData";
+import { ListboxSelect, type ListboxOption } from "@/components/ListboxSelect/ListboxSelect";
+import { LinkPending } from "@/components/LinkPending/LinkPending";
+import { NAV_FORWARD } from "@/components/PageTransition/PageTransition";
 import { PartyBadge } from "@/components/PartyBadge/PartyBadge";
-import { StateMap } from "@/components/StateMap/StateMap";
+import { ScrollSlider } from "@/components/ScrollSlider/ScrollSlider";
+import { Skeleton, SkeletonRows, SkeletonStatus } from "@/components/Skeleton/Skeleton";
+import { StateMap, StateMapSkeleton } from "@/components/StateMap/StateMap";
 import { BRAZILIAN_REGIONS, BRAZILIAN_STATES, FEDERAL_DISTRICT_CODE, inState, ofState, stateName } from "./brazilianStates";
 import { matchesOnlyCivilName, normalizeSearchText, searchByName, splitSearchTokens } from "./searchDeputies";
 import styles from "./DeputySearch.module.scss";
@@ -15,6 +22,8 @@ import styles from "./DeputySearch.module.scss";
 const SEATS_IN_CHAMBER = 513;
 const NO_PARTY_ACRONYM = "S.PART.";
 const LIST_HINT_MIN_ROWS = 8;
+// rows in the server html and in hydration; the list box shows about eight, the rest render right after, without blocking taps
+const FIRST_RENDER_ROWS = 24;
 
 interface Filters {
     name: string;
@@ -60,6 +69,15 @@ function subscribeToUrl(onChange: () => void): () => void {
 
 function partyLabel(acronym: string): string {
     return acronym === NO_PARTY_ACRONYM ? "Sem partido" : acronym;
+}
+
+// state search of the phones: a state matches by the start of any word of its name, without accents ("sul" finds Rio Grande do
+// Sul), or by the start of its abbreviation
+function matchesStateQuery(code: string, query: string): boolean {
+    const normalizedQuery = normalizeSearchText(query).trim();
+    return (
+        normalizedQuery === "" || ` ${normalizeSearchText(stateName(code))}`.includes(` ${normalizedQuery}`) || code.toLowerCase().startsWith(normalizedQuery)
+    );
 }
 
 function deputiesWord(count: number): string {
@@ -125,26 +143,42 @@ function HighlightedName({ name, tokens }: Readonly<{ name: string; tokens: stri
     return <>{pieces}</>;
 }
 
-interface DeputySearchProps {
-    deputies: DeputySearchEntry[];
+interface ChamberData {
+    seats: ChamberSeat[];
+    periodText: string;
     sourceNote: ReactNode;
 }
 
-export function DeputySearch({ deputies, sourceNote }: Readonly<DeputySearchProps>) {
+interface DeputySearchProps {
+    deputies: DeputySearchEntry[];
+    chamber: ChamberData;
+    sourceNote: ReactNode;
+}
+
+export function DeputySearch({ deputies, chamber, sourceNote }: Readonly<DeputySearchProps>) {
     // the page is prerendered without query string (server snapshot), the url filters apply after hydration
-    const search = useSyncExternalStore(subscribeToUrl, () => window.location.search, () => "");
+    const search = useSyncExternalStore(
+        subscribeToUrl,
+        () => window.location.search,
+        () => "",
+    );
     const filters = useMemo(() => parseFilters(search), [search]);
+    const [stateQuery, setStateQuery] = useState("");
+    const regionsRef = useRef<HTMLDivElement>(null);
+    // back to the first region after the filter changes; it runs after the render, so scroll snapping cannot pull the slider
+    // back to a button that is now hidden
+    useEffect(() => {
+        regionsRef.current?.scrollTo({ left: 0 });
+    }, [stateQuery]);
+    const hasStateMatch = BRAZILIAN_REGIONS.some((region) => region.stateCodes.some((code) => matchesStateQuery(code, stateQuery)));
 
     function updateFilters(changes: Partial<Filters>) {
         writeFiltersToUrl({ ...filters, ...changes });
     }
 
-    const officePool = useMemo(
-        () => deputies.filter((deputy) => !filters.onlyInOffice || deputy.isInOffice),
-        [deputies, filters.onlyInOffice],
-    );
+    const officePool = useMemo(() => deputies.filter((deputy) => !filters.onlyInOffice || deputy.isInOffice), [deputies, filters.onlyInOffice]);
     const partyPool = useMemo(
-        () => officePool.filter((deputy) => !filters.partyAcronym || deputy.partyAcronym === filters.partyAcronym),
+        () => officePool.filter((deputy) => !filters.partyAcronym || (deputy.partyAcronym ?? NO_PARTY_ACRONYM) === filters.partyAcronym),
         [officePool, filters.partyAcronym],
     );
 
@@ -176,17 +210,75 @@ export function DeputySearch({ deputies, sourceNote }: Readonly<DeputySearchProp
     // similar matches do not contain the typed words, so nothing is underlined
     const tokens = isSimilarMatch ? [] : searchTokens;
     const partyText = filters.partyAcronym ? ` do ${partyLabel(filters.partyAcronym)}` : "";
+    // the badge is its own element in each option; the count follows the other filters, like the map
+    const partySelectOptions: ListboxOption[] = [
+        { value: "", text: "Todos os partidos", content: "Todos os partidos" },
+        ...partyOptions.map(([acronym, count]) => ({
+            value: acronym,
+            text: partyLabel(acronym),
+            content: (
+                <>
+                    <PartyBadge acronym={acronym} />
+                    <span className={styles.optionCount}>
+                        {count} {deputiesWord(count)}
+                    </span>
+                </>
+            ),
+        })),
+    ];
+    const stateSelectOptions: ListboxOption[] = [
+        { value: "", text: "Todos os estados", content: "Todos os estados" },
+        ...BRAZILIAN_REGIONS.flatMap((region) =>
+            region.stateCodes.map((code) => ({
+                value: code,
+                text: stateName(code),
+                group: region.name,
+                content: (
+                    <>
+                        <span className={styles.stateCode}>{code}</span>
+                        <span className={styles.optionName}>{stateName(code)}</span>
+                        <span className={styles.optionCount}>{countsByState[code] ?? 0}</span>
+                    </>
+                ),
+            })),
+        ),
+    ];
+
     const selectedCount = filters.stateCode ? (countsByState[filters.stateCode] ?? 0) : partyPool.length;
 
     let emptyAction: { label: string; changes: Partial<Filters> } | null = null;
     if (filters.stateCode) {
-        emptyAction = { label: "Procurar em todos os estados", changes: { stateCode: "" } };
+        emptyAction = {
+            label: "Procurar em todos os estados",
+            changes: { stateCode: "" },
+        };
     } else if (filters.partyAcronym) {
-        emptyAction = { label: "Procurar em todos os partidos", changes: { partyAcronym: "" } };
+        emptyAction = {
+            label: "Procurar em todos os partidos",
+            changes: { partyAcronym: "" },
+        };
     } else if (filters.onlyInOffice) {
-        emptyAction = { label: "Incluir quem saiu do cargo", changes: { onlyInOffice: false } };
+        emptyAction = {
+            label: "Incluir quem saiu do cargo",
+            changes: { onlyInOffice: false },
+        };
     }
     const where = filters.stateCode ? ` ${inState(filters.stateCode)}` : "";
+
+    // the chamber follows the same filters as the list; deputies out of office have no seat, so they never light one
+    const hasFilter = Boolean(filters.name.trim() || filters.stateCode || filters.partyAcronym);
+    const highlightedIds = useMemo(() => (hasFilter ? new Set(results.map((deputy) => deputy.id)) : null), [hasFilter, results]);
+
+    // the 513 rows were most of the html and of the hydration work, which kept taps waiting on phones
+    const isDataEnabled = useDataEnabled();
+    const [isListComplete, setIsListComplete] = useState(false);
+    useEffect(() => {
+        startTransition(() => setIsListComplete(true));
+    }, []);
+    const shownResults = isListComplete ? results : results.slice(0, FIRST_RENDER_ROWS);
+    const typedName = filters.name.trim();
+    const nameText = typedName ? (isSimilarMatch ? ` com nome parecido com “${typedName}”` : ` com “${typedName}” no nome`) : "";
+    const highlightText = `deputados${partyText}${filters.stateCode ? ` ${ofState(filters.stateCode)}` : ""}${nameText}`;
 
     return (
         <>
@@ -216,65 +308,143 @@ export function DeputySearch({ deputies, sourceNote }: Readonly<DeputySearchProp
             </div>
 
             <div className={styles.layout}>
-                <section className={styles.places} aria-labelledby="places-title">
+                <section className={styles.chamber} aria-labelledby="chamber-title">
                     <div className={styles.blockLabel}>
-                        <h2 id="places-title" className={styles.blockTitle}>
-                            Estados
+                        <h2 id="chamber-title" className={styles.blockTitle}>
+                            Composição da Câmara
                         </h2>
-                        <span className={styles.blockCount}>{filters.stateCode ? <strong>{stateName(filters.stateCode)}</strong> : "Todos"}</span>
-                    </div>
-
-                    <div className={styles.mapArea}>
-                        <StateMap
-                            countsByState={countsByState}
-                            selectedStateCode={filters.stateCode}
-                            legendTitle={`Número de deputados${partyText} em cada estado`}
-                            scaleColor={PARTY_COLORS[filters.partyAcronym]?.color}
-                            onSelectState={(code) => updateFilters({ stateCode: filters.stateCode === code ? "" : code })}
-                        />
-                    </div>
-
-                    <div className={styles.figure} aria-live="polite">
-                        <span className={styles.figureNumber}>{selectedCount.toLocaleString("pt-BR")}</span>
-                        <span className={styles.figureText}>
-                            {deputiesWord(selectedCount)}
-                            {partyText} {filters.stateCode ? ofState(filters.stateCode) : placesText(countsByState)}
+                        <span className={styles.blockCount}>
+                            <strong>{chamber.seats.length}</strong> cadeiras
                         </span>
-                        {!filters.partyAcronym && (
-                            <p className={styles.figureNote}>
-                                {filters.stateCode &&
-                                    filters.onlyInOffice &&
-                                    `${((selectedCount / SEATS_IN_CHAMBER) * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% das ${SEATS_IN_CHAMBER} vagas. `}
-                                Cada estado tem de 8 a 70 vagas, conforme o tamanho da população.
-                            </p>
+                    </div>
+                    <p className={styles.chamberLead}>
+                        Cada quadrado é um deputado, na cor do seu partido. Os partidos estão em ordem de quanto votaram como o governo orientou.
+                    </p>
+                    <div className={styles.chamberDrawing}>
+                        {isDataEnabled ? (
+                            <Hemicycle
+                                seats={chamber.seats}
+                                periodText={chamber.periodText}
+                                highlightedIds={highlightedIds}
+                                highlightText={highlightText}
+                                selectedAcronym={filters.partyAcronym}
+                                onSelectParty={(acronym) => updateFilters({ partyAcronym: acronym })}
+                            />
+                        ) : (
+                            <>
+                                <SkeletonStatus />
+                                <HemicycleSkeleton />
+                            </>
                         )}
                     </div>
+                    {isDataEnabled && chamber.sourceNote}
+                </section>
 
-                    <div className={styles.picker}>
-                        <p className={styles.pickerTitle}>Toque no seu estado</p>
-                        <div className={styles.regions}>
-                            {BRAZILIAN_REGIONS.map((region) => (
-                                <div key={region.name} className={styles.region} role="group" aria-labelledby={`region-${region.name}`}>
-                                    <h3 id={`region-${region.name}`} className={styles.regionName}>
-                                        {region.name}
-                                    </h3>
-                                    <div className={styles.stateButtons}>
-                                        {region.stateCodes.map((code) => (
-                                            <button
-                                                key={code}
-                                                type="button"
-                                                className={styles.stateButton}
-                                                aria-pressed={filters.stateCode === code}
-                                                aria-label={stateName(code)}
-                                                title={stateName(code)}
-                                                onClick={() => updateFilters({ stateCode: filters.stateCode === code ? "" : code })}
-                                            >
-                                                {code}
-                                            </button>
-                                        ))}
+                <section className={styles.places} aria-labelledby="places-title">
+                    <div className={styles.placesMap}>
+                        <div className={styles.blockLabel}>
+                            <h2 id="places-title" className={styles.blockTitle}>
+                                Estados
+                            </h2>
+                            <span className={styles.blockCount}>{filters.stateCode ? <strong>{stateName(filters.stateCode)}</strong> : "Todos"}</span>
+                        </div>
+
+                        <div className={styles.mapArea}>
+                            {isDataEnabled ? (
+                                <StateMap
+                                    countsByState={countsByState}
+                                    selectedStateCode={filters.stateCode}
+                                    legendTitle={`Número de deputados${partyText} em cada estado`}
+                                    scaleColor={PARTY_COLORS[filters.partyAcronym]?.color}
+                                    onSelectState={(code) =>
+                                        updateFilters({
+                                            stateCode: filters.stateCode === code ? "" : code,
+                                        })
+                                    }
+                                />
+                            ) : (
+                                <StateMapSkeleton />
+                            )}
+                        </div>
+                    </div>
+
+                    <div className={styles.placesInfo}>
+                        {isDataEnabled ? (
+                            <div className={styles.figure} aria-live="polite">
+                                <span className={styles.figureNumber}>{selectedCount.toLocaleString("pt-BR")}</span>
+                                <span className={styles.figureText}>
+                                    {deputiesWord(selectedCount)}
+                                    {partyText} {filters.stateCode ? ofState(filters.stateCode) : placesText(countsByState)}
+                                </span>
+                                {!filters.partyAcronym && (
+                                    <p className={styles.figureNote}>
+                                        {filters.stateCode &&
+                                            filters.onlyInOffice &&
+                                            `${((selectedCount / SEATS_IN_CHAMBER) * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% das ${SEATS_IN_CHAMBER} vagas. `}
+                                        Cada estado tem de 8 a 70 vagas, conforme o tamanho da população.
+                                    </p>
+                                )}
+                            </div>
+                        ) : (
+                            <div className={styles.figure} aria-hidden="true">
+                                <Skeleton width="2.4em" className={styles.figureNumber} />
+                                <Skeleton width="min(12em, 60%)" />
+                            </div>
+                        )}
+
+                        <div className={styles.picker}>
+                            <p className={styles.pickerTitle}>Toque no seu estado</p>
+                            <div className={styles.stateSearch}>
+                                <Search aria-hidden="true" />
+                                <input
+                                    type="search"
+                                    autoComplete="off"
+                                    aria-label="Procurar estado pelo nome ou pela sigla"
+                                    placeholder="Procure o estado. Exemplo: Bahia, SP"
+                                    value={stateQuery}
+                                    onChange={(event) => setStateQuery(event.target.value)}
+                                />
+                            </div>
+                            {!hasStateMatch && <p className={styles.noStateMatch}>Nenhum estado com esse nome ou sigla.</p>}
+                            <ScrollSlider className={styles.regions} ref={regionsRef}>
+                                {BRAZILIAN_REGIONS.map((region) => (
+                                    <div
+                                        key={region.name}
+                                        className={
+                                            region.stateCodes.some((code) => matchesStateQuery(code, stateQuery))
+                                                ? styles.region
+                                                : `${styles.region} ${styles.filteredOut}`
+                                        }
+                                        role="group"
+                                        aria-labelledby={`region-${region.name}`}
+                                    >
+                                        <h3 id={`region-${region.name}`} className={styles.regionName}>
+                                            {region.name}
+                                        </h3>
+                                        <div className={styles.stateButtons}>
+                                            {region.stateCodes.map((code) => (
+                                                <button
+                                                    key={code}
+                                                    type="button"
+                                                    className={
+                                                        matchesStateQuery(code, stateQuery) ? styles.stateButton : `${styles.stateButton} ${styles.filteredOut}`
+                                                    }
+                                                    aria-pressed={filters.stateCode === code}
+                                                    aria-label={stateName(code)}
+                                                    title={stateName(code)}
+                                                    onClick={() =>
+                                                        updateFilters({
+                                                            stateCode: filters.stateCode === code ? "" : code,
+                                                        })
+                                                    }
+                                                >
+                                                    {code}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
+                            </ScrollSlider>
                         </div>
                     </div>
                 </section>
@@ -290,33 +460,32 @@ export function DeputySearch({ deputies, sourceNote }: Readonly<DeputySearchProp
                     </div>
 
                     <div className={styles.filters}>
-                        <div className={styles.field}>
-                            <label htmlFor="party-filter" className={styles.fieldLabel}>
-                                Partido
-                            </label>
-                            <div className={styles.selectBox}>
-                                <select
-                                    id="party-filter"
-                                    className={styles.select}
-                                    value={filters.partyAcronym}
-                                    onChange={(event) => updateFilters({ partyAcronym: event.target.value })}
-                                >
-                                    <option value="">Todos os partidos</option>
-                                    {partyOptions.map(([acronym, count]) => (
-                                        <option key={acronym} value={acronym}>
-                                            {partyLabel(acronym)} ({count})
-                                        </option>
-                                    ))}
-                                </select>
-                                <ChevronDown className={styles.selectIcon} aria-hidden="true" />
-                            </div>
-                        </div>
+                        <ListboxSelect
+                            id="party-filter"
+                            label="Partido"
+                            value={filters.partyAcronym}
+                            options={partySelectOptions}
+                            isLoading={!isDataEnabled}
+                            onChange={(acronym) => updateFilters({ partyAcronym: acronym })}
+                        />
+                        <ListboxSelect
+                            id="state-filter"
+                            label="Estado"
+                            value={filters.stateCode}
+                            options={stateSelectOptions}
+                            isLoading={!isDataEnabled}
+                            onChange={(code) => updateFilters({ stateCode: code })}
+                        />
                         <label htmlFor="only-in-office" className={styles.check}>
                             <input
                                 id="only-in-office"
                                 type="checkbox"
                                 checked={filters.onlyInOffice}
-                                onChange={(event) => updateFilters({ onlyInOffice: event.target.checked })}
+                                onChange={(event) =>
+                                    updateFilters({
+                                        onlyInOffice: event.target.checked,
+                                    })
+                                }
                             />
                             Só quem está no cargo agora
                         </label>
@@ -353,17 +522,21 @@ export function DeputySearch({ deputies, sourceNote }: Readonly<DeputySearchProp
                         <p className={styles.similarNote}>Nenhum nome igual a “{filters.name.trim()}”. Estes são os mais parecidos:</p>
                     )}
 
-                    {results.length > 0 ? (
+                    {!isDataEnabled ? (
+                        <div className={styles.listScroll}>
+                            <SkeletonRows count={6} leading="avatar" hasMeta size="large" />
+                        </div>
+                    ) : results.length > 0 ? (
                         <>
                             {/* own scroll with a max height, the page keeps scrolling outside the list */}
-                            <div className={styles.listScroll} tabIndex={0} role="region" aria-label="Lista de deputados">
+                            <ScrollSlider direction="vertical" className={styles.listScroll} tabIndex={0} role="region" aria-label="Lista de deputados">
                                 <ul className={styles.list}>
-                                    {results.map((deputy) => (
-                                        <li key={deputy.id} className={styles.item}>
-                                            <Link href={`/deputados/${deputy.id}`} className={styles.deputy}>
+                                    {shownResults.map((deputy) => (
+                                        <li key={deputy.id} className={styles.item} data-reveal="rise">
+                                            <Link href={`/deputados/${deputy.id}`} className={styles.deputy} transitionTypes={NAV_FORWARD}>
                                                 <span className={styles.avatar} aria-hidden="true">
                                                     {deputy.photoUrl ? (
-                                                        <Image src={deputy.photoUrl} alt="" fill sizes="56px" className={styles.photo} />
+                                                        <Image src={deputy.photoUrl} alt="" width={56} height={56} className={styles.photo} />
                                                     ) : (
                                                         initials(deputy.politicalName)
                                                     )}
@@ -384,11 +557,12 @@ export function DeputySearch({ deputies, sourceNote }: Readonly<DeputySearchProp
                                                     </span>
                                                 </span>
                                                 <ChevronRight className={styles.chevron} aria-hidden="true" />
+                                                <LinkPending />
                                             </Link>
                                         </li>
                                     ))}
                                 </ul>
-                            </div>
+                            </ScrollSlider>
                             {results.length >= LIST_HINT_MIN_ROWS && <p className={styles.listHint}>Role a lista para ver todos os nomes.</p>}
                         </>
                     ) : (

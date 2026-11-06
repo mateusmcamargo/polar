@@ -84,11 +84,20 @@ div.summary {
         margin-top: var(--space-2);
         padding: var(--space-4) var(--space-5);
         font-size: var(--text-label);
+        // comes down a little from the strip when it opens
+        transition:
+            opacity var(--duration-slide) var(--ease-out),
+            transform var(--duration-slide) var(--ease-out);
+
+        @starting-style {
+            opacity: 0;
+            transform: translateY(calc(-1 * var(--slide-distance)));
+        }
 
         &::before {
             content: "";
             position: absolute;
-            top: -17px;
+            top: -14px;
             left: 28px;
             border-style: solid;
             border-width: 0 12px 14px 0;

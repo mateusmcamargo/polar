@@ -18,6 +18,9 @@ div.search {
 
     svg.searchIcon {
         @include search-icon;
+        left: 14px;
+        width: 20px;
+        height: 20px;
     }
 
     input.searchInput {
@@ -34,7 +37,6 @@ div.search {
         place-items: center;
         padding: 0;
         border: 0;
-        border-radius: var(--radius-pill);
         background: transparent;
         color: var(--color-fg-2);
         cursor: pointer;
@@ -56,15 +58,43 @@ div.search {
     }
 }
 
+section.chamber {
+    grid-area: chamber;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-width: 0;
+
+    p.chamberLead {
+        max-width: 60ch;
+        color: var(--color-fg-2);
+    }
+
+    // reading width keeps the drawing at the size it was designed for, centered on wide screens
+    div.chamberDrawing {
+        width: 100%;
+        max-width: var(--content-width-reading);
+        margin-inline: auto;
+    }
+}
+
+// phones: chamber, states, list. desktop: chamber beside the list, then the map beside the count and the state buttons
+// (the dom keeps the phone order, so on desktop the keyboard goes from the chamber to the states before the list)
 div.layout {
+    --layout-columns: minmax(0, 3fr) minmax(0, 2fr);
+    --layout-column-gap: var(--space-6);
     display: grid;
+    // the 0 minimum keeps the column at the screen width, so the sliders scroll instead of widening the page
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "chamber" "places" "results";
     align-items: start;
     gap: var(--space-7);
     padding-bottom: var(--space-8);
 
     @include from("medium") {
-        grid-template-columns: minmax(380px, 5fr) 7fr;
-        gap: var(--space-7) var(--space-6);
+        grid-template-columns: var(--layout-columns);
+        grid-template-areas: "chamber results" "places places";
+        gap: var(--space-7) var(--layout-column-gap);
     }
 }
 
@@ -82,13 +112,25 @@ div.blockLabel {
 }
 
 section.places {
+    grid-area: places;
     display: flex;
     flex-direction: column;
     gap: var(--space-5);
 
+    // the same columns as the row above, so the map lines up with the chamber and the count with the list
     @include from("medium") {
-        position: sticky;
-        top: var(--space-5);
+        display: grid;
+        grid-template-columns: var(--layout-columns);
+        align-items: start;
+        gap: var(--space-5) var(--layout-column-gap);
+    }
+
+    div.placesMap,
+    div.placesInfo {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-5);
+        min-width: 0;
     }
 
     // on phones the state buttons are the way to pick a state
@@ -107,6 +149,12 @@ section.places {
         gap: var(--space-1) var(--space-3);
         padding-top: var(--space-4);
         box-shadow: inset 0 1px 0 var(--color-line);
+
+        // on desktop the count opens its own column, beside the "Estados" label
+        @include from("medium") {
+            padding-top: 0;
+            box-shadow: none;
+        }
     }
 
     span.figureNumber {
@@ -137,13 +185,60 @@ section.places {
         font-weight: 600;
     }
 
+    // phones only, it filters the slider of regions; on desktop the map is the shortcut and every button shows
+    div.stateSearch {
+        position: relative;
+
+        @include from("medium") {
+            display: none;
+        }
+
+        svg {
+            @include search-icon;
+            left: 14px;
+            width: 20px;
+            height: 20px;
+        }
+
+        input {
+            @include search-input;
+            font-size: var(--text-label);
+        }
+    }
+
+    p.noStateMatch {
+        color: var(--color-fg-2);
+        font-size: var(--text-label);
+
+        @include from("medium") {
+            display: none;
+        }
+    }
+
+    // states and regions left out by the state search, hidden only below 900 px, where the search shows
+    div.region.filteredOut,
+    button.stateButton.filteredOut {
+        @media (max-width: 899.98px) {
+            display: none;
+        }
+    }
+
+    // phones: one row that slides sideways, region after region
     div.regions {
+        @include horizontal-slider;
         display: flex;
-        flex-wrap: wrap;
         gap: var(--space-3) var(--space-5);
+
+        @include from("medium") {
+            flex-wrap: wrap;
+            margin: 0;
+            padding: 0;
+            overflow: visible;
+        }
     }
 
     div.region {
+        flex: none;
         display: flex;
         flex-direction: column;
         gap: var(--space-1);
@@ -157,8 +252,12 @@ section.places {
 
     div.stateButtons {
         display: flex;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         gap: var(--space-1);
+
+        @include from("medium") {
+            flex-wrap: wrap;
+        }
     }
 
     button.stateButton {
@@ -183,49 +282,49 @@ section.places {
 }
 
 section.results {
+    grid-area: results;
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
     min-width: 0;
 
+    // party and state selects at full width, one under the other, then the checkbox
     div.filters {
         display: flex;
-        flex-wrap: wrap;
-        align-items: flex-end;
-        gap: var(--space-3) var(--space-4);
-    }
-
-    div.field {
-        display: flex;
         flex-direction: column;
-        gap: var(--space-1);
+        gap: var(--space-3);
+
+        label.check {
+            align-self: flex-start;
+        }
     }
 
-    label.fieldLabel {
+    // parts of the options of the party and state selects
+    span.stateCode {
+        display: inline-flex;
+        align-items: center;
+        min-width: 3ch;
+        min-height: 26px;
+        padding: 0 var(--space-2);
+        box-shadow: inset 0 0 0 1px var(--color-line-3);
+        font-size: var(--text-micro);
+        font-weight: 700;
+        letter-spacing: 0.04em;
+    }
+
+    span.optionName {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    span.optionCount {
+        margin-left: auto;
         color: var(--color-fg-2);
         font-size: var(--text-micro);
-    }
-
-    div.selectBox {
-        position: relative;
-    }
-
-    select.select {
-        @include control;
-        min-width: 12rem;
-        padding: 0 40px 0 var(--space-4);
-        appearance: none;
-    }
-
-    svg.selectIcon {
-        position: absolute;
-        top: 50%;
-        right: 12px;
-        width: 20px;
-        height: 20px;
-        color: var(--color-fg-3);
-        pointer-events: none;
-        transform: translateY(-50%);
+        font-weight: 400;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
     }
 
     label.check {
@@ -286,7 +385,6 @@ section.results {
         box-shadow:
             inset 0 1px 0 var(--color-line-2),
             inset 0 -1px 0 var(--color-line-2);
-        scrollbar-gutter: stable;
 
         &:focus-visible {
             outline-offset: 0;
@@ -304,6 +402,8 @@ section.results {
     }
 
     a.deputy {
+        // holds the LinkPending sweep
+        position: relative;
         display: grid;
         grid-template-columns: 56px 1fr 24px;
         align-items: center;
@@ -313,8 +413,6 @@ section.results {
         padding: var(--space-3) var(--space-2);
         border-radius: var(--radius-small);
         text-decoration: none;
-        transition: background-color var(--duration-fast) var(--ease-standard);
-
         &:hover {
             background: var(--color-panel-2);
         }
@@ -324,14 +422,15 @@ section.results {
         }
     }
 
+    // the ink border sits outside the photo, which would cover an inset shadow
     span.avatar {
-        @include hairline-border;
         position: relative;
         display: grid;
         place-items: center;
         width: 56px;
         height: 56px;
         overflow: hidden;
+        border: 3px solid var(--color-ink);
         border-radius: var(--radius-pill);
         background: var(--color-panel);
         color: var(--color-fg-2);
@@ -340,7 +439,10 @@ section.results {
         letter-spacing: 0.04em;
     }
 
+    // a fixed size, not fill: next/image then lists only the 1x and 2x files, instead of 16 widths in every row of the html
     img.photo {
+        width: 100%;
+        height: 100%;
         object-fit: cover;
         object-position: top;
     }
@@ -410,6 +512,15 @@ section.results {
         width: 22px;
         height: 22px;
         color: var(--color-fg-3);
+        transition:
+            translate var(--duration-fast) var(--ease-standard),
+            color var(--duration-fast) var(--ease-standard);
+    }
+
+    // the arrow moves a little toward the profile
+    a.deputy:hover svg.chevron {
+        translate: 3px 0;
+        color: var(--color-fg);
     }
 
     p.listHint {
@@ -437,6 +548,7 @@ section.results {
 
     button.sticker {
         @include comic.comic-sticker;
+        @include comic.comic-pressable;
         align-self: flex-start;
         min-height: 48px;
         margin-top: var(--space-2);

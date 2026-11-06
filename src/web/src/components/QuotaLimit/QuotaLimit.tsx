@@ -1,6 +1,7 @@
 import type { DeputyQuotaLimit } from "@polar/db";
 import { Explanation } from "@/components/Explanation/Explanation";
 import { monthName } from "@/components/SpendingBreakdown/months";
+import { Skeleton, SkeletonStack } from "@/components/Skeleton/Skeleton";
 import styles from "./QuotaLimit.module.scss";
 
 const wholeMoneyFormat = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
@@ -34,7 +35,7 @@ export function QuotaLimit({ total, limit, inStatePhrase }: Readonly<QuotaLimitP
                 role="img"
                 aria-label={`${usedPercent}% do limite usado: ${wholeMoneyFormat.format(total)} de ${wholeMoneyFormat.format(limit.total)}`}
             >
-                <i style={{ width: `${Math.min(100, Math.max(0, usedPercent))}%` }} />
+                <i data-reveal="fill" style={{ width: `${Math.min(100, Math.max(0, usedPercent))}%` }} />
             </span>
             <p className={styles.base}>
                 Gastou {wholeMoneyFormat.format(total)} de um limite de {wholeMoneyFormat.format(limit.total)} {periodText(limit)}. O limite{" "}
@@ -55,5 +56,16 @@ export function QuotaLimit({ total, limit, inStatePhrase }: Readonly<QuotaLimitP
                 </p>
             </Explanation>
         </div>
+    );
+}
+
+// the share of the limit while it loads: figure, bar and the sentence below
+export function QuotaLimitSkeleton() {
+    return (
+        <SkeletonStack>
+            <Skeleton width="10em" height="var(--text-figure)" />
+            <Skeleton shape="block" height="16px" />
+            <Skeleton width="80%" />
+        </SkeletonStack>
     );
 }

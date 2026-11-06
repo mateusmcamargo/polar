@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { SkeletonFigures } from "@/components/Skeleton/Skeleton";
 import styles from "./SummaryMetrics.module.scss";
 
 export interface SummaryMetric {
@@ -25,7 +26,7 @@ export function SummaryMetrics({ metrics }: Readonly<SummaryMetricsProps>) {
         <div className={styles.summary}>
             <div className={styles.metrics}>
                 {metrics.map((metric) => (
-                    <div key={metric.id} className={styles.metric}>
+                    <div key={metric.id} className={styles.metric} data-reveal="rise">
                         <span className={styles.figure}>{metric.figure ?? "–"}</span>
                         <span className={styles.label}>{metric.label}</span>
                         <span className={styles.base}>{metric.base}</span>
@@ -51,4 +52,9 @@ export function SummaryMetrics({ metrics }: Readonly<SummaryMetricsProps>) {
             )}
         </div>
     );
+}
+
+// the three figures of the year summary while they load
+export function SummaryMetricsSkeleton() {
+    return <SkeletonFigures count={3} />;
 }

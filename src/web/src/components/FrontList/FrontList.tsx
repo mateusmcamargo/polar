@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import type { DeputyFrontRow } from "@polar/db";
+import { ScrollSlider } from "@/components/ScrollSlider/ScrollSlider";
+import { SkeletonRows } from "@/components/Skeleton/Skeleton";
 import styles from "./FrontList.module.scss";
 
 const SCROLL_HINT_MIN_ROWS = 8;
@@ -32,7 +34,7 @@ export function FrontList({ fronts, isInOffice }: Readonly<FrontListProps>) {
             {coordinated.length > 0 && (
                 <ul className={styles.rows}>
                     {coordinated.map((front) => (
-                        <li key={front.id}>
+                        <li key={front.id} data-reveal="rise">
                             <span>{front.title}</span>
                             <span className={styles.role}>Coordenação</span>
                         </li>
@@ -58,16 +60,21 @@ export function FrontList({ fronts, isInOffice }: Readonly<FrontListProps>) {
                       : `${shown.length} ${shown.length === 1 ? "frente" : "frentes"}.`}
             </p>
             {shown.length > 0 && (
-                <div className={styles.scroll} tabIndex={0} role="region" aria-label={isInOffice ? "Frentes de que participa" : "Frentes de que participou"}>
+                <ScrollSlider direction="vertical" className={styles.scroll} tabIndex={0} role="region" aria-label={isInOffice ? "Frentes de que participa" : "Frentes de que participou"}>
                     <ul className={styles.rows}>
                         {shown.map((front) => (
-                            <li key={front.id}>
+                            <li key={front.id} data-reveal="rise">
                                 <span>{front.title}</span>
                             </li>
                         ))}
                     </ul>
-                </div>
+                </ScrollSlider>
             )}
         </div>
     );
+}
+
+// parliamentary fronts while they load
+export function FrontListSkeleton() {
+    return <SkeletonRows count={5} hasValue />;
 }

@@ -5,7 +5,9 @@ import { ChevronDown, ExternalLink } from "lucide-react";
 import type { DeputyReceipt, DeputySpendingSupplier } from "@polar/db";
 import { Explanation } from "@/components/Explanation/Explanation";
 import { capitalizedMonthName } from "@/components/SpendingBreakdown/months";
+import { ScrollSlider } from "@/components/ScrollSlider/ScrollSlider";
 import { useReceiptFilters, writeReceiptFilters, type ReceiptFilters } from "./receiptFilters";
+import { SkeletonControls, SkeletonRows, SkeletonStack } from "@/components/Skeleton/Skeleton";
 import styles from "./ReceiptList.module.scss";
 
 // rows rendered at a time; the biggest years have about 2,000 receipts
@@ -175,13 +177,13 @@ export function ReceiptList({ receipts, suppliers, categories }: Readonly<Receip
             {shown.length === 0 ? (
                 <p className={styles.empty}>Nenhuma nota com esses filtros.</p>
             ) : (
-                <div className={styles.scroll} tabIndex={0} role="region" aria-label="Notas da cota parlamentar">
+                <ScrollSlider direction="vertical" className={styles.scroll} tabIndex={0} role="region" aria-label="Notas da cota parlamentar">
                     <ol className={styles.rows}>
                         {shown.slice(0, visibleCount).map((receipt) => {
                             const supplier = suppliersById.get(receipt.supplierId);
                             const date = receiptDate(receipt);
                             return (
-                                <li key={receipt.id}>
+                                <li key={receipt.id} data-reveal="rise">
                                     <span className={styles.supplier}>{supplier?.name ?? "Fornecedor não informado"}</span>
                                     <span className={receipt.netValue < 0 ? styles.negative : styles.value}>
                                         {exactMoneyFormat.format(receipt.netValue)}
@@ -225,8 +227,18 @@ export function ReceiptList({ receipts, suppliers, categories }: Readonly<Receip
                             Mostrar mais {Math.min(PAGE_SIZE, shown.length - visibleCount)} de {shown.length - visibleCount}
                         </button>
                     )}
-                </div>
+                </ScrollSlider>
             )}
         </div>
+    );
+}
+
+// the three filters and the first receipts while they load
+export function ReceiptListSkeleton() {
+    return (
+        <SkeletonStack>
+            <SkeletonControls count={3} />
+            <SkeletonRows count={6} hasMeta hasValue />
+        </SkeletonStack>
     );
 }

@@ -14,7 +14,10 @@ main.page {
         color: var(--color-fg-3);
         font-size: var(--text-micro);
 
+        // the link back to the profile holds the LinkPending sweep
         a {
+            @include text-link-target;
+            position: relative;
             color: inherit;
         }
     }
@@ -36,6 +39,7 @@ main.page {
         display: block;
         width: 64px;
         height: 80px;
+        border: 3px solid var(--color-ink);
         border-radius: var(--radius-small);
         background: var(--color-panel-2);
         object-fit: cover;
@@ -88,6 +92,7 @@ main.page {
     }
 
     section.block {
+        @include section-opening;
         display: flex;
         flex-direction: column;
         gap: var(--space-4);
@@ -98,13 +103,12 @@ main.page {
         }
     }
 
-    h2.blockLabel {
-        @include block-label-title;
-        color: var(--color-fg-3);
+    p.sectionKicker {
+        @include section-kicker;
     }
 
     h2.title {
-        font-size: var(--text-name);
+        @include section-title;
     }
 
     h3.subtitle {
@@ -125,6 +129,8 @@ main.page {
 
     a.back {
         @include control;
+        // holds the LinkPending sweep
+        position: relative;
         display: inline-flex;
         align-self: flex-start;
         align-items: center;

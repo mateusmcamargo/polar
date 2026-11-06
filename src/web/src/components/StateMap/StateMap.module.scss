@@ -40,18 +40,20 @@ div.map {
         stroke-width: 1;
         stroke-linejoin: round;
         cursor: pointer;
-        transition: fill var(--duration-fast) var(--ease-standard);
-
-        &:hover {
-            stroke: var(--color-ink);
-            stroke-width: 1.5;
-        }
+        transition: fill var(--duration-fill) var(--ease-standard) calc(var(--wave, 0) * var(--stagger));
     }
 
-    path.selectedState,
-    path.selectedState:hover {
+    path.selectedState {
         stroke: var(--color-ink);
         stroke-width: 3;
+    }
+
+    path.hoverOutline {
+        fill: none;
+        stroke: var(--color-ink);
+        stroke-width: 2;
+        stroke-linejoin: round;
+        pointer-events: none;
     }
 
     text.label {
@@ -61,6 +63,7 @@ div.map {
         text-anchor: middle;
         dominant-baseline: central;
         pointer-events: none;
+        transition: fill var(--duration-fill) var(--ease-standard) calc(var(--wave, 0) * var(--stagger));
     }
 
     div.tooltip {

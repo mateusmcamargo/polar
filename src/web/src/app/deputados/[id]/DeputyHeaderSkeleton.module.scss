@@ -1,0 +1,74 @@
+@use "mixins" as *;
+
+div.header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+
+    span.crumb {
+        font-size: var(--text-micro);
+    }
+
+    div.identity {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--space-4);
+
+        @include from("small") {
+            gap: var(--space-5);
+        }
+    }
+
+    div.names {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: var(--space-2);
+        min-width: 0;
+    }
+
+    span.kicker {
+        font-size: var(--text-micro);
+    }
+
+    span.name {
+        font-size: var(--text-title);
+    }
+
+    div.tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2);
+        margin-top: var(--space-1);
+    }
+
+    div.lines {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        max-width: 62ch;
+    }
+
+    div.actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: var(--space-3);
+    }
+
+    // the same sizes as the real photos: the 3:4 portrait of the profile and the thumbnail of the spending page
+    &.large span.photo {
+        --skeleton-width: 104px;
+        --skeleton-height: 139px;
+
+        @include from("small") {
+            --skeleton-width: 140px;
+            --skeleton-height: 187px;
+        }
+    }
+
+    &.small span.photo {
+        --skeleton-width: 64px;
+        --skeleton-height: 80px;
+    }
+}

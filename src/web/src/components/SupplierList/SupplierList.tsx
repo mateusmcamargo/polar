@@ -3,6 +3,8 @@
 import { useState } from "react";
 import type { DeputySpendingSupplier } from "@polar/db";
 import { RECEIPTS_SECTION_ID, writeReceiptFilters } from "@/components/ReceiptList/receiptFilters";
+import { ScrollSlider } from "@/components/ScrollSlider/ScrollSlider";
+import { SkeletonRows } from "@/components/Skeleton/Skeleton";
 import styles from "./SupplierList.module.scss";
 
 const TOP_SUPPLIERS = 10;
@@ -26,7 +28,7 @@ function SupplierRows({ suppliers, total }: Readonly<SupplierListProps>) {
     return (
         <ol className={styles.rows}>
             {suppliers.map((supplier) => (
-                <li key={supplier.id}>
+                <li key={supplier.id} data-reveal="rise">
                     <span className={styles.name}>{supplier.name}</span>
                     <span className={styles.value}>{wholeMoneyFormat.format(supplier.total)}</span>
                     <span className={styles.document}>
@@ -50,9 +52,9 @@ export function SupplierList({ suppliers, total }: Readonly<SupplierListProps>) 
     return (
         <div className={styles.suppliers}>
             {showsAll ? (
-                <div className={styles.scroll} tabIndex={0} role="region" aria-label="Todos os fornecedores">
+                <ScrollSlider direction="vertical" className={styles.scroll} tabIndex={0} role="region" aria-label="Todos os fornecedores">
                     <SupplierRows suppliers={suppliers} total={total} />
-                </div>
+                </ScrollSlider>
             ) : (
                 <SupplierRows suppliers={suppliers.slice(0, TOP_SUPPLIERS)} total={total} />
             )}
@@ -63,4 +65,9 @@ export function SupplierList({ suppliers, total }: Readonly<SupplierListProps>) 
             )}
         </div>
     );
+}
+
+// suppliers while they load: name, document and the amount with its share
+export function SupplierListSkeleton() {
+    return <SkeletonRows count={6} hasMeta hasValue />;
 }

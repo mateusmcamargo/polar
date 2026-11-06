@@ -18,7 +18,7 @@ div.hemicycle {
 
     rect.seat,
     rect.dimmedSeat {
-        transition: opacity var(--duration-fast) var(--ease-standard);
+        transition: opacity var(--duration-medium) var(--ease-standard);
 
         // the outline comes from css, so hovering does not touch react state
         @include from("medium") {
@@ -94,19 +94,75 @@ div.hemicycle {
         }
     }
 
+    // phones: a slider two rows tall, each row packed by the width of its items; odd items go on top and even items below, so
+    // the order of alignment still reads from left to right. Hemicycle.tsx measures the longest row into --legend-row-width
+    div.legendScroll {
+        @include horizontal-slider;
+
+        @include from("medium") {
+            margin: 0;
+            padding: 0;
+            overflow: visible;
+        }
+    }
+
     ul.legend {
         display: flex;
         flex-wrap: wrap;
-        gap: var(--space-2);
+        gap: 0 var(--space-2);
+        width: var(--legend-row-width, max-content);
         margin: 0;
         padding: 0;
         list-style: none;
+
+        // full width empty item that breaks the line between the two rows; the row gap is a margin of the second row, because
+        // a gap would also open around this empty line
+        &::before {
+            content: "";
+            order: 1;
+            flex-basis: 100%;
+        }
+
+        li {
+            display: flex;
+            flex: 0 0 auto;
+        }
+
+        // once Hemicycle.tsx has measured the rows, every row stretches its buttons to the full width, so rows end together;
+        // before that (server html, measuring) the buttons keep their own width
+        &[data-fitted] li {
+            flex-grow: 1;
+        }
+
+        li:nth-child(even) {
+            order: 2;
+            margin-top: var(--space-2);
+        }
+
+        @include from("medium") {
+            gap: var(--space-2);
+            width: auto;
+
+            li {
+                flex-grow: 1;
+            }
+
+            &::before {
+                display: none;
+            }
+
+            li:nth-child(even) {
+                order: 0;
+                margin-top: 0;
+            }
+        }
     }
 
     button.legendButton {
         @include control;
         @include hairline-border(--color-line-2);
         display: inline-flex;
+        flex: 1;
         align-items: center;
         gap: var(--space-2);
         padding: 0 var(--space-3) 0 var(--space-2);
@@ -142,6 +198,16 @@ div.hemicycle {
     p.hint {
         color: var(--color-fg-3);
         font-size: var(--text-micro);
+    }
+
+    p.litSummary {
+        color: var(--color-fg-2);
+        font-size: var(--text-label);
+
+        strong {
+            color: var(--color-fg);
+            font-variant-numeric: tabular-nums;
+        }
     }
 
     div.detailArea:empty {
@@ -183,25 +249,6 @@ div.hemicycle {
         }
     }
 
-    a.goButton {
-        display: inline-flex;
-        align-items: center;
-        gap: var(--space-2);
-        min-height: 44px;
-        padding: 0 var(--space-4);
-        border-radius: var(--radius-small);
-        background: var(--color-fg);
-        color: var(--color-bg);
-        font-size: var(--text-label);
-        font-weight: 700;
-        text-decoration: none;
-
-        svg {
-            width: 20px;
-            height: 20px;
-        }
-    }
-
     div.actions {
         display: flex;
         flex-wrap: wrap;
@@ -226,7 +273,7 @@ div.hemicycle {
         &::before {
             content: "";
             position: absolute;
-            top: -17px;
+            top: -14px;
             left: 28px;
             border-style: solid;
             border-width: 0 12px 14px 0;

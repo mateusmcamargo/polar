@@ -1,6 +1,7 @@
 import type { DeputySpendingCategory } from "@polar/db";
 import { EXPENSE_TYPE_LABELS } from "@/components/MoneySummary/expenseTypeLabels";
 import { capitalizedMonthName } from "./months";
+import { SkeletonBars, SkeletonRows } from "@/components/Skeleton/Skeleton";
 import styles from "./SpendingBreakdown.module.scss";
 
 const wholeMoneyFormat = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
@@ -36,7 +37,7 @@ export function CategoryList({ categories, total, flights }: Readonly<CategoryLi
                             <span className={styles.name}>{EXPENSE_TYPE_LABELS[category.expenseTypeCode] ?? category.description}</span>
                             <span className={styles.value}>{wholeMoneyFormat.format(category.total)}</span>
                             <span className={styles.line} aria-hidden="true">
-                                <i style={{ width: `${share}%` }} />
+                                <i data-reveal="fill" style={{ width: `${share}%` }} />
                             </span>
                             <span className={styles.detail}>
                                 {shareText(share)} do total, {receiptsText(category.receiptCount)}
@@ -73,7 +74,7 @@ export function MonthlyTotals({ monthlyTotals }: Readonly<MonthlyTotalsProps>) {
                     <li key={month} className={month === largestMonth ? styles.largest : undefined}>
                         <span>{capitalizedMonthName(month)}</span>
                         <span className={styles.track} aria-hidden="true">
-                            <i style={{ width: `${shareOf(value, largest)}%` }} />
+                            <i data-reveal="fill" style={{ width: `${shareOf(value, largest)}%` }} />
                         </span>
                         <span className={styles.value}>
                             {value === 0 ? "Sem gastos" : wholeMoneyFormat.format(value)}
@@ -84,4 +85,14 @@ export function MonthlyTotals({ monthlyTotals }: Readonly<MonthlyTotalsProps>) {
             })}
         </ol>
     );
+}
+
+// expense types while they load: name, amount and the share line
+export function CategoryListSkeleton() {
+    return <SkeletonRows count={6} hasValue hasTrack />;
+}
+
+// the twelve months of the year while they load
+export function MonthlyTotalsSkeleton() {
+    return <SkeletonBars count={12} />;
 }

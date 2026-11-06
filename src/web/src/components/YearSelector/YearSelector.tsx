@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { LinkPending } from "@/components/LinkPending/LinkPending";
+import { NAV_BACK, NAV_FORWARD } from "@/components/PageTransition/PageTransition";
 import styles from "./YearSelector.module.scss";
 
 interface YearSelectorProps {
@@ -20,8 +22,11 @@ export function YearSelector({ basePath, years, selectedYear }: Readonly<YearSel
                         href={index === 0 ? basePath : `${basePath}/${year}`}
                         aria-current={year === selectedYear ? "page" : undefined}
                         scroll={false}
+                        // a newer year moves forward, an older one back
+                        transitionTypes={year > selectedYear ? NAV_FORWARD : NAV_BACK}
                     >
                         {year}
+                        <LinkPending />
                     </Link>
                 ))}
             </nav>

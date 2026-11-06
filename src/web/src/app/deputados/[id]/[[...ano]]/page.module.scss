@@ -15,34 +15,37 @@ main.page {
         font-size: var(--text-micro);
 
         a {
+            @include text-link-target;
             color: inherit;
         }
     }
 
     section.profile {
         display: grid;
-        grid-template-columns: 88px 1fr;
+        grid-template-columns: 104px 1fr;
         gap: var(--space-4);
         align-items: start;
 
         @include from("small") {
-            grid-template-columns: 112px 1fr;
+            grid-template-columns: 140px 1fr;
             gap: var(--space-5);
         }
     }
 
+    // the same size as the portrait of a ruler page, 3:4
     .photo {
         display: block;
-        width: 88px;
-        height: 110px;
+        width: 104px;
+        height: 139px;
+        border: 3px solid var(--color-ink);
         border-radius: var(--radius-card);
         background: var(--color-panel-2);
         object-fit: cover;
         object-position: center 20%;
 
         @include from("small") {
-            width: 112px;
-            height: 140px;
+            width: 140px;
+            height: 187px;
         }
     }
 
@@ -129,18 +132,20 @@ main.page {
     }
 
     section.block {
+        @include section-opening;
         display: flex;
         flex-direction: column;
         gap: var(--space-4);
+        // clears the sticky header
+        scroll-margin-top: 88px;
     }
 
-    h2.blockLabel {
-        @include block-label-title;
-        color: var(--color-fg-3);
+    p.sectionKicker {
+        @include section-kicker;
     }
 
     h2.title {
-        font-size: var(--text-name);
+        @include section-title;
     }
 
     h3.subtitle {
@@ -161,6 +166,8 @@ main.page {
 
     a.more {
         @include control;
+        // holds the LinkPending sweep
+        position: relative;
         display: inline-flex;
         align-self: flex-start;
         align-items: center;

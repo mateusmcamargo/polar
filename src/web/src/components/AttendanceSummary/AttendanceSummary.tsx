@@ -1,5 +1,6 @@
 import type { DeputyAttendance } from "@polar/db";
 import { CircleCheck, TriangleAlert } from "lucide-react";
+import { SkeletonFigures } from "@/components/Skeleton/Skeleton";
 import styles from "./AttendanceSummary.module.scss";
 
 interface AttendanceItemProps {
@@ -34,6 +35,7 @@ function AttendanceItem({ title, attendance, unit, unjustifiedPlace }: Readonly<
                     </p>
                     <div
                         className={styles.bar}
+                        data-reveal="fill"
                         role="img"
                         aria-label={rows.map((row) => `${row.label}: ${countText(row.count, unit)}`).join(", ")}
                     >
@@ -95,4 +97,9 @@ export function AttendanceSummary({ plenary, committees }: Readonly<AttendanceSu
             />
         </div>
     );
+}
+
+// plenary and committees side by side while they load
+export function AttendanceSummarySkeleton() {
+    return <SkeletonFigures count={2} />;
 }

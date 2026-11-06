@@ -1,5 +1,6 @@
 import type { DeputyPartyPeriod } from "@polar/db";
 import { PartyBadge } from "@/components/PartyBadge/PartyBadge";
+import { SkeletonRows } from "@/components/Skeleton/Skeleton";
 import styles from "./PartyHistory.module.scss";
 
 const dateFormat = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" });
@@ -13,7 +14,7 @@ export function PartyHistory({ periods }: Readonly<PartyHistoryProps>) {
     return (
         <ol className={styles.timeline}>
             {periods.map((period) => (
-                <li key={period.startsAt.toISOString()} className={period.endsAt ? undefined : styles.current}>
+                <li key={period.startsAt.toISOString()} className={period.endsAt ? undefined : styles.current} data-reveal="rise">
                     <span className={styles.pin} aria-hidden="true" />
                     <div>
                         <p className={styles.when}>
@@ -35,4 +36,9 @@ export function PartyHistory({ periods }: Readonly<PartyHistoryProps>) {
             ))}
         </ol>
     );
+}
+
+// party timeline while it loads: a pin, the party and the period
+export function PartyHistorySkeleton() {
+    return <SkeletonRows count={2} leading="pin" hasMeta hasDividers={false} />;
 }

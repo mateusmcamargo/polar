@@ -3,6 +3,7 @@
 import { useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { stateName } from "@/components/DeputySearch/brazilianStates";
 import { MAP_HEIGHT, MAP_WIDTH, STATE_SHAPES } from "./stateShapes";
+import { SkeletonArea } from "@/components/Skeleton/Skeleton";
 import styles from "./StateMap.module.scss";
 
 const COLOR_STEPS = 5;
@@ -96,12 +97,15 @@ export function StateMap({ countsByState, selectedStateCode, legendTitle, scaleC
                                 key={code}
                                 d={STATE_SHAPES[code]?.path}
                                 className={code === selectedStateCode ? styles.selectedState : styles.state}
-                                style={{ fill: `var(--map-${step})` }}
+                                // the color change runs as a short wave from west to east
+                                style={{ fill: `var(--map-${step})`, "--wave": Math.round(((STATE_SHAPES[code]?.labelX ?? 0) / MAP_WIDTH) * 10) } as CSSProperties}
                                 onClick={() => onSelectState(code)}
                                 onPointerMove={(event) => showTooltip(event, code)}
                             />
                         );
                     })}
+                    {/* drawn above every state, so the neighbors' edges do not cover parts of the hover outline */}
+                    {tooltip && <path d={STATE_SHAPES[tooltip.stateCode]?.path} className={styles.hoverOutline} />}
                     {stateCodes
                         .filter((code) => !STATES_WITHOUT_LABEL.has(code))
                         .map((code) => {
@@ -113,7 +117,12 @@ export function StateMap({ countsByState, selectedStateCode, legendTitle, scaleC
                                     x={shape?.labelX}
                                     y={shape?.labelY}
                                     className={styles.label}
-                                    style={{ fill: step >= 4 ? "var(--map-on-dark-steps)" : "var(--map-on-light-steps)" }}
+                                    style={
+                                        {
+                                            fill: step >= 4 ? "var(--map-on-dark-steps)" : "var(--map-on-light-steps)",
+                                            "--wave": Math.round(((shape?.labelX ?? 0) / MAP_WIDTH) * 10),
+                                        } as CSSProperties
+                                    }
                                 >
                                     {code}
                                 </text>
@@ -145,4 +154,9 @@ export function StateMap({ countsByState, selectedStateCode, legendTitle, scaleC
             </div>
         </div>
     );
+}
+
+// the map while it loads, with the proportions of the drawing and its margin
+export function StateMapSkeleton() {
+    return <SkeletonArea ratio={`${MAP_WIDTH + 8} / ${MAP_HEIGHT + 8}`} />;
 }

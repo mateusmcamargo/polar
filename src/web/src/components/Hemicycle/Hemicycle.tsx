@@ -1,18 +1,35 @@
 "use client";
 
-import { useMemo, useRef, useState, type MouseEvent, type PointerEvent } from "react";
-import Link from "next/link";
+import { useLayoutEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import type { ChamberSeat } from "@polar/db";
 import { PARTY_COLORS } from "@polar/db/party-colors";
+import { NAV_FORWARD } from "@/components/PageTransition/PageTransition";
 import { PartyBadge } from "@/components/PartyBadge/PartyBadge";
+import { ScrollSlider } from "@/components/ScrollSlider/ScrollSlider";
 import { groupSeatsByParty, MIN_COUNTED_VOTES, partyLabel, type SeatWithRates } from "./chamberParties";
 import { CENTER_X, CENTER_Y, HEMICYCLE_HEIGHT, HEMICYCLE_WIDTH, layoutSeats, SEAT_SIZE } from "./seatLayout";
+import { SkeletonArea } from "@/components/Skeleton/Skeleton";
 import styles from "./Hemicycle.module.scss";
 
 const DESKTOP_QUERY = "(min-width: 900px)";
 const NEUTRAL_SEAT_COLOR = "var(--color-fg-3)";
+
+// phones show the legend as a slider of two packed rows: odd items on top, even items below, so the order still reads from
+// left to right. The list gets the width of its longest row, measured, because css cannot size a wrapping row on its own
+function fitLegendRows(list: HTMLUListElement) {
+    // the items stretch to fill their row only once fitted, so they are measured with the stretch turned off
+    list.removeAttribute("data-fitted");
+    const widths = [...list.children].map((item) => item.getBoundingClientRect().width);
+    const gap = Number.parseFloat(getComputedStyle(list).columnGap) || 0;
+    const rowWidth = (parity: number) => {
+        const row = widths.filter((_, index) => index % 2 === parity);
+        return row.reduce((total, width) => total + width, 0) + gap * Math.max(row.length - 1, 0);
+    };
+    list.style.setProperty("--legend-row-width", `${Math.ceil(Math.max(rowWidth(0), rowWidth(1)))}px`);
+    list.setAttribute("data-fitted", "");
+}
 
 function percent(rate: number): string {
     return `${Math.round(rate * 100)}%`;
@@ -30,34 +47,63 @@ function deputiesLabel(count: number): string {
 interface HemicycleProps {
     seats: ChamberSeat[];
     periodText: string;
+    // seats lit by the filters of the deputy search, null when no filter is active
+    highlightedIds: ReadonlySet<number> | null;
+    // what the lit seats are, read after the count in the center ("de São Paulo")
+    highlightText: string;
+    // the party filter of the deputy search, shared with the legend
+    selectedAcronym: string;
+    onSelectParty: (acronym: string) => void;
 }
 
-export function Hemicycle({ seats, periodText }: Readonly<HemicycleProps>) {
+// controlled by DeputySearch: the map, the party filter and the name search light the matching seats and dim the others,
+// which keep their place, so the drawing shows where those deputies sit
+export function Hemicycle({ seats, periodText, highlightedIds, highlightText, selectedAcronym, onSelectParty }: Readonly<HemicycleProps>) {
     const router = useRouter();
     const figureRef = useRef<HTMLElement>(null);
+    const legendRef = useRef<HTMLUListElement>(null);
     const tooltipRef = useRef<HTMLDivElement>(null);
-    const [selectedAcronym, setSelectedAcronym] = useState<string | null>(null);
     const [hoveredSeat, setHoveredSeat] = useState<SeatWithRates | null>(null);
     const [isListOpen, setIsListOpen] = useState(false);
     const [isMethodOpen, setIsMethodOpen] = useState(false);
 
     const parties = useMemo(() => groupSeatsByParty(seats), [seats]);
+    // measured before the first paint after hydration, again when the parties change and after the web font loads, which
+    // changes the width of the labels
+    useLayoutEffect(() => {
+        const list = legendRef.current;
+        if (!list) {
+            return;
+        }
+        fitLegendRows(list);
+        let isCurrent = true;
+        void document.fonts.ready.then(() => {
+            if (isCurrent) {
+                fitLegendRows(list);
+            }
+        });
+        return () => {
+            isCurrent = false;
+        };
+    }, [parties]);
     const positions = useMemo(() => layoutSeats(parties.map((party) => party.seats.length)), [parties]);
     const selectedParty = parties.find((party) => party.acronym === selectedAcronym) ?? null;
+    const litCount = highlightedIds ? seats.filter((seat) => highlightedIds.has(seat.id)).length : seats.length;
     const seatList = useMemo(() => parties.flatMap((party) => party.seats), [parties]);
 
-    // drawn once per party selection: hovering never re-renders the 513 seats
+    // drawn once per filter change: hovering never re-renders the 513 seats
     const seatElements = useMemo(() => {
         let seatIndex = 0;
-        return parties.flatMap((party, partyIndex) => {
-            const isDimmed = selectedAcronym !== null && party.acronym !== selectedAcronym;
+        // one group per party, so the entry animation moves 21 groups in turn instead of 513 seats
+        return parties.map((party, partyIndex) => {
             const fill = PARTY_COLORS[party.acronym]?.color ?? NEUTRAL_SEAT_COLOR;
-            return party.seats.map((seat, indexInParty) => {
+            const seatRects = party.seats.map((seat, indexInParty) => {
                 const position = positions[partyIndex]?.[indexInParty];
                 const index = seatIndex++;
                 if (!position) {
                     return null;
                 }
+                const isDimmed = highlightedIds !== null && !highlightedIds.has(seat.id);
                 return (
                     <rect
                         key={seat.id}
@@ -73,8 +119,13 @@ export function Hemicycle({ seats, periodText }: Readonly<HemicycleProps>) {
                     />
                 );
             });
+            return (
+                <g key={party.acronym} data-reveal="rise">
+                    {seatRects}
+                </g>
+            );
         });
-    }, [parties, positions, selectedAcronym]);
+    }, [parties, positions, highlightedIds]);
 
     function seatFromEvent(target: EventTarget): SeatWithRates | null {
         const index = target instanceof Element ? target.getAttribute("data-seat") : null;
@@ -98,7 +149,7 @@ export function Hemicycle({ seats, periodText }: Readonly<HemicycleProps>) {
     function handleClick(event: MouseEvent<SVGSVGElement>) {
         const seat = seatFromEvent(event.target);
         if (seat && window.matchMedia(DESKTOP_QUERY).matches) {
-            router.push(`/deputados/${seat.id}`);
+            router.push(`/deputados/${seat.id}`, { transitionTypes: NAV_FORWARD });
         }
     }
 
@@ -120,10 +171,10 @@ export function Hemicycle({ seats, periodText }: Readonly<HemicycleProps>) {
                 >
                     {seatElements}
                     <text x={CENTER_X} y={CENTER_Y - 26} className={styles.total}>
-                        {seats.length}
+                        {litCount}
                     </text>
                     <text x={CENTER_X} y={CENTER_Y - 4} className={styles.totalLabel}>
-                        deputados
+                        {highlightedIds ? `de ${seats.length} deputados` : "deputados"}
                     </text>
                 </svg>
                 <div ref={tooltipRef} className={styles.tooltip} hidden={!hoveredSeat} aria-hidden="true">
@@ -151,24 +202,39 @@ export function Hemicycle({ seats, periodText }: Readonly<HemicycleProps>) {
                 </span>
             </div>
 
-            <ul className={styles.legend} aria-label="Partidos, do mais ao menos alinhado ao governo">
-                {parties.map((party) => (
-                    <li key={party.acronym}>
-                        <button
-                            type="button"
-                            className={styles.legendButton}
-                            aria-pressed={party.acronym === selectedAcronym}
-                            onClick={() => setSelectedAcronym(party.acronym === selectedAcronym ? null : party.acronym)}
-                        >
-                            <span className={styles.swatch} style={{ background: PARTY_COLORS[party.acronym]?.color ?? NEUTRAL_SEAT_COLOR }} />
-                            <span className={styles.legendAcronym}>{party.label}</span>
-                            <span className={styles.legendSeats}>{party.seats.length}</span>
-                            {party.governmentRate === null && <span className={styles.legendFlag}>poucos votos</span>}
-                        </button>
-                    </li>
-                ))}
-            </ul>
-            <p className={styles.hint}>Toque em um partido para ver onde estão os seus deputados.</p>
+            <ScrollSlider className={styles.legendScroll}>
+                <ul ref={legendRef} className={styles.legend} aria-label="Partidos, do mais ao menos alinhado ao governo">
+                    {parties.map((party) => (
+                        <li key={party.acronym}>
+                            <button
+                                type="button"
+                                className={styles.legendButton}
+                                aria-pressed={party.acronym === selectedAcronym}
+                                onClick={() => onSelectParty(party.acronym === selectedAcronym ? "" : party.acronym)}
+                            >
+                                <span className={styles.swatch} style={{ background: PARTY_COLORS[party.acronym]?.color ?? NEUTRAL_SEAT_COLOR }} />
+                                <span className={styles.legendAcronym}>{party.label}</span>
+                                <span className={styles.legendSeats}>{party.seats.length}</span>
+                                {party.governmentRate === null && <span className={styles.legendFlag}>poucos votos</span>}
+                            </button>
+                        </li>
+                    ))}
+                </ul>
+            </ScrollSlider>
+            <p className={styles.hint}>Toque em um partido, ou num estado do mapa abaixo, para ver onde estão os seus deputados.</p>
+
+            <p className={styles.litSummary} aria-live="polite">
+                {highlightedIds && highlightedIds.size === 0 ? (
+                    "Nenhum deputado com esses filtros, então nenhuma cadeira está acesa."
+                ) : highlightedIds ? (
+                    <>
+                        <strong>{litCount}</strong> {litCount === 1 ? "cadeira acesa" : "cadeiras acesas"}: {highlightText}.
+                        {litCount < highlightedIds.size && " Quem saiu do cargo aparece na lista, mas não tem cadeira na Câmara."}
+                    </>
+                ) : (
+                    "Todas as cadeiras acesas. Use o mapa, o partido ou o nome para acender só algumas."
+                )}
+            </p>
 
             <div className={styles.detailArea} aria-live="polite">
                 {selectedParty && (
@@ -192,10 +258,6 @@ export function Hemicycle({ seats, periodText }: Readonly<HemicycleProps>) {
                                 </p>
                             )}
                         </div>
-                        <Link href={`/deputados?partido=${encodeURIComponent(selectedParty.acronym)}`} className={styles.goButton}>
-                            Ver os deputados do {selectedParty.label}
-                            <ArrowRight aria-hidden="true" />
-                        </Link>
                     </div>
                 )}
             </div>
@@ -228,7 +290,7 @@ export function Hemicycle({ seats, periodText }: Readonly<HemicycleProps>) {
             )}
 
             {isListOpen && (
-                <div id="chamber-party-list" className={styles.tableScroll} tabIndex={0} role="region" aria-label="Partidos em lista">
+                <ScrollSlider direction="vertical" id="chamber-party-list" className={styles.tableScroll} tabIndex={0} role="region" aria-label="Partidos em lista">
                     <table className={styles.table}>
                         <caption className="visually-hidden">Partidos da Câmara, do mais ao menos alinhado ao governo</caption>
                         <thead>
@@ -258,8 +320,13 @@ export function Hemicycle({ seats, periodText }: Readonly<HemicycleProps>) {
                             ))}
                         </tbody>
                     </table>
-                </div>
+                </ScrollSlider>
             )}
         </div>
     );
+}
+
+// the chamber drawing while it loads, with the proportions of the seats
+export function HemicycleSkeleton() {
+    return <SkeletonArea ratio={`${HEMICYCLE_WIDTH} / ${HEMICYCLE_HEIGHT}`} />;
 }

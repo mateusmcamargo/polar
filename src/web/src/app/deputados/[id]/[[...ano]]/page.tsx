@@ -4,18 +4,24 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight, CircleAlert } from "lucide-react";
 import { METRICS_START_DATE, type DeputyProfile, type DeputyYear } from "@polar/db";
-import { AttendanceSummary } from "@/components/AttendanceSummary/AttendanceSummary";
+import { AttendanceSummary, AttendanceSummarySkeleton } from "@/components/AttendanceSummary/AttendanceSummary";
+import { DataGate } from "@/components/DebugDataToggle/DataGate";
 import { BRAZILIAN_STATES } from "@/components/DeputySearch/brazilianStates";
-import { FrontList } from "@/components/FrontList/FrontList";
+import { FrontList, FrontListSkeleton } from "@/components/FrontList/FrontList";
+import { LinkPending } from "@/components/LinkPending/LinkPending";
 import { ListenButton } from "@/components/ListenButton/ListenButton";
-import { BenefitList, QuotaSummary } from "@/components/MoneySummary/MoneySummary";
-import { OrganList } from "@/components/OrganList/OrganList";
+import { BenefitList, BenefitListSkeleton, QuotaSummary, QuotaSummarySkeleton } from "@/components/MoneySummary/MoneySummary";
+import { PageMap, type PageMapSection } from "@/components/PageMap/PageMap";
+import { OrganList, OrganListSkeleton } from "@/components/OrganList/OrganList";
+import { NAV_BACK, NAV_FORWARD, PageTransition } from "@/components/PageTransition/PageTransition";
 import { PartyBadge } from "@/components/PartyBadge/PartyBadge";
-import { PartyHistory } from "@/components/PartyHistory/PartyHistory";
-import { RecentVotes } from "@/components/RecentVotes/RecentVotes";
+import { PartyHistory, PartyHistorySkeleton } from "@/components/PartyHistory/PartyHistory";
+import { RecentVotes, RecentVotesSkeleton } from "@/components/RecentVotes/RecentVotes";
+import { Skeleton } from "@/components/Skeleton/Skeleton";
 import { SourceNote } from "@/components/SourceNote/SourceNote";
-import { SummaryMetrics, type SummaryMetric } from "@/components/SummaryMetrics/SummaryMetrics";
+import { SummaryMetrics, SummaryMetricsSkeleton, type SummaryMetric } from "@/components/SummaryMetrics/SummaryMetrics";
 import { YearSelector } from "@/components/YearSelector/YearSelector";
+import { DeputyHeaderSkeleton } from "../DeputyHeaderSkeleton";
 import { loadDeputyYear, resolveProfileYear, type ResolvedProfile } from "../deputyProfileData";
 import styles from "./page.module.scss";
 
@@ -199,220 +205,266 @@ export default async function DeputyProfilePage({ params }: ProfilePageProps) {
     const outOfOfficeReason = profile.outOfOffice ? OUT_OF_OFFICE_REASONS[profile.outOfOffice.situation] : undefined;
     const showsCivilName = profile.civilName && profile.civilName.toLowerCase() !== profile.politicalName.toLowerCase();
 
+    const mapSections: PageMapSection[] = [
+        ...(yearData
+            ? [
+                  { id: "summary", label: "Resumo do ano" },
+                  { id: "votes", label: "Últimas votações" },
+                  { id: "attendance", label: "Presença" },
+                  { id: "money", label: "Gastos e benefícios" },
+              ]
+            : []),
+        { id: "organs", label: "Comissões" },
+        { id: "fronts", label: "Frentes parlamentares" },
+        ...(profile.partyHistory.length > 0 ? [{ id: "parties", label: "Partidos" }] : []),
+    ];
+
     return (
-        <main id="conteudo" className={styles.page}>
-            <nav className={styles.crumb} aria-label="Você está em">
-                <Link href="/deputados">Deputados</Link> <span aria-hidden="true">›</span> {profile.politicalName}
-            </nav>
+        <PageTransition>
+            <PageMap sections={mapSections} />
+            <main id="conteudo" className={styles.page}>
+                <DataGate skeleton={<DeputyHeaderSkeleton photo="large" />}>
+                    <nav className={styles.crumb} aria-label="Você está em">
+                        <Link href="/deputados" transitionTypes={NAV_BACK}>Deputados</Link> <span aria-hidden="true">›</span> {profile.politicalName}
+                    </nav>
 
-            <section className={styles.profile} aria-labelledby="deputy-name">
-                {profile.photoUrl ? (
-                    <Image
-                        className={styles.photo}
-                        src={profile.photoUrl}
-                        alt={`Foto de ${profile.politicalName}`}
-                        width={112}
-                        height={140}
-                        priority
-                    />
-                ) : (
-                    <span className={styles.photo} aria-hidden="true" />
-                )}
-                <div className={styles.identity}>
-                    <h1 id="deputy-name" className={styles.name}>
-                        {profile.politicalName}
-                    </h1>
-                    {showsCivilName && <p className={styles.civilName}>Nome de registro: {readableName(profile.civilName ?? "")}</p>}
-                    <div className={styles.tags}>
-                        <PartyBadge acronym={profile.party?.acronym ?? null} />
-                        <span className={styles.tag}>{BRAZILIAN_STATES[profile.stateCode]?.name ?? profile.stateCode}</span>
-                        <span className={styles.tag}>
-                            <span className={profile.isInOffice ? styles.dotOn : styles.dotOff} aria-hidden="true" />
-                            {profile.isInOffice ? "No cargo" : "Fora do cargo"}
-                        </span>
-                    </div>
-                </div>
-                {profile.outOfOffice && (
-                    <p className={styles.outOfOffice}>
-                        <CircleAlert aria-hidden="true" />
-                        <span>
-                            <strong>Fora do cargo desde {dateFormat.format(profile.outOfOffice.since)}.</strong>
-                            {outOfOfficeReason && ` Motivo registrado pela Câmara: ${outOfOfficeReason}.`}
-                            {profile.years.length > 0 && " Os dados abaixo cobrem o período no cargo."}
-                        </span>
-                    </p>
-                )}
-                <p className={styles.intro}>
-                    {roleSentence(profile)} Esta página mostra os votos no plenário, a presença e o uso do dinheiro público.
-                </p>
-                <div className={styles.actions}>
-                    {year && profile.years.length > 1 && <YearSelector basePath={`/deputados/${profile.id}`} years={profile.years} selectedYear={year} />}
-                    <ListenButton text={listenText(profile, yearData, summaryMetrics)} />
-                </div>
-            </section>
-
-            {yearData ? (
-                <>
-                    <section className={styles.block} aria-labelledby="summary-title">
-                        <h2 id="summary-title" className={styles.blockLabel}>
-                            Resumo de {yearData.year}
-                        </h2>
-                        <SummaryMetrics metrics={summaryMetrics} />
-                        <SourceNote
-                            sourceName="Câmara dos Deputados, votações nominais do plenário"
-                            sourceUrl={DADOS_ABERTOS_URL}
-                            collectedAt={yearData.votesCollectedAt}
-                        />
-                        {yearData.annualPage && (
-                            <SourceNote
-                                sourceName={`Presença: Câmara dos Deputados, página do perfil (${yearData.year})`}
-                                sourceUrl={yearData.annualPage.sourceUrl}
-                                collectedAt={yearData.annualPage.collectedAt}
+                    <section className={styles.profile} aria-labelledby="deputy-name">
+                        {profile.photoUrl ? (
+                            <Image
+                                className={styles.photo}
+                                src={profile.photoUrl}
+                                alt={`Foto de ${profile.politicalName}`}
+                                width={140}
+                                height={187}
+                                priority
                             />
-                        )}
-                    </section>
-
-                    <section className={styles.block} aria-labelledby="votes-title">
-                        <h2 id="votes-title" className={styles.title}>
-                            Últimas votações de {yearData.year}
-                        </h2>
-                        <p className={styles.lead}>
-                            Os votos nas últimas decisões do plenário. Escolha uma linha para ver cada votação sobre aquela proposta.
-                        </p>
-                        {yearData.latestVoteGroups.length > 0 ? (
-                            <RecentVotes groups={yearData.latestVoteGroups} />
                         ) : (
-                            <p className={styles.empty}>Nenhuma votação nominal do plenário com voto registrado neste ano.</p>
+                            <span className={styles.photo} aria-hidden="true" />
+                        )}
+                        <div className={styles.identity}>
+                            <h1 id="deputy-name" className={styles.name}>
+                                {profile.politicalName}
+                            </h1>
+                            {showsCivilName && <p className={styles.civilName}>Nome de registro: {readableName(profile.civilName ?? "")}</p>}
+                            <div className={styles.tags}>
+                                <PartyBadge acronym={profile.party?.acronym ?? null} />
+                                <span className={styles.tag}>{BRAZILIAN_STATES[profile.stateCode]?.name ?? profile.stateCode}</span>
+                                <span className={styles.tag}>
+                                    <span className={profile.isInOffice ? styles.dotOn : styles.dotOff} aria-hidden="true" />
+                                    {profile.isInOffice ? "No cargo" : "Fora do cargo"}
+                                </span>
+                            </div>
+                        </div>
+                        {profile.outOfOffice && (
+                            <p className={styles.outOfOffice}>
+                                <CircleAlert aria-hidden="true" />
+                                <span>
+                                    <strong>Fora do cargo desde {dateFormat.format(profile.outOfOffice.since)}.</strong>
+                                    {outOfOfficeReason && ` Motivo registrado pela Câmara: ${outOfOfficeReason}.`}
+                                    {profile.years.length > 0 && " Os dados abaixo cobrem o período no cargo."}
+                                </span>
+                            </p>
+                        )}
+                        <p className={styles.intro}>
+                            {roleSentence(profile)} Esta página mostra os votos no plenário, a presença e o uso do dinheiro público.
+                        </p>
+                        <div className={styles.actions}>
+                            {year && profile.years.length > 1 && <YearSelector basePath={`/deputados/${profile.id}`} years={profile.years} selectedYear={year} />}
+                            <ListenButton text={listenText(profile, yearData, summaryMetrics)} />
+                        </div>
+                    </section>
+                </DataGate>
+
+                {yearData ? (
+                    <>
+                        <section id="summary" className={styles.block} aria-labelledby="summary-title">
+                            <p className={styles.sectionKicker}>Em {yearData.year}</p>
+                            <h2 id="summary-title" className={styles.title}>
+                                Resumo do ano
+                            </h2>
+                            <DataGate skeleton={<SummaryMetricsSkeleton />}>
+                                <SummaryMetrics metrics={summaryMetrics} />
+                                <SourceNote
+                                    sourceName="Câmara dos Deputados, votações nominais do plenário"
+                                    sourceUrl={DADOS_ABERTOS_URL}
+                                    collectedAt={yearData.votesCollectedAt}
+                                />
+                                {yearData.annualPage && (
+                                    <SourceNote
+                                        sourceName={`Presença: Câmara dos Deputados, página do perfil (${yearData.year})`}
+                                        sourceUrl={yearData.annualPage.sourceUrl}
+                                        collectedAt={yearData.annualPage.collectedAt}
+                                    />
+                                )}
+                            </DataGate>
+                        </section>
+
+                        <section id="votes" className={styles.block} aria-labelledby="votes-title">
+                            <p className={styles.sectionKicker}>Em {yearData.year}</p>
+                            <h2 id="votes-title" className={styles.title}>
+                                Últimas votações
+                            </h2>
+                            <p className={styles.lead}>
+                                Os votos nas últimas decisões do plenário. Escolha uma linha para ver cada votação sobre aquela proposta.
+                            </p>
+                            <DataGate skeleton={<RecentVotesSkeleton />}>
+                                {yearData.latestVoteGroups.length > 0 ? (
+                                    <RecentVotes groups={yearData.latestVoteGroups} />
+                                ) : (
+                                    <p className={styles.empty}>Nenhuma votação nominal do plenário com voto registrado neste ano.</p>
+                                )}
+                                <SourceNote
+                                    sourceName="Câmara dos Deputados, votações nominais do plenário"
+                                    sourceUrl={DADOS_ABERTOS_URL}
+                                    collectedAt={yearData.votesCollectedAt}
+                                />
+                            </DataGate>
+                        </section>
+
+                        <section id="attendance" className={styles.block} aria-labelledby="attendance-title">
+                            <p className={styles.sectionKicker}>Em {yearData.year}</p>
+                            <h2 id="attendance-title" className={styles.title}>
+                                Presença
+                            </h2>
+                            <p className={styles.lead}>
+                                Quantas vezes houve presença nos dias de votação do plenário e nas reuniões das comissões.
+                            </p>
+                            <DataGate skeleton={<AttendanceSummarySkeleton />}>
+                                {yearData.annualPage ? (
+                                    <>
+                                        <AttendanceSummary plenary={yearData.annualPage.plenary} committees={yearData.annualPage.committees} />
+                                        <SourceNote
+                                            sourceName={`Câmara dos Deputados, página do perfil (${yearData.year})`}
+                                            sourceUrl={yearData.annualPage.sourceUrl}
+                                            collectedAt={yearData.annualPage.collectedAt}
+                                        />
+                                    </>
+                                ) : (
+                                    <p className={styles.empty}>A Câmara não publicou o resumo de presença deste ano.</p>
+                                )}
+                            </DataGate>
+                        </section>
+
+                        <section id="money" className={styles.block} aria-labelledby="money-title">
+                            <p className={styles.sectionKicker}>Em {yearData.year}</p>
+                            <h2 id="money-title" className={styles.title}>
+                                Gastos e benefícios
+                            </h2>
+                            <p className={styles.lead}>
+                                A cota parlamentar paga despesas do mandato, como combustível, passagens e divulgação. O limite muda
+                                conforme o estado. As médias consideram todos os deputados com algum gasto no ano.
+                            </p>
+                            <DataGate skeleton={<QuotaSummarySkeleton />}>
+                                {yearData.quota ? (
+                                    <>
+                                        <QuotaSummary deputyName={profile.politicalName} statePhrase={state} quota={yearData.quota} />
+                                        <SourceNote
+                                            sourceName="Câmara dos Deputados, cota parlamentar (CEAP)"
+                                            sourceUrl={QUOTA_URL}
+                                            collectedAt={yearData.quota.collectedAt}
+                                        />
+                                        <Link
+                                            className={styles.more}
+                                            transitionTypes={NAV_FORWARD}
+                                            href={
+                                                yearData.year === profile.years[0]
+                                                    ? `/deputados/${profile.id}/gastos`
+                                                    : `/deputados/${profile.id}/gastos/${yearData.year}`
+                                            }
+                                        >
+                                            Ver todos os gastos de {yearData.year}
+                                            <ChevronRight aria-hidden="true" />
+                                            <LinkPending />
+                                        </Link>
+                                    </>
+                                ) : (
+                                    <p className={styles.empty}>Nenhum gasto da cota parlamentar registrado neste ano.</p>
+                                )}
+                            </DataGate>
+                            {yearData.annualPage && (
+                                <>
+                                    <h3 className={styles.subtitle}>Benefícios</h3>
+                                    <DataGate skeleton={<BenefitListSkeleton />}>
+                                        <BenefitList benefits={yearData.annualPage.benefits} />
+                                        <SourceNote
+                                            sourceName={`Câmara dos Deputados, página do perfil (${yearData.year})`}
+                                            sourceUrl={yearData.annualPage.sourceUrl}
+                                            collectedAt={yearData.annualPage.collectedAt}
+                                        />
+                                    </DataGate>
+                                </>
+                            )}
+                        </section>
+                    </>
+                ) : (
+                    <DataGate skeleton={<Skeleton width="min(24em, 80%)" />}>
+                        <p className={styles.empty}>
+                            {profile.isInOffice
+                                ? "Ainda não há votos, presença ou gastos carregados para este deputado."
+                                : `O polar tem votos, presença e gastos a partir de ${METRICS_START_DATE.slice(0, 4)}, e o período no cargo terminou antes.`}
+                        </p>
+                    </DataGate>
+                )}
+
+                <section id="organs" className={styles.block} aria-labelledby="organs-title">
+                    <p className={styles.sectionKicker}>Nesta legislatura</p>
+                    <h2 id="organs-title" className={styles.title}>
+                        Comissões
+                    </h2>
+                    <p className={styles.lead}>
+                        Grupos de deputados que analisam os projetos antes do plenário.
+                        {profile.organsCollectedAt && ` Situação em ${dateFormat.format(profile.organsCollectedAt)}.`}
+                    </p>
+                    <DataGate skeleton={<OrganListSkeleton />}>
+                        <OrganList currentOrgans={profile.currentOrgans} pastOrgans={profile.pastOrgans} />
+                        <SourceNote
+                            sourceName="Câmara dos Deputados, órgãos e membros"
+                            sourceUrl={DADOS_ABERTOS_URL}
+                            collectedAt={profile.organsCollectedAt}
+                        />
+                    </DataGate>
+                </section>
+
+                <section id="fronts" className={styles.block} aria-labelledby="fronts-title">
+                    <p className={styles.sectionKicker}>Nesta legislatura</p>
+                    <h2 id="fronts-title" className={styles.title}>
+                        Frentes parlamentares
+                    </h2>
+                    <p className={styles.lead}>
+                        Grupos de deputados que se juntam em torno de um tema. Participar de uma frente não é uma votação.
+                    </p>
+                    <DataGate skeleton={<FrontListSkeleton />}>
+                        {profile.fronts.length > 0 ? (
+                            <FrontList fronts={profile.fronts} isInOffice={profile.isInOffice} />
+                        ) : (
+                            <p className={styles.empty}>Não participa de nenhuma frente parlamentar nesta legislatura.</p>
                         )}
                         <SourceNote
-                            sourceName="Câmara dos Deputados, votações nominais do plenário"
+                            sourceName="Câmara dos Deputados, frentes parlamentares"
                             sourceUrl={DADOS_ABERTOS_URL}
-                            collectedAt={yearData.votesCollectedAt}
+                            collectedAt={profile.frontsCollectedAt}
                         />
-                    </section>
-
-                    <section className={styles.block} aria-labelledby="attendance-title">
-                        <h2 id="attendance-title" className={styles.title}>
-                            Presença em {yearData.year}
-                        </h2>
-                        <p className={styles.lead}>
-                            Quantas vezes houve presença nos dias de votação do plenário e nas reuniões das comissões.
-                        </p>
-                        {yearData.annualPage ? (
-                            <>
-                                <AttendanceSummary plenary={yearData.annualPage.plenary} committees={yearData.annualPage.committees} />
-                                <SourceNote
-                                    sourceName={`Câmara dos Deputados, página do perfil (${yearData.year})`}
-                                    sourceUrl={yearData.annualPage.sourceUrl}
-                                    collectedAt={yearData.annualPage.collectedAt}
-                                />
-                            </>
-                        ) : (
-                            <p className={styles.empty}>A Câmara não publicou o resumo de presença deste ano.</p>
-                        )}
-                    </section>
-
-                    <section className={styles.block} aria-labelledby="money-title">
-                        <h2 id="money-title" className={styles.title}>
-                            Gastos e benefícios em {yearData.year}
-                        </h2>
-                        <p className={styles.lead}>
-                            A cota parlamentar paga despesas do mandato, como combustível, passagens e divulgação. O limite muda
-                            conforme o estado. As médias consideram todos os deputados com algum gasto no ano.
-                        </p>
-                        {yearData.quota ? (
-                            <>
-                                <QuotaSummary deputyName={profile.politicalName} statePhrase={state} quota={yearData.quota} />
-                                <SourceNote
-                                    sourceName="Câmara dos Deputados, cota parlamentar (CEAP)"
-                                    sourceUrl={QUOTA_URL}
-                                    collectedAt={yearData.quota.collectedAt}
-                                />
-                                <Link
-                                    className={styles.more}
-                                    href={
-                                        yearData.year === profile.years[0]
-                                            ? `/deputados/${profile.id}/gastos`
-                                            : `/deputados/${profile.id}/gastos/${yearData.year}`
-                                    }
-                                >
-                                    Ver todos os gastos de {yearData.year}
-                                    <ChevronRight aria-hidden="true" />
-                                </Link>
-                            </>
-                        ) : (
-                            <p className={styles.empty}>Nenhum gasto da cota parlamentar registrado neste ano.</p>
-                        )}
-                        {yearData.annualPage && (
-                            <>
-                                <h3 className={styles.subtitle}>Benefícios</h3>
-                                <BenefitList benefits={yearData.annualPage.benefits} />
-                                <SourceNote
-                                    sourceName={`Câmara dos Deputados, página do perfil (${yearData.year})`}
-                                    sourceUrl={yearData.annualPage.sourceUrl}
-                                    collectedAt={yearData.annualPage.collectedAt}
-                                />
-                            </>
-                        )}
-                    </section>
-                </>
-            ) : (
-                <p className={styles.empty}>
-                    {profile.isInOffice
-                        ? "Ainda não há votos, presença ou gastos carregados para este deputado."
-                        : `O polar tem votos, presença e gastos a partir de ${METRICS_START_DATE.slice(0, 4)}, e o período no cargo terminou antes.`}
-                </p>
-            )}
-
-            <section className={styles.block} aria-labelledby="organs-title">
-                <h2 id="organs-title" className={styles.title}>
-                    Comissões
-                </h2>
-                <p className={styles.lead}>
-                    Grupos de deputados que analisam os projetos antes do plenário.
-                    {profile.organsCollectedAt && ` Situação em ${dateFormat.format(profile.organsCollectedAt)}.`}
-                </p>
-                <OrganList currentOrgans={profile.currentOrgans} pastOrgans={profile.pastOrgans} />
-                <SourceNote
-                    sourceName="Câmara dos Deputados, órgãos e membros"
-                    sourceUrl={DADOS_ABERTOS_URL}
-                    collectedAt={profile.organsCollectedAt}
-                />
-            </section>
-
-            <section className={styles.block} aria-labelledby="fronts-title">
-                <h2 id="fronts-title" className={styles.title}>
-                    Frentes parlamentares
-                </h2>
-                <p className={styles.lead}>
-                    Grupos de deputados que se juntam em torno de um tema. Participar de uma frente não é uma votação.
-                </p>
-                {profile.fronts.length > 0 ? (
-                    <FrontList fronts={profile.fronts} isInOffice={profile.isInOffice} />
-                ) : (
-                    <p className={styles.empty}>Não participa de nenhuma frente parlamentar nesta legislatura.</p>
-                )}
-                <SourceNote
-                    sourceName="Câmara dos Deputados, frentes parlamentares"
-                    sourceUrl={DADOS_ABERTOS_URL}
-                    collectedAt={profile.frontsCollectedAt}
-                />
-            </section>
-
-            {profile.partyHistory.length > 0 && (
-                <section className={styles.block} aria-labelledby="parties-title">
-                    <h2 id="parties-title" className={styles.title}>
-                        Partidos nesta legislatura
-                    </h2>
-                    <p className={styles.lead}>Desde 1º de fevereiro de 2023.</p>
-                    <PartyHistory periods={profile.partyHistory} />
-                    <SourceNote
-                        sourceName="Câmara dos Deputados, histórico do deputado"
-                        sourceUrl={`${profile.sourceUrl}/historico`}
-                        collectedAt={profile.collectedAt}
-                    />
+                    </DataGate>
                 </section>
-            )}
-        </main>
+
+                {profile.partyHistory.length > 0 && (
+                    <section id="parties" className={styles.block} aria-labelledby="parties-title">
+                        <p className={styles.sectionKicker}>Nesta legislatura</p>
+                        <h2 id="parties-title" className={styles.title}>
+                            Partidos
+                        </h2>
+                        <p className={styles.lead}>Desde 1º de fevereiro de 2023.</p>
+                        <DataGate skeleton={<PartyHistorySkeleton />}>
+                            <PartyHistory periods={profile.partyHistory} />
+                            <SourceNote
+                                sourceName="Câmara dos Deputados, histórico do deputado"
+                                sourceUrl={`${profile.sourceUrl}/historico`}
+                                collectedAt={profile.collectedAt}
+                            />
+                        </DataGate>
+                    </section>
+                )}
+            </main>
+        </PageTransition>
     );
 }

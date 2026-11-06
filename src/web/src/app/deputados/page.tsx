@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
-import { listDeputiesForSearch } from "@polar/db";
+import { getChamberComposition, listDeputiesForSearch } from "@polar/db";
 import { DeputySearch } from "@/components/DeputySearch/DeputySearch";
 import { ListenButton } from "@/components/ListenButton/ListenButton";
+import { PageTransition } from "@/components/PageTransition/PageTransition";
 import { SourceNote } from "@/components/SourceNote/SourceNote";
 import styles from "./page.module.scss";
 
-// the deputies ingestion runs once a day
+// deputies and votes are ingested once a day
 export const revalidate = 86400;
 
+const voteDateFormat = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" });
+
 const PAGE_TITLE = "Encontre seu deputado";
-const PAGE_LEAD = "Escolha o seu estado ou digite um nome. Você vê a foto, o partido e o estado de cada deputado federal.";
+const PAGE_LEAD = "Digite um nome ou escolha o seu estado. Você vê a foto, o partido e o estado de cada deputado federal, e onde cada um senta na Câmara.";
 
 export const metadata: Metadata = {
     title: PAGE_TITLE,
@@ -17,29 +20,46 @@ export const metadata: Metadata = {
 };
 
 export default async function DeputiesPage() {
-    const { deputies, collectedAt } = await listDeputiesForSearch();
+    const [{ deputies, collectedAt }, chamber] = await Promise.all([listDeputiesForSearch(), getChamberComposition()]);
+    const periodText =
+        chamber.firstVoteAt && chamber.lastVoteAt
+            ? `Período: votações do Plenário de ${voteDateFormat.format(chamber.firstVoteAt)} a ${voteDateFormat.format(chamber.lastVoteAt)}.`
+            : "Ainda não há votações carregadas para o cálculo.";
 
     return (
-        <main id="conteudo" className={styles.page}>
-            <section className={styles.intro} aria-labelledby="page-title">
-                <div className={styles.titleRow}>
-                    <h1 id="page-title" className={styles.title}>
-                        {PAGE_TITLE}
-                    </h1>
-                    <ListenButton text={`${PAGE_TITLE}. ${PAGE_LEAD}`} />
-                </div>
-                <p className={styles.lead}>{PAGE_LEAD}</p>
-            </section>
-            <DeputySearch
-                deputies={deputies}
-                sourceNote={
-                    <SourceNote
-                        sourceName="Câmara dos Deputados, Dados Abertos"
-                        sourceUrl="https://dadosabertos.camara.leg.br/"
-                        collectedAt={collectedAt}
-                    />
-                }
-            />
-        </main>
+        <PageTransition>
+            <main id="conteudo" className={styles.page}>
+                <section className={styles.intro} aria-labelledby="page-title">
+                    <div className={styles.titleRow}>
+                        <h1 id="page-title" className={styles.title}>
+                            {PAGE_TITLE}
+                        </h1>
+                        <ListenButton text={`${PAGE_TITLE}. ${PAGE_LEAD}`} />
+                    </div>
+                    <p className={styles.lead}>{PAGE_LEAD}</p>
+                </section>
+                <DeputySearch
+                    deputies={deputies}
+                    chamber={{
+                        seats: chamber.seats,
+                        periodText,
+                        sourceNote: (
+                            <SourceNote
+                                sourceName="Câmara dos Deputados, Dados Abertos (deputados, votações e orientações)"
+                                sourceUrl="https://dadosabertos.camara.leg.br/"
+                                collectedAt={chamber.collectedAt}
+                            />
+                        ),
+                    }}
+                    sourceNote={
+                        <SourceNote
+                            sourceName="Câmara dos Deputados, Dados Abertos"
+                            sourceUrl="https://dadosabertos.camara.leg.br/"
+                            collectedAt={collectedAt}
+                        />
+                    }
+                />
+            </main>
+        </PageTransition>
     );
 }

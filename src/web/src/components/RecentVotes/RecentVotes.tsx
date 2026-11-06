@@ -2,6 +2,7 @@ import type { DeputyVoteGroup } from "@polar/db";
 import { VoteBadge } from "@/components/VoteBadge/VoteBadge";
 import { PROPOSITION_TYPE_NAMES } from "./propositionTypes";
 import { classifyVote } from "./voteKinds";
+import { SkeletonRows } from "@/components/Skeleton/Skeleton";
 import styles from "./RecentVotes.module.scss";
 
 const voteDateFormat = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" });
@@ -23,7 +24,7 @@ export function RecentVotes({ groups }: Readonly<RecentVotesProps>) {
                 }
                 const proposition = group.proposition;
                 return (
-                    <li key={latestVote.id} className={styles.group}>
+                    <li key={latestVote.id} className={styles.group} data-reveal="rise">
                         <details>
                             <summary className={styles.summary}>
                                 <div className={styles.heading}>
@@ -73,4 +74,9 @@ export function RecentVotes({ groups }: Readonly<RecentVotesProps>) {
             })}
         </ul>
     );
+}
+
+// latest votes while they load: a proposal with its date and the vote at the right
+export function RecentVotesSkeleton() {
+    return <SkeletonRows count={5} hasMeta hasValue />;
 }
