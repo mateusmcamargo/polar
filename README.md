@@ -1,6 +1,4 @@
-Obrigado, At.te# <img src="brand/readme-banner.svg" alt="polar" width="100%">
-
-**A política brasileira na palma da sua mão.**
+# <img src="brand/readme-banner-inverted.svg" alt="polar" width="100%">
 
 O polar é uma plataforma gratuita e comunitária que reúne, em um só lugar, informações sobre quem representa o eleitorado brasileiro e como essas pessoas decidem. Todos os dados vêm de fontes oficiais e públicas do governo federal, sempre acompanhados do link de origem e da data de coleta.
 
@@ -15,23 +13,23 @@ Os dados sobre a atividade política no Brasil são públicos, mas estão espalh
 - **Pra onde foi o dinheiro?** Como cada deputado usou a cota parlamentar e os benefícios do cargo, com o comprovante de cada gasto.
 - **Vínculos:** quem financiou a campanha de cada deputado e para onde ele destinou as emendas parlamentares.
 - **Presença:** em quais sessões e reuniões cada deputado esteve presente.
-- **Do voto à lei:** o caminho de cada proposta, da votação até a lei publicada.
+- **Do voto à lei:** o caminho que cada proposta toma antes de ser aprovada ou negada.
 - **Histórico de parlamentares:** mandatos, partidos, comissões e posicionamentos ao longo do tempo.
-- **Comparações:** parlamentares lado a lado, com as mesmas métricas e a mesma fonte.
+- **Comparações:** parlamentares lado a lado, mostrando dados com as mesmas métricas e a mesma fonte.
 
 ## Princípios
 
 - **Transparência:** todo número exibido indica a fonte oficial e a data em que foi coletado.
-- **Neutralidade:** o polar apresenta fatos, não opiniões. Não há notas, rankings editoriais nem adjetivos sobre políticos.
-- **Acesso livre:** sem cadastro, sem anúncios e sem custo para quem usa.
-- **Para todas as pessoas:** linguagem simples, termos técnicos explicados, tradução para Libras com o VLibras, leitura em voz alta e acessibilidade como requisito, seguindo o padrão WCAG 2.2 AA.
-- **Privacidade:** apenas dados de agentes públicos no exercício de suas funções, em conformidade com a LGPD.
+- **Neutralidade:** o polar apresenta fatos e não toma partidos. Não há notas, rankings editoriais nem adjetivos sobre políticos.
+- **Acesso livre:** sem cadastro, sem anúncios e sem custo.
+- **Para todas as pessoas:** linguagem simples, termos técnicos explicados, tradução para Libras com o VLibras, leitura em voz alta e interface construída com foco em acessibilidade, seguindo o padrão WCAG 2.2 AA.
+- **Privacidade:** o polar usa e exibe apenas dados de agentes públicos no exercício de suas funções, em conformidade com a LGPD.
 
 ## Fontes de dados
 
 - [Dados Abertos da Câmara dos Deputados](https://dadosabertos.camara.leg.br/)
 
-Novas fontes serão incorporadas nas próximas etapas, entre elas indicadores socioeconômicos do IBGE e do Banco Central, o Senado Federal, o Tribunal Superior Eleitoral e o Portal da Transparência.
+Novas fontes serão incorporadas, entre elas indicadores socioeconômicos do IBGE e do Banco Central, o Senado Federal, o Tribunal Superior Eleitoral e o Portal da Transparência.
 
 ## Situação do projeto
 
