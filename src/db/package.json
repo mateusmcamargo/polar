@@ -6,7 +6,9 @@
         ".": "./src/index.ts",
         "./party-colors": "./src/partyColors.ts",
         "./deputy-salary": "./src/deputySalary.ts",
-        "./quota-limits": "./src/deputyQuotaLimits.ts"
+        "./quota-limits": "./src/deputyQuotaLimits.ts",
+        "./rulers": "./src/rulers/index.ts",
+        "./glossary": "./src/glossary.ts"
     },
     "scripts": {
         "generate": "prisma generate",
