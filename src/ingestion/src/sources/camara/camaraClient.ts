@@ -59,7 +59,8 @@ function fetchJsonWithRetry<Data>(
 }
 
 // the server closes long downloads midway, so each attempt resumes from the last byte received
-async function fetchResumable(url: string, accept: string): Promise<Buffer> {
+// (also used for the CEAP zip, which is on the main website and accepts the same Range requests)
+export async function fetchResumable(url: string, accept: string): Promise<Buffer> {
     const chunks: Uint8Array[] = [];
     let receivedBytes = 0;
     let totalBytes: number | null = null;
@@ -117,8 +118,13 @@ export function buildCamaraUrl(path: string, query: Record<string, string | numb
     return `${CAMARA_API_URL}${path}${queryString}`;
 }
 
-export async function fetchCamaraObject<Data>(path: string): Promise<Data> {
-    const response = await fetchJsonWithRetry<Data>(buildCamaraUrl(path));
+// a request that has no fallback sets hasNoFallback, so an outage of a few minutes does not stop the run
+export async function fetchCamaraObject<Data>(path: string, hasNoFallback = false): Promise<Data> {
+    const response = await fetchJsonWithRetry<Data>(
+        buildCamaraUrl(path),
+        hasNoFallback ? LONG_OUTAGE_MAX_ATTEMPTS : MAX_ATTEMPTS,
+        hasNoFallback ? LONG_OUTAGE_MAX_RETRY_WAIT_MS : MAX_RETRY_WAIT_MS,
+    );
     await sleep(PAUSE_BETWEEN_REQUESTS_MS);
     return response.dados;
 }

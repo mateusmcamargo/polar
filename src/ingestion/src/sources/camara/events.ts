@@ -97,7 +97,7 @@ export function createCamaraEventsAdapter(
             ].filter((id) => !knownOrganIds.has(id));
             const missingOrgans: OrganDetail[] = [];
             for (const organId of missingOrganIds) {
-                missingOrgans.push(await fetchCamaraObject<OrganDetail>(`/orgaos/${organId}`));
+                missingOrgans.push(await fetchCamaraObject<OrganDetail>(`/orgaos/${organId}`, true));
             }
 
             return { eventsCsv, eventOrgansCsv, attendancesCsv, missingOrgans };

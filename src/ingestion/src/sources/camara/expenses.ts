@@ -7,10 +7,10 @@ import { parse as parseCsv } from "csv-parse/sync";
 import { prisma } from "@polar/db";
 import type { CollectionContext, SourceAdapter } from "../sourceAdapter";
 import { splitIntoBatches } from "../splitIntoBatches";
+import { fetchResumable } from "./camaraClient";
 
 const execFileAsync = promisify(execFile);
 
-const USER_AGENT = "polar-ingestion (open data platform, contact via repository)";
 const MAX_UNZIPPED_BYTES = 1024 * 1024 * 1024;
 const WRITE_BATCH_SIZE = 4000;
 const TRANSACTION_TIMEOUT_MS = 10 * 60 * 1000;
@@ -141,15 +141,12 @@ export function createCamaraExpensesAdapter(
         // the zip is read with the system unzip, which needs a file instead of a stream
         async fetch(): Promise<string> {
             const url = `https://www.camara.leg.br/cotas/Ano-${year}.csv.zip`;
-            const response = await fetch(url, { headers: { "user-agent": USER_AGENT } });
-            if (!response.ok) {
-                throw new Error(`${url} answered ${response.status}`);
-            }
+            const zip = await fetchResumable(url, "application/zip");
 
             const temporaryDirectory = await mkdtemp(join(tmpdir(), "polar-ceap-"));
             try {
                 const zipPath = join(temporaryDirectory, `Ano-${year}.csv.zip`);
-                await writeFile(zipPath, Buffer.from(await response.arrayBuffer()));
+                await writeFile(zipPath, zip);
                 const { stdout } = await execFileAsync("unzip", ["-p", zipPath], {
                     encoding: "utf8",
                     maxBuffer: MAX_UNZIPPED_BYTES,
