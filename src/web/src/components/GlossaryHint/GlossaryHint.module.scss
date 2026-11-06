@@ -1,0 +1,18 @@
+@use "mixins" as *;
+
+p.hint {
+    @include hairline-border;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-card);
+    color: var(--color-fg-2);
+    font-size: var(--text-label);
+
+    svg {
+        flex: none;
+        width: 22px;
+        height: 22px;
+    }
+}

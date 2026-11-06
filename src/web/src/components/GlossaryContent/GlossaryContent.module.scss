@@ -1,0 +1,89 @@
+@use "mixins" as *;
+
+// takes the height its parent gives: the head keeps its size and the list scrolls in the rest
+div.content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+
+    div.head {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+        padding: var(--space-3) var(--space-4);
+        box-shadow: inset 0 -1px 0 var(--color-line-2);
+    }
+
+    label.search {
+        position: relative;
+
+        svg {
+            @include search-icon;
+            left: 14px;
+            width: 20px;
+            height: 20px;
+        }
+
+        input {
+            @include hairline-border(--color-line-3);
+            width: 100%;
+            min-height: 48px;
+            padding: 0 var(--space-3) 0 44px;
+            border: 0;
+            border-radius: var(--radius-small);
+            background: var(--color-bg);
+            color: var(--color-fg);
+            font: inherit;
+            font-size: var(--text-body);
+        }
+    }
+
+    nav.letters {
+        display: flex;
+        gap: var(--space-1);
+        overflow-x: auto;
+        padding-bottom: 2px;
+
+        button {
+            @include hairline-border;
+            flex: none;
+            min-width: 40px;
+            min-height: 40px;
+            border: 0;
+            border-radius: var(--radius-tag);
+            background: var(--color-panel);
+            color: var(--color-fg);
+            font: inherit;
+            font-size: var(--text-micro);
+            font-weight: 700;
+            cursor: pointer;
+        }
+    }
+
+    // the ScrollSlider frame takes the free height and its single row holds the scrolling body
+    div.bodyFrame {
+        flex: 1;
+        grid-template-rows: minmax(0, 1fr);
+    }
+
+    div.body {
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding: 0 var(--space-4) var(--space-5);
+    }
+
+    p.empty {
+        padding-block: var(--space-4);
+        color: var(--color-fg-2);
+    }
+
+    p.more {
+        padding-top: var(--space-4);
+        font-size: var(--text-micro);
+
+        a {
+            color: var(--color-fg-2);
+        }
+    }
+}

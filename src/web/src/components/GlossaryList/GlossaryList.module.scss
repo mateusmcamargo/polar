@@ -1,0 +1,100 @@
+@use "mixins" as *;
+@use "comic";
+
+div.list {
+    display: flex;
+    flex-direction: column;
+
+    // h2 on the /glossario page (under the h1), h3 in the panel (under its h2 title)
+    :is(h2, h3).letter {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        padding: var(--space-3) 0 var(--space-2);
+        // the panel and the /glossario page have different backgrounds
+        background: var(--glossary-letter-background, var(--color-panel));
+        box-shadow: inset 0 -1px 0 var(--color-line-2);
+        font-size: var(--text-label);
+        font-weight: 700;
+    }
+
+    dl.entries {
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+    }
+
+    div.entry {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        padding: var(--space-4) var(--space-3);
+        scroll-margin-top: 56px;
+        box-shadow: inset 0 -1px 0 var(--color-line);
+
+        &:focus {
+            outline: none;
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--color-focus);
+            outline-offset: 2px;
+        }
+
+        // the page opened at /glossario#termo-id gets the same highlight as the tapped entry of the panel
+        &:target {
+            @include comic.comic-panel;
+            margin-block: var(--space-3) var(--space-4);
+        }
+    }
+
+    // the tapped entry: the only comic block of the panel
+    div.current {
+        @include comic.comic-panel;
+        margin-block: var(--space-3) var(--space-4);
+    }
+
+    p.flag {
+        align-self: flex-start;
+        padding: 1px var(--space-2);
+        background: var(--color-sticker);
+        color: var(--color-on-sticker);
+        font-size: var(--text-micro);
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+    }
+
+    dt.term {
+        font-size: var(--text-body);
+        font-weight: 700;
+    }
+
+    span.alias {
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+        font-weight: 400;
+    }
+
+    dd.body {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        margin: 0;
+    }
+
+    p.example {
+        color: var(--color-fg-2);
+        font-size: var(--text-label);
+    }
+
+    p.seeAlso {
+        color: var(--color-fg-2);
+        font-size: var(--text-micro);
+
+        a {
+            @include text-link-target;
+            color: var(--color-fg);
+        }
+    }
+}

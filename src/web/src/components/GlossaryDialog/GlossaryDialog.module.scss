@@ -1,0 +1,114 @@
+@use "mixins" as *;
+
+dialog.dialog {
+    position: fixed;
+    inset: auto 0 0;
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    max-width: none;
+    height: min(80svh, 680px);
+    max-height: none;
+    margin: 0;
+    padding: 0 0 env(safe-area-inset-bottom, 0px);
+    border: 0;
+    background: var(--color-panel);
+    color: var(--color-fg);
+    box-shadow: inset 0 1px 0 var(--color-line-3);
+    // the panel slides in from the bottom (from the right on desktop) and back out when it closes; display and overlay
+    // wait for the slide, so the exit can be seen
+    transform: translateY(100%);
+    transition:
+        transform var(--duration-slide) var(--ease-out),
+        overlay var(--duration-slide) allow-discrete,
+        display var(--duration-slide) allow-discrete;
+
+    &[open] {
+        display: flex;
+        transform: none;
+
+        @starting-style {
+            transform: translateY(100%);
+        }
+    }
+
+    &::backdrop {
+        background: var(--color-scrim);
+        opacity: 0;
+        transition:
+            opacity var(--duration-slide) var(--ease-standard),
+            overlay var(--duration-slide) allow-discrete,
+            display var(--duration-slide) allow-discrete;
+    }
+
+    &[open]::backdrop {
+        opacity: 1;
+
+        @starting-style {
+            opacity: 0;
+        }
+    }
+
+    @include from("medium") {
+        inset: 0 0 0 auto;
+        width: 440px;
+        height: 100%;
+        box-shadow: inset 1px 0 0 var(--color-line-3);
+        transform: translateX(100%);
+
+        &[open] {
+            @starting-style {
+                transform: translateX(100%);
+            }
+        }
+    }
+
+    div.grip {
+        align-self: center;
+        width: 40px;
+        height: 4px;
+        margin-top: var(--space-2);
+        border-radius: 2px;
+        background: var(--color-line-3);
+
+        @include from("medium") {
+            display: none;
+        }
+    }
+
+    header.header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-3);
+        padding: var(--space-3) var(--space-4) 0;
+    }
+
+    h2.title {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        font-size: var(--text-name);
+
+        svg {
+            width: 22px;
+            height: 22px;
+        }
+    }
+
+    button.close {
+        @include hairline-border(--color-line-3);
+        @include touch-target;
+        display: grid;
+        place-items: center;
+        border: 0;
+        background: var(--color-panel);
+        color: var(--color-fg);
+        cursor: pointer;
+
+        svg {
+            width: 20px;
+            height: 20px;
+        }
+    }
+}

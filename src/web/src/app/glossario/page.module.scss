@@ -1,0 +1,56 @@
+@use "mixins" as *;
+
+main.page {
+    @include page-gutter;
+    --glossary-letter-background: var(--color-bg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    max-width: calc(var(--content-width-reading) + 2 * var(--page-gutter));
+    margin: 0 auto;
+    padding-block: var(--space-5) var(--space-8);
+
+    section.intro {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+    }
+
+    p.kicker {
+        @include block-label-title;
+        color: var(--color-fg-3);
+    }
+
+    h1.title {
+        font-size: var(--text-title);
+    }
+
+    p.lead {
+        max-width: 62ch;
+        color: var(--color-fg-2);
+    }
+
+    nav.letters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-1);
+
+        a {
+            @include hairline-border;
+            display: grid;
+            place-items: center;
+            min-width: 44px;
+            min-height: 44px;
+            border-radius: var(--radius-tag);
+            color: var(--color-fg);
+            font-size: var(--text-micro);
+            font-weight: 700;
+            text-decoration: none;
+        }
+    }
+
+    p.note {
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+    }
+}
