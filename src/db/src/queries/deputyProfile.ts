@@ -1,4 +1,5 @@
 import { prisma } from "../client";
+import { groupByProposition, readPropositionSummaries, yearRange, type PropositionSummary } from "./votes";
 
 // first day of the 57th legislature in Brasília time
 const LEGISLATURE_START = new Date("2023-02-01T00:00:00-03:00");
@@ -79,7 +80,7 @@ export interface DeputyVote {
 
 // consecutive votes of one proposition, newest first
 export interface DeputyVoteGroup {
-    proposition: { typeCode: string; number: number; year: number; summary: string; sourceUrl: string } | null;
+    proposition: PropositionSummary | null;
     votes: DeputyVote[];
 }
 
@@ -157,14 +158,6 @@ interface CategoryRow {
     expense_type_code: number;
     description: string;
     total: string;
-}
-
-// bounds of a year in Brasília time, as UTC text for the timestamp columns, which hold UTC without a zone
-function yearRange(year: number): { start: string; end: string } {
-    return {
-        start: new Date(`${year}-01-01T00:00:00-03:00`).toISOString(),
-        end: new Date(`${year + 1}-01-01T00:00:00-03:00`).toISOString(),
-    };
 }
 
 function latestDate(dates: Date[]): Date | null {
@@ -373,11 +366,6 @@ async function readVoteMetrics(deputyId: number, year: number): Promise<MetricsR
     return rows[0];
 }
 
-// the prefix of a Câmara vote id is the id of the proposition being discussed
-function propositionIdOf(voteId: string): number {
-    return Number.parseInt(voteId.split("-")[0] ?? "", 10);
-}
-
 async function readLatestVoteGroups(deputyId: number, year: number): Promise<DeputyVoteGroup[]> {
     const { start, end } = yearRange(year);
     const rows = await prisma.$queryRaw<LatestVoteRow[]>`
@@ -390,49 +378,23 @@ async function readLatestVoteGroups(deputyId: number, year: number): Promise<Dep
         limit ${LATEST_VOTES_SCAN_LIMIT}
     `;
 
-    const groups: { propositionId: number; votes: DeputyVote[] }[] = [];
-    for (const row of rows) {
-        const propositionId = propositionIdOf(row.id);
-        const vote = {
-            id: row.id,
-            occurredAt: row.occurred_at,
-            description: row.description,
-            approved: row.approved,
-            choice: row.choice,
-            sourceUrl: row.source_url,
-        };
-        const current = groups.at(-1);
-        if (current?.propositionId === propositionId) {
-            current.votes.push(vote);
-        } else {
-            groups.push({ propositionId, votes: [vote] });
-        }
-    }
-    // the last group may be cut by the scan limit, so it is dropped when the limit was reached
-    const completeGroups = rows.length === LATEST_VOTES_SCAN_LIMIT ? groups.slice(0, -1) : groups;
+    const votes: DeputyVote[] = rows.map((row) => ({
+        id: row.id,
+        occurredAt: row.occurred_at,
+        description: row.description,
+        approved: row.approved,
+        choice: row.choice,
+        sourceUrl: row.source_url,
+    }));
+    const groups = groupByProposition(votes);
+    // the group of the oldest scanned vote may be cut by the scan limit, so it is dropped when the limit was reached
+    const oldestScannedId = rows.at(-1)?.id;
+    const completeGroups =
+        rows.length === LATEST_VOTES_SCAN_LIMIT ? groups.filter((group) => !group.items.some((vote) => vote.id === oldestScannedId)) : groups;
     const shownGroups = completeGroups.slice(0, LATEST_VOTE_GROUPS);
 
-    const propositions = await prisma.proposition.findMany({
-        where: { id: { in: shownGroups.map((group) => group.propositionId) } },
-        select: { id: true, typeCode: true, number: true, year: true, summary: true, sourceUrl: true },
-    });
-    const propositionsById = new Map(propositions.map((proposition) => [proposition.id, proposition]));
-
-    return shownGroups.map((group) => {
-        const proposition = propositionsById.get(group.propositionId);
-        return {
-            proposition: proposition
-                ? {
-                      typeCode: proposition.typeCode,
-                      number: proposition.number,
-                      year: proposition.year,
-                      summary: proposition.summary,
-                      sourceUrl: proposition.sourceUrl,
-                  }
-                : null,
-            votes: group.votes,
-        };
-    });
+    const propositions = await readPropositionSummaries(shownGroups.map((group) => group.propositionId));
+    return shownGroups.map((group) => ({ proposition: propositions.get(group.propositionId) ?? null, votes: group.items }));
 }
 
 // averages consider every deputy with at least one expense in the year

@@ -25,3 +25,21 @@ export {
     type DeputySpendingCategory,
     type DeputySpendingSupplier,
 } from "./queries/deputySpending";
+export { getPropositionDetail, type PropositionDetail } from "./queries/propositions";
+export {
+    getDeputyVotes,
+    getVoteDetail,
+    listPlenaryVoteGroups,
+    NOT_VOTED,
+    type DeputyYearVote,
+    type DeputyYearVoteGroup,
+    type DeputyYearVotes,
+    type PlenaryVote,
+    type PlenaryVoteGroup,
+    type PlenaryVoteGroupList,
+    type PropositionSummary,
+    type VoteCounts,
+    type VoteDetail,
+    type VoteOrientationRow,
+    type VoteSeat,
+} from "./queries/votes";
