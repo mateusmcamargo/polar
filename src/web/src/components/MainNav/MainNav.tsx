@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Calendar, House, Landmark, Users, Vote, type LucideIcon } from "lucide-react";
+import { Calendar, House, Landmark, MapPin, Users, Vote, type LucideIcon } from "lucide-react";
 import styles from "./MainNav.module.scss";
 
 interface NavItem {
@@ -17,6 +17,8 @@ const NAV_ITEMS: readonly NavItem[] = [
     { href: "/governantes", label: "Governantes", icon: Landmark },
     { href: "/votacoes", label: "Votações", icon: Vote },
     { href: "/agenda", label: "Agenda", icon: Calendar },
+    // sixth item added on 2026-11-07 as a temporary fix, see "Landmarks" in DESIGN.md
+    { href: "/marcos", label: "Marcos", icon: MapPin },
 ];
 
 function isCurrentSection(pathname: string, href: string): boolean {

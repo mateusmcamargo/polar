@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookOpen, ChevronRight, Landmark, Users, type LucideIcon } from "lucide-react";
+import { BookOpen, ChevronRight, Landmark, MapPin, Users, type LucideIcon } from "lucide-react";
 import { NAV_FORWARD, PageTransition } from "@/components/PageTransition/PageTransition";
 import styles from "./page.module.scss";
 
@@ -25,6 +25,13 @@ const SHORTCUTS: readonly Shortcut[] = [
         title: "Governantes",
         text: "Reis, imperadores, regentes, presidentes e primeiros-ministros que governaram o Brasil desde 1808, com a história de cada um e as fontes.",
         icon: Landmark,
+    },
+    {
+        href: "/marcos",
+        label: "Galeria",
+        title: "Marcos",
+        text: "Grandes obras, fatos e lugares do Brasil, com mapa, números, quanto custou e as fontes. Comece pela Usina de Itaipu.",
+        icon: MapPin,
     },
     {
         href: "/glossario",

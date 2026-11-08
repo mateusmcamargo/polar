@@ -55,7 +55,7 @@ nav.bottomNav {
     ul.list {
         display: grid;
         // a column never gets narrower than its longest label ("Governantes"), the others share the rest
-        grid-template-columns: repeat(5, minmax(max-content, 1fr));
+        grid-template-columns: repeat(6, minmax(max-content, 1fr));
     }
 
     a.link {
@@ -68,7 +68,7 @@ nav.bottomNav {
         padding-inline: 0;
         text-align: center;
 
-        // five labels share 360 px phones, where "Governantes" needs about 80 px at 14 px and a column has about 69 px
+        // six labels share 360 px phones, where "Governantes" needs about 80 px at 14 px and a column has about 69 px
         @media (max-width: 399px) {
             font-size: 0.75rem;
             letter-spacing: -0.01em;

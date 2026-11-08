@@ -1,0 +1,60 @@
+@use "comic";
+
+// the drawing sits on the dot field of the comic accent; the full map has the ink border of the other maps and charts
+svg.full,
+svg.thumb {
+    display: block;
+    width: 100%;
+    height: auto;
+    @include comic.comic-field;
+}
+
+svg.full {
+    border: 3px solid var(--color-ink);
+}
+
+svg.thumb {
+    // a state is a tall or wide shape, so the card keeps a steady box and the shape is centered in it
+    aspect-ratio: 4 / 3;
+    padding: var(--space-3);
+}
+
+// line widths do not scale with the drawing, so the map reads the same at every size
+path.state {
+    fill: var(--map-0);
+    stroke: var(--color-line-3);
+    stroke-width: 1px;
+    vector-effect: non-scaling-stroke;
+}
+
+path.highlight {
+    fill: var(--map-5);
+    stroke: var(--color-ink);
+    stroke-width: 2px;
+    vector-effect: non-scaling-stroke;
+}
+
+// the one round shape of the interface besides the era nodes: a point is round by nature
+circle.marker {
+    fill: var(--color-marker);
+    stroke: var(--color-ink);
+    stroke-width: 3px;
+    vector-effect: non-scaling-stroke;
+}
+
+@media (forced-colors: active) {
+    path.state {
+        fill: Canvas;
+        stroke: CanvasText;
+    }
+
+    path.highlight {
+        fill: Highlight;
+        stroke: CanvasText;
+    }
+
+    circle.marker {
+        fill: LinkText;
+        stroke: CanvasText;
+    }
+}

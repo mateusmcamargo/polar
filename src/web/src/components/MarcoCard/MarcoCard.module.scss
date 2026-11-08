@@ -1,0 +1,75 @@
+@use "comic";
+
+// a comic card like the ruler card that leads to a page: ink outline, offset shadow and a lift on hover
+a.card {
+    @include comic.comic-panel;
+    @include comic.comic-pressable;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    color: var(--color-fg);
+    text-decoration: none;
+    --card-outline: inset 0 0 0 3px var(--color-ink);
+
+    span.frame {
+        position: relative;
+        display: block;
+        overflow: hidden;
+        background: var(--color-panel-2);
+
+        // the card outline is an inset shadow the map would cover, so the frame draws it again above the map
+        &::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            box-shadow: var(--card-outline);
+            pointer-events: none;
+        }
+    }
+
+    span.body {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: var(--space-2);
+        padding: var(--space-3) var(--space-4) var(--space-4);
+    }
+
+    span.kind {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--color-fg-2);
+        font-size: var(--text-micro);
+        font-weight: 700;
+
+        svg {
+            flex: none;
+            width: 16px;
+            height: 16px;
+        }
+    }
+
+    span.name {
+        font-size: var(--text-name);
+        font-weight: 700;
+        line-height: 1.25;
+    }
+
+    span.caption {
+        color: var(--color-fg-2);
+        font-size: var(--text-micro);
+        font-variant-numeric: tabular-nums;
+    }
+
+    span.cta {
+        font-size: var(--text-micro);
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+    }
+
+    @media (forced-colors: active) {
+        --card-outline: none;
+    }
+}

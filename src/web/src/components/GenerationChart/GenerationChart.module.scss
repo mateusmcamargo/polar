@@ -1,0 +1,132 @@
+@use "mixins" as *;
+
+figure.chart {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: 0;
+
+    figcaption.unit {
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    svg {
+        display: block;
+        width: 100%;
+        height: auto;
+    }
+
+    // phones draw the tall layout (360 × 340) and larger text, computers the wide one (640 × 270)
+    svg.wide {
+        display: none;
+
+        @include from("small") {
+            display: block;
+        }
+    }
+
+    svg.narrow {
+        @include from("small") {
+            display: none;
+        }
+
+        text.tick {
+            font-size: 14px;
+        }
+
+        text.value {
+            font-size: 16px;
+        }
+    }
+
+    line.axis {
+        stroke: var(--color-line-3);
+    }
+
+    line.grid {
+        stroke: var(--color-line);
+    }
+
+    text.tick {
+        fill: var(--color-fg-3);
+        font-family: var(--font-sans);
+        font-size: 13px;
+        font-variant-numeric: tabular-nums;
+    }
+
+    text.value {
+        fill: var(--color-fg);
+        font-family: var(--font-sans);
+        font-size: 14px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }
+
+    rect.bar {
+        fill: var(--color-fg);
+    }
+
+    // the highlighted year is told by its color, its outline and the value written above it
+    rect.highlight {
+        fill: var(--color-sticker);
+        stroke: var(--color-ink);
+        stroke-width: 2px;
+    }
+
+    p.note {
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+        max-width: 62ch;
+    }
+
+    details.table {
+        summary {
+            @include touch-target;
+            display: flex;
+            align-items: center;
+            font-size: var(--text-label);
+            font-weight: 600;
+            cursor: pointer;
+        }
+    }
+
+    div.tableScroll {
+        max-height: 320px;
+        overflow: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: var(--text-label);
+        font-variant-numeric: tabular-nums;
+
+        th,
+        td {
+            padding: var(--space-2);
+            text-align: left;
+            vertical-align: top;
+            box-shadow: inset 0 1px 0 var(--color-line);
+        }
+
+        th {
+            color: var(--color-fg-3);
+            font-size: var(--text-micro);
+        }
+    }
+
+    @media (forced-colors: active) {
+        rect.bar {
+            fill: CanvasText;
+        }
+
+        rect.highlight {
+            fill: Highlight;
+            stroke: CanvasText;
+        }
+    }
+}

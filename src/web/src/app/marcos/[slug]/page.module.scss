@@ -1,0 +1,247 @@
+@use "mixins" as *;
+@use "comic";
+
+main.page {
+    @include page-gutter;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-7);
+    max-width: calc(var(--content-width-reading) + 2 * var(--page-gutter));
+    margin: 0 auto;
+    padding-block: var(--space-5) var(--space-8);
+
+    nav.crumb {
+        margin-bottom: calc(-1 * var(--space-5));
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+
+        a {
+            @include text-link-target;
+            color: inherit;
+        }
+    }
+
+    section.intro {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-4);
+    }
+
+    p.kicker {
+        @include block-label-title;
+        color: var(--color-fg-3);
+    }
+
+    h1.name {
+        font-size: var(--text-title);
+    }
+
+    div.tags {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-2);
+    }
+
+    span.tag {
+        display: inline-flex;
+        align-items: center;
+        min-height: 26px;
+        padding: 0 var(--space-2);
+        border-radius: var(--radius-tag);
+        box-shadow: inset 0 0 0 1px var(--color-line-2);
+        font-size: var(--text-micro);
+    }
+
+    p.lead {
+        max-width: 62ch;
+    }
+
+    h3.subtitle {
+        font-size: var(--text-label);
+    }
+
+    p.text {
+        max-width: 62ch;
+        color: var(--color-fg-2);
+    }
+
+    dl.facts {
+        margin: 0;
+        @include comic.comic-note;
+
+        div {
+            display: grid;
+            gap: 2px;
+            padding: var(--space-3) var(--space-4);
+            box-shadow: inset 0 -1px 0 var(--color-line);
+
+            &:last-child {
+                box-shadow: none;
+            }
+
+            @include from("small") {
+                grid-template-columns: 12rem 1fr;
+                gap: var(--space-4);
+            }
+        }
+
+        dt {
+            color: var(--color-fg-3);
+            font-size: var(--text-micro);
+            font-weight: 600;
+        }
+
+        dd {
+            margin: 0;
+        }
+    }
+
+    div.figures {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: var(--space-5) var(--space-4);
+    }
+
+    div.figure {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-1);
+        color: var(--color-fg-2);
+
+        strong {
+            display: block;
+            color: var(--color-fg);
+            font-size: var(--text-figure);
+            line-height: 1.2;
+            font-variant-numeric: tabular-nums;
+        }
+    }
+
+    div.decided {
+        padding: var(--space-4);
+        @include comic.comic-note;
+
+        ul {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-4);
+            margin: 0;
+            padding-left: var(--space-5);
+        }
+    }
+
+    a.rulerLink {
+        @include text-link-target;
+        font-weight: 600;
+    }
+
+    // statements that two sources give differently, or that are still open: a plain panel with a left rule
+    div.notice {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+        padding: var(--space-3) var(--space-4);
+        box-shadow: inset 3px 0 0 var(--color-ink);
+        background: var(--color-panel-2);
+    }
+
+    h3.noticeLabel {
+        @include block-label-title;
+        color: var(--color-fg-3);
+    }
+
+    div.money {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+        padding: var(--space-4);
+        @include comic.comic-note;
+    }
+
+    figure.map {
+        display: grid;
+        gap: var(--space-4);
+        margin: 0;
+
+        @include from("small") {
+            grid-template-columns: minmax(0, 320px) 1fr;
+            align-items: start;
+        }
+
+        figcaption {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+    }
+
+    ul.legend {
+        display: grid;
+        gap: var(--space-2);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+
+        li {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+    }
+
+    i.stateSwatch {
+        flex: none;
+        width: 14px;
+        height: 14px;
+        border: 2px solid var(--color-ink);
+        background: var(--map-5);
+    }
+
+    i.pointSwatch {
+        flex: none;
+        width: 14px;
+        height: 14px;
+        border: 2px solid var(--color-ink);
+        border-radius: var(--radius-pill);
+        background: var(--color-marker);
+    }
+
+    p.mapSource {
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+    }
+
+    // the trivia are a comic sticker like the result of a vote, as wide as the column; the yellow is the same in both themes, so
+    // everything in it is dark, and the amount marks turn white there, because a yellow mark would vanish
+    ul.trivia {
+        @include comic.comic-sticker;
+        // the offset shadow of the comic accent sits outside the box
+        margin: 0 7px 7px 0;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+        padding: var(--space-5) var(--space-5) var(--space-5) var(--space-6);
+        --mark-color: var(--color-panel);
+
+        * {
+            color: inherit;
+        }
+    }
+
+    footer.review {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        padding-top: var(--space-3);
+        box-shadow: inset 0 1px 0 var(--color-line-2);
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+
+        a {
+            @include text-link-target;
+            color: inherit;
+        }
+    }
+}

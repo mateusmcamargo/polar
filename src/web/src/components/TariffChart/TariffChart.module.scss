@@ -1,0 +1,175 @@
+@use "mixins" as *;
+
+figure.chart {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: 0;
+
+    figcaption.unit {
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    svg {
+        display: block;
+        width: 100%;
+        height: auto;
+    }
+
+    // phones draw the tall layout (360 × 340) and larger text, computers the wide one (640 × 280)
+    svg.wide {
+        display: none;
+
+        @include from("small") {
+            display: block;
+        }
+    }
+
+    svg.narrow {
+        @include from("small") {
+            display: none;
+        }
+
+        text.tick {
+            font-size: 14px;
+        }
+
+        text.value {
+            font-size: 15px;
+        }
+
+        polyline.solid,
+        polyline.dashed {
+            stroke-width: 3.5;
+        }
+    }
+
+    line.axis {
+        stroke: var(--color-line-3);
+    }
+
+    line.grid {
+        stroke: var(--color-line);
+    }
+
+    text.tick {
+        fill: var(--color-fg-3);
+        font-family: var(--font-sans);
+        font-size: 13px;
+        font-variant-numeric: tabular-nums;
+    }
+
+    text.value {
+        fill: var(--color-fg);
+        font-family: var(--font-sans);
+        font-size: 14px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }
+
+    polyline.solid,
+    polyline.dashed {
+        fill: none;
+        stroke: var(--color-fg);
+        stroke-width: 3;
+        stroke-linejoin: round;
+    }
+
+    polyline.dashed {
+        stroke-dasharray: 9 7;
+    }
+
+    circle.dot {
+        fill: var(--color-panel);
+        stroke: var(--color-fg);
+        stroke-width: 2.5px;
+    }
+
+    ul.legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-1) var(--space-5);
+        margin: 0;
+        padding: 0;
+        color: var(--color-fg-2);
+        font-size: var(--text-label);
+        list-style: none;
+
+        li {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        svg {
+            flex: none;
+            width: 40px;
+            height: 8px;
+        }
+
+        line.sampleSolid,
+        line.sampleDashed {
+            stroke: var(--color-fg);
+            stroke-width: 3;
+        }
+
+        line.sampleDashed {
+            stroke-dasharray: 9 7;
+        }
+    }
+
+    p.note {
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+        max-width: 62ch;
+    }
+
+    details.table {
+        summary {
+            @include touch-target;
+            display: flex;
+            align-items: center;
+            font-size: var(--text-label);
+            font-weight: 600;
+            cursor: pointer;
+        }
+    }
+
+    div.tableScroll {
+        max-height: 320px;
+        overflow: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: var(--text-label);
+        font-variant-numeric: tabular-nums;
+
+        th,
+        td {
+            padding: var(--space-2);
+            text-align: left;
+            vertical-align: top;
+            box-shadow: inset 0 1px 0 var(--color-line);
+        }
+
+        th {
+            color: var(--color-fg-3);
+            font-size: var(--text-micro);
+        }
+    }
+
+    @media (forced-colors: active) {
+        polyline.solid,
+        polyline.dashed,
+        line.sampleSolid,
+        line.sampleDashed {
+            stroke: CanvasText;
+        }
+    }
+}

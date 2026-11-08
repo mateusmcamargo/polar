@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
     outputFileTracingIncludes: {
         "/deputados/[id]/opengraph-image": ["./assets/fonts/*.ttf"],
         "/governantes/[slug]/opengraph-image": ["./assets/fonts/*.ttf", "./public/rulers/*.jpg"],
+        "/marcos/[slug]/opengraph-image": ["./assets/fonts/*.ttf"],
     },
     // the gallery was renamed from presidentes to governantes on 2026-11-05, old links keep working
     redirects() {
