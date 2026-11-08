@@ -119,6 +119,14 @@ header.header {
             font-weight: 700;
             text-overflow: ellipsis;
             white-space: nowrap;
+
+            // the icon of the section being read
+            svg {
+                width: 16px;
+                height: 16px;
+                margin-right: var(--space-2);
+                vertical-align: -2px;
+            }
         }
     }
 
@@ -355,6 +363,23 @@ header.header {
             width: 24px;
             height: 24px;
         }
+    }
+
+    ol.sectionList span.sectionLabel {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-3);
+
+        svg {
+            flex: none;
+            width: 20px;
+            height: 20px;
+        }
+    }
+
+    // an entry inside another section (a question of a summary) sits one step in
+    ol.sectionList li.child a {
+        padding-left: calc(var(--space-4) + var(--space-5));
     }
 
     ol.sectionList a {

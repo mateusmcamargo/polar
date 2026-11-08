@@ -35,6 +35,33 @@ $comic-outline: inset 0 0 0 3px var(--color-ink);
     }
 }
 
+// a floating note: the ink outline and the offset shadow of the comic accent on a plain panel, with no dot texture, so long text
+// stays easy to read. The margin leaves room for the shadow, which sits outside the box
+@mixin comic-note($offset: 7px) {
+    background-color: var(--color-panel);
+    @include comic-shadow($offset);
+    margin: 0 $offset $offset 0;
+
+    @media (forced-colors: active) {
+        box-shadow: none;
+        outline: 3px solid CanvasText;
+        outline-offset: -3px;
+    }
+}
+
+// a card: a thick ink border and an offset shadow. Unlike the other comic mixins the edge is a real border, not an inset shadow,
+// so the backgrounds of what is inside (a hovered row, a button) never hide it. The margin leaves room for the shadow
+@mixin comic-card($offset: 7px) {
+    border: 3px solid var(--color-ink);
+    background-color: var(--color-panel);
+    box-shadow: $offset $offset 0 var(--color-ink);
+    margin: 0 $offset $offset 0;
+
+    @media (forced-colors: active) {
+        box-shadow: none;
+    }
+}
+
 @mixin comic-field {
     background-color: var(--color-field);
     @include dot-texture(--color-field-dot);

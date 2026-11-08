@@ -12,22 +12,32 @@
     --color-line-3: rgb(18 17 16 / 0.40);
     --color-focus: #121110;
 
-    --vote-yes: #1E7F4F;
-    --vote-no: #C42B2B;
-    --vote-abstain: #A15C00;
-    --vote-obstruct: #6B4BC4;
+    // vote colors are fills (badges, seats, bars): the text on each one is picked by contrast, because the green and the
+    // yellow are too light to be text or a border on the light theme. The blue is also used by the presiding seat and by "Virou lei"
+    --vote-yes: #1AC05E;
+    --vote-no: #E00000;
+    --vote-abstain: #F5CD52;
+    --vote-obstruct: #4c2ba8;
+    --vote-presiding: #6955fd;
     --vote-absent: #5C5956;
+    --vote-yes-on: #121110;
+    --vote-no-on: #FFFFFF;
+    --vote-abstain-on: #121110;
+    --vote-obstruct-on: #FFFFFF;
+    --vote-presiding-on: #FFFFFF;
+    // the amber that abstention used before, kept for the notices that are not votes (a refused receipt)
+    --color-caution: #A15C00;
 
     --color-ink: #121110;
     --comic-dot: rgb(18 17 16 / 0.13);
     --color-field: #ECEAE6;
     --color-field-dot: rgb(18 17 16 / 0.16);
-    --color-sticker: #F2C230;
+    --color-sticker: #F5CD52;
     --color-sticker-dot: rgb(18 17 16 / 0.12);
     --color-on-sticker: #121110;
     // glossary term fill (sticker yellow, light enough for 4.5:1 text) and the backdrop behind the glossary panel
-    --color-term-fill: rgb(242 194 48 / 0.22);
-    --color-term-fill-hover: rgb(242 194 48 / 0.40);
+    --color-term-fill: rgb(245 205 82 / 0.22);
+    --color-term-fill-hover: rgb(245 205 82 / 0.40);
     --color-scrim: rgb(18 17 16 / 0.45);
     // the only soft shadows of the interface: they set the sticky header and the bottom bar apart from the page (DESIGN.md, "Header")
     --shadow-header: 0 2px 8px rgb(18 17 16 / 0.10);
@@ -44,6 +54,8 @@
     --map-on-dark-steps: #FFFFFF;
     // party colored map: how much white lifts the party color, so dark party colors stand out on the dark theme
     --map-party-tint: 0%;
+    // the point of a landmark on the location map; red like the "Não" vote, a fill with an ink outline around it
+    --color-marker: #E00000;
 
     color-scheme: light;
 }
@@ -60,21 +72,28 @@
     --color-line-3: rgb(250 250 249 / 0.40);
     --color-focus: #FAFAF9;
 
-    --vote-yes: #3DD68C;
-    --vote-no: #FF6B6B;
-    --vote-abstain: #F2B04B;
-    --vote-obstruct: #B39DFF;
+    --vote-yes: #1AC05E;
+    --vote-no: #E00000;
+    --vote-abstain: #F5CD52;
+    --vote-obstruct: #4c2ba8;
+    --vote-presiding: #6955fd;
     --vote-absent: #A6A39C;
+    --vote-yes-on: #121110;
+    --vote-no-on: #FFFFFF;
+    --vote-abstain-on: #121110;
+    --vote-obstruct-on: #121110;
+    --vote-presiding-on: #FFFFFF;
+    --color-caution: #F2B04B;
 
     --color-ink: #FAFAF9;
     --comic-dot: rgb(250 250 249 / 0.09);
     --color-field: #1F1D1B;
     --color-field-dot: rgb(250 250 249 / 0.10);
-    --color-sticker: #F2C230;
+    --color-sticker: #F5CD52;
     --color-sticker-dot: rgb(18 17 16 / 0.12);
     --color-on-sticker: #121110;
-    --color-term-fill: rgb(242 194 48 / 0.16);
-    --color-term-fill-hover: rgb(242 194 48 / 0.30);
+    --color-term-fill: rgb(245 205 82 / 0.16);
+    --color-term-fill-hover: rgb(245 205 82 / 0.30);
     --color-scrim: rgb(0 0 0 / 0.6);
     --shadow-header: 0 2px 10px rgb(0 0 0 / 0.5);
     --shadow-bar-up: 0 -2px 10px rgb(0 0 0 / 0.5);
@@ -88,6 +107,7 @@
     --map-on-light-steps: #FAFAF9;
     --map-on-dark-steps: #121110;
     --map-party-tint: 30%;
+    --color-marker: #FF5A5A;
 
     color-scheme: dark;
 }
@@ -120,6 +140,10 @@
     --page-gutter: 16px;
     --content-width-reading: 720px;
     --content-width-wide: 1200px;
+    // the rulers gallery is narrower than the wide layout, so the era trail beside it has more room
+    --content-width-gallery: 1040px;
+    // width of the era trail beside the gallery (computers)
+    --trail-width: 320px;
     --bottom-nav-height: 68px;
 
     // square corners everywhere since 2026-11-05, the same shape as the comic accent; only shapes that are round by nature use --radius-pill

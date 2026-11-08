@@ -1,5 +1,12 @@
 @use "sass:map";
 
+// the rulers page has three equal gaps: screen edge to era trail, trail to gallery, gallery to screen edge. The trail is fixed, so the
+// page (as padding) and the trail (as its left offset) both compute the gap with this function. It is a share of the screen (percent),
+// so it is only valid where the containing block is the screen width, with a minimum of --space-6
+@function gallery-gap() {
+    @return max(var(--space-6), calc((100% - var(--trail-width) - var(--content-width-gallery)) / 3));
+}
+
 $breakpoints: (
     "small": 600px,
     "medium": 900px,

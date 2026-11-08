@@ -2,12 +2,17 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { ACTIVE_LINE, clamp01, yearInEra } from "@/components/ChronoClock/chronology";
+import type { SectionIconName } from "@/components/SectionIcon/SectionIcon";
 import type { TrailIconName } from "@/components/SnakeTrail/trailIcons";
 
 export interface PageMapSection {
     // id of the section element in the page
     id: string;
     label: string;
+    // icon of the section, drawn beside its label in the map and in the title of the section; unlike `icon`, it keeps the list
+    sectionIcon?: SectionIconName;
+    // id of the section this entry belongs to, for entries that sit inside another one (the questions of a summary); the map indents them
+    parentId?: string;
     // sections that are eras of a trail (the rulers page) also carry their years and an icon, which switches the map to a snake trail
     years?: string;
     icon?: TrailIconName;
@@ -36,6 +41,9 @@ interface HeaderContextValue {
     currentId: string | null;
     // a page with a map registers its sections; the returned function removes them
     registerSections: (sections: readonly PageMapSection[]) => () => void;
+    // a section of the page registers itself when it renders, and the map keeps the entries in the order they have in the page; the
+    // returned function removes the entry
+    registerSection: (section: PageMapSection) => () => void;
     // the header puts its progress line here, and scrolling moves it through the dom
     progressRef: RefObject<HTMLElement | null>;
     // the chronological clock follows the scroll without rendering: it is told the year on every update and answers by writing to the dom
@@ -61,7 +69,11 @@ export function useHeader(): HeaderContextValue {
 // state shared by the header, the page map and the glossary: the sections of the page being read (and the one in view), and the
 // requests to open the glossary. Scroll tracking lives here, once, and only runs on pages that register a map
 export function HeaderProvider({ children }: Readonly<{ children: ReactNode }>) {
-    const [sections, setSections] = useState<readonly PageMapSection[]>(NO_SECTIONS);
+    // sections handed over as a whole list (the eras of the rulers page) and sections that registered themselves one by one
+    const [listedSections, setListedSections] = useState<readonly PageMapSection[]>(NO_SECTIONS);
+    const [selfRegistered, setSelfRegistered] = useState<readonly PageMapSection[]>(NO_SECTIONS);
+    const registrations = useRef(new Map<symbol, PageMapSection>());
+    const sections = listedSections.length > 0 ? listedSections : selfRegistered;
     const [currentId, setCurrentId] = useState<string | null>(null);
     const [glossaryRequest, setGlossaryRequest] = useState<GlossaryRequest>({ termId: null, count: 0, opener: null });
     const progressRef = useRef<HTMLElement | null>(null);
@@ -69,10 +81,36 @@ export function HeaderProvider({ children }: Readonly<{ children: ReactNode }>) 
     const chronoState = useRef<ChronoState>(NO_YEAR);
 
     const registerSections = useCallback((next: readonly PageMapSection[]) => {
-        setSections(next);
+        setListedSections(next);
         // a page that unmounts after the next one registered must not clear the next one's sections
-        return () => setSections((current) => (current === next ? NO_SECTIONS : current));
+        return () => setListedSections((current) => (current === next ? NO_SECTIONS : current));
     }, []);
+
+    const publishRegistrations = useCallback(() => {
+        // the order of the page decides the order of the map, so a section that renders conditionally or late still lands in place
+        const ordered = [...registrations.current.values()].sort((first, second) => {
+            const firstElement = document.getElementById(first.id);
+            const secondElement = document.getElementById(second.id);
+            if (!firstElement || !secondElement) {
+                return 0;
+            }
+            return firstElement.compareDocumentPosition(secondElement) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+        });
+        setSelfRegistered(ordered.length > 0 ? ordered : NO_SECTIONS);
+    }, []);
+
+    const registerSection = useCallback(
+        (section: PageMapSection) => {
+            const token = Symbol(section.id);
+            registrations.current.set(token, section);
+            publishRegistrations();
+            return () => {
+                registrations.current.delete(token);
+                publishRegistrations();
+            };
+        },
+        [publishRegistrations],
+    );
 
     const openGlossary = useCallback((termId: string | null, opener: HTMLElement | null = null) => {
         setGlossaryRequest((current) => ({ termId, count: current.count + 1, opener }));
@@ -165,8 +203,8 @@ export function HeaderProvider({ children }: Readonly<{ children: ReactNode }>) 
     }, [sections]);
 
     const value = useMemo(
-        () => ({ sections, currentId: sections.length > 0 ? currentId : null, registerSections, progressRef, subscribeChrono, glossaryRequest, openGlossary }),
-        [sections, currentId, registerSections, subscribeChrono, glossaryRequest, openGlossary],
+        () => ({ sections, currentId: sections.length > 0 ? currentId : null, registerSections, registerSection, progressRef, subscribeChrono, glossaryRequest, openGlossary }),
+        [sections, currentId, registerSections, registerSection, subscribeChrono, glossaryRequest, openGlossary],
     );
 
     return <HeaderContext.Provider value={value}>{children}</HeaderContext.Provider>;

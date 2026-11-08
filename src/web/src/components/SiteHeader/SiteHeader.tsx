@@ -1,5 +1,6 @@
 "use client";
 
+import { SectionIcon } from "@/components/SectionIcon/SectionIcon";
 import { useEffect, useRef, useState, type MouseEvent, type RefObject } from "react";
 import { usePathname } from "next/navigation";
 import { BookOpen, ChevronDown, Menu, Moon, X } from "lucide-react";
@@ -38,7 +39,8 @@ export function SiteHeader() {
     // the eras of the rulers page: the panel draws the snake trail instead of the list
     const isTrail = sections.some((section) => section.icon);
     const currentIndex = sections.findIndex((section) => section.id === currentId);
-    const currentLabel = sections[currentIndex]?.label;
+    const currentSection = sections[currentIndex];
+    const currentLabel = currentSection?.label;
     const showsSections = panel === "sections" && hasMap;
     const visiblePanel = panel === "sections" && !hasMap ? null : panel;
 
@@ -118,7 +120,10 @@ export function SiteHeader() {
                                 {currentIndex < 0 ? (isTrail ? "Linha do tempo" : "Nesta página") : `${isTrail ? "Era" : "Seção"} ${currentIndex + 1} de ${sections.length}`}
                                 <ChevronDown aria-hidden="true" />
                             </span>
-                            <span className={styles.name}>{currentLabel ?? "Início da página"}</span>
+                            <span className={styles.name}>
+                                {currentSection?.sectionIcon && <SectionIcon name={currentSection.sectionIcon} />}
+                                {currentLabel ?? "Início da página"}
+                            </span>
                         </button>
                     )}
                     <p className={styles.glossaryTitle}>
@@ -190,13 +195,16 @@ export function SiteHeader() {
                             ) : (
                                 <ol className={styles.sectionList}>
                                     {sections.map((section) => (
-                                        <li key={section.id}>
+                                        <li key={section.id} className={section.parentId ? styles.child : undefined}>
                                             <a
                                                 href={`#${section.id}`}
                                                 aria-current={section.id === currentId ? "location" : undefined}
                                                 onClick={(event) => handleSectionClick(event, section.id)}
                                             >
-                                                {section.label}
+                                                <span className={styles.sectionLabel}>
+                                                    {section.sectionIcon && <SectionIcon name={section.sectionIcon} />}
+                                                    {section.label}
+                                                </span>
                                                 {section.id === currentId && <span className={styles.here}>Você está aqui</span>}
                                             </a>
                                         </li>

@@ -131,6 +131,11 @@ button:not(:disabled):active {
     }
 }
 
+// the shape of an amount mark sits behind the text of its parent (AmountMark), so the parent makes a stacking context of its own
+:has(> mark) {
+    isolation: isolate;
+}
+
 .visually-hidden {
     @include visually-hidden;
 }
@@ -145,6 +150,85 @@ button:not(:disabled):active {
 
 [data-reveal="rise"] {
     animation: reveal-rise var(--duration-slide) var(--ease-out) both;
+}
+
+// the highlight of a glossary term, painted from left to right: the fill and the hover fill are widths of the background,
+// registered as properties so that they can be animated and transitioned (see GlossaryText)
+@property --term-fill-progress {
+    syntax: "<percentage>";
+    inherits: false;
+    initial-value: 100%;
+}
+
+@property --term-hover-progress {
+    syntax: "<percentage>";
+    inherits: false;
+    initial-value: 0%;
+}
+
+[data-reveal="mark"] {
+    animation: reveal-mark calc(1.5 * var(--duration-fill)) var(--ease-out) both;
+}
+
+@keyframes reveal-mark {
+    from {
+        --term-fill-progress: 0%;
+    }
+}
+
+// a photo printed by an instant printer: the ticket comes out of the mouth in four pushes with a pause after each one, and
+// every push eases in and out, so it moves like paper being fed and not like a slide (OldPrint)
+[data-reveal="print"] {
+    animation: reveal-print 2.4s both;
+}
+
+@keyframes reveal-print {
+    0% {
+        transform: translateY(-100%);
+        animation-timing-function: ease-in-out;
+    }
+
+    12% {
+        transform: translateY(-75%);
+    }
+
+    24% {
+        transform: translateY(-75%);
+        animation-timing-function: ease-in-out;
+    }
+
+    40% {
+        transform: translateY(-48%);
+    }
+
+    50% {
+        transform: translateY(-48%);
+        animation-timing-function: ease-in-out;
+    }
+
+    65% {
+        transform: translateY(-20%);
+    }
+
+    76% {
+        transform: translateY(-20%);
+        animation-timing-function: ease-in-out;
+    }
+
+    84% {
+        transform: translateY(0%);
+    }
+
+    90% {
+        transform: translateY(0%);
+        animation-timing-function: ease-in-out;
+    }
+
+    // the last push leaves the ticket below its starting place, out of the mouth, by the distance OldPrint sets in
+    // --print-push (24px; the tray leaves the same room below the ticket)
+    100% {
+        transform: translateY(var(--print-push, 0px));
+    }
 }
 
 // a chart line drawn from start to end; the line needs pathLength="1"
