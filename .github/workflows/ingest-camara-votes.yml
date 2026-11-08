@@ -42,3 +42,5 @@ jobs:
             - run: pnpm ingest camara-votes "${YEAR:-$(date +%Y)}"
               env:
                   YEAR: ${{ inputs.year }}
+
+            - run: pnpm ingest camara-propositions

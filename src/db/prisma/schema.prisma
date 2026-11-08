@@ -124,6 +124,13 @@ model Proposition {
     sourceUrl   String    @map("source_url")
     collectedAt DateTime  @map("collected_at")
 
+    // official status, filled by the camara-propositions adapter
+    situation         String? // descricaoSituacao, as published
+    situationAt       DateTime? @map("situation_at")
+    dispatch          String? // despacho of the latest status
+    fullTextUrl       String?   @map("full_text_url")
+    statusCollectedAt DateTime? @map("status_collected_at")
+
     votes VoteProposition[]
 
     @@map("propositions")
