@@ -11,7 +11,8 @@ import { FrontList, FrontListSkeleton } from "@/components/FrontList/FrontList";
 import { LinkPending } from "@/components/LinkPending/LinkPending";
 import { ListenButton } from "@/components/ListenButton/ListenButton";
 import { BenefitList, BenefitListSkeleton, QuotaSummary, QuotaSummarySkeleton } from "@/components/MoneySummary/MoneySummary";
-import { PageMap, type PageMapSection } from "@/components/PageMap/PageMap";
+import { PageMap } from "@/components/PageMap/PageMap";
+import { PageSection } from "@/components/PageSection/PageSection";
 import { OrganList, OrganListSkeleton } from "@/components/OrganList/OrganList";
 import { NAV_BACK, NAV_FORWARD, PageTransition } from "@/components/PageTransition/PageTransition";
 import { PartyBadge } from "@/components/PartyBadge/PartyBadge";
@@ -205,23 +206,9 @@ export default async function DeputyProfilePage({ params }: ProfilePageProps) {
     const outOfOfficeReason = profile.outOfOffice ? OUT_OF_OFFICE_REASONS[profile.outOfOffice.situation] : undefined;
     const showsCivilName = profile.civilName && profile.civilName.toLowerCase() !== profile.politicalName.toLowerCase();
 
-    const mapSections: PageMapSection[] = [
-        ...(yearData
-            ? [
-                  { id: "summary", label: "Resumo do ano" },
-                  { id: "votes", label: "Últimas votações" },
-                  { id: "attendance", label: "Presença" },
-                  { id: "money", label: "Gastos e benefícios" },
-              ]
-            : []),
-        { id: "organs", label: "Comissões" },
-        { id: "fronts", label: "Frentes parlamentares" },
-        ...(profile.partyHistory.length > 0 ? [{ id: "parties", label: "Partidos" }] : []),
-    ];
-
     return (
         <PageTransition>
-            <PageMap sections={mapSections} />
+            <PageMap />
             <main id="conteudo" className={styles.page}>
                 <DataGate skeleton={<DeputyHeaderSkeleton photo="large" />}>
                     <nav className={styles.crumb} aria-label="Você está em">
@@ -277,11 +264,7 @@ export default async function DeputyProfilePage({ params }: ProfilePageProps) {
 
                 {yearData ? (
                     <>
-                        <section id="summary" className={styles.block} aria-labelledby="summary-title">
-                            <p className={styles.sectionKicker}>Em {yearData.year}</p>
-                            <h2 id="summary-title" className={styles.title}>
-                                Resumo do ano
-                            </h2>
+                        <PageSection id="summary" icon="summary" kicker={`Em ${yearData.year}`} title="Resumo do ano">
                             <DataGate skeleton={<SummaryMetricsSkeleton />}>
                                 <SummaryMetrics metrics={summaryMetrics} />
                                 <SourceNote
@@ -297,13 +280,9 @@ export default async function DeputyProfilePage({ params }: ProfilePageProps) {
                                     />
                                 )}
                             </DataGate>
-                        </section>
+                        </PageSection>
 
-                        <section id="votes" className={styles.block} aria-labelledby="votes-title">
-                            <p className={styles.sectionKicker}>Em {yearData.year}</p>
-                            <h2 id="votes-title" className={styles.title}>
-                                Últimas votações
-                            </h2>
+                        <PageSection id="votes" icon="votes" kicker={`Em ${yearData.year}`} title="Últimas votações" label="Últimas votações">
                             <p className={styles.lead}>
                                 Os votos nas últimas decisões do plenário. Escolha uma linha para ver cada votação sobre aquela proposta.
                             </p>
@@ -318,14 +297,25 @@ export default async function DeputyProfilePage({ params }: ProfilePageProps) {
                                     sourceUrl={DADOS_ABERTOS_URL}
                                     collectedAt={yearData.votesCollectedAt}
                                 />
+                                {yearData.latestVoteGroups.length > 0 && (
+                                    <Link
+                                        className={styles.more}
+                                        transitionTypes={NAV_FORWARD}
+                                        href={
+                                            yearData.year === profile.years[0]
+                                                ? `/deputados/${profile.id}/votacoes`
+                                                : `/deputados/${profile.id}/votacoes/${yearData.year}`
+                                        }
+                                    >
+                                        Ver todas as votações de {yearData.year}
+                                        <ChevronRight aria-hidden="true" />
+                                        <LinkPending />
+                                    </Link>
+                                )}
                             </DataGate>
-                        </section>
+                        </PageSection>
 
-                        <section id="attendance" className={styles.block} aria-labelledby="attendance-title">
-                            <p className={styles.sectionKicker}>Em {yearData.year}</p>
-                            <h2 id="attendance-title" className={styles.title}>
-                                Presença
-                            </h2>
+                        <PageSection id="attendance" icon="attendance" kicker={`Em ${yearData.year}`} title="Presença">
                             <p className={styles.lead}>
                                 Quantas vezes houve presença nos dias de votação do plenário e nas reuniões das comissões.
                             </p>
@@ -343,13 +333,9 @@ export default async function DeputyProfilePage({ params }: ProfilePageProps) {
                                     <p className={styles.empty}>A Câmara não publicou o resumo de presença deste ano.</p>
                                 )}
                             </DataGate>
-                        </section>
+                        </PageSection>
 
-                        <section id="money" className={styles.block} aria-labelledby="money-title">
-                            <p className={styles.sectionKicker}>Em {yearData.year}</p>
-                            <h2 id="money-title" className={styles.title}>
-                                Gastos e benefícios
-                            </h2>
+                        <PageSection id="money" icon="money" kicker={`Em ${yearData.year}`} title="Gastos e benefícios">
                             <p className={styles.lead}>
                                 A cota parlamentar paga despesas do mandato, como combustível, passagens e divulgação. O limite muda
                                 conforme o estado. As médias consideram todos os deputados com algum gasto no ano.
@@ -394,7 +380,7 @@ export default async function DeputyProfilePage({ params }: ProfilePageProps) {
                                     </DataGate>
                                 </>
                             )}
-                        </section>
+                        </PageSection>
                     </>
                 ) : (
                     <DataGate skeleton={<Skeleton width="min(24em, 80%)" />}>
@@ -406,11 +392,7 @@ export default async function DeputyProfilePage({ params }: ProfilePageProps) {
                     </DataGate>
                 )}
 
-                <section id="organs" className={styles.block} aria-labelledby="organs-title">
-                    <p className={styles.sectionKicker}>Nesta legislatura</p>
-                    <h2 id="organs-title" className={styles.title}>
-                        Comissões
-                    </h2>
+                <PageSection id="organs" icon="organs" kicker="Nesta legislatura" title="Comissões">
                     <p className={styles.lead}>
                         Grupos de deputados que analisam os projetos antes do plenário.
                         {profile.organsCollectedAt && ` Situação em ${dateFormat.format(profile.organsCollectedAt)}.`}
@@ -423,13 +405,9 @@ export default async function DeputyProfilePage({ params }: ProfilePageProps) {
                             collectedAt={profile.organsCollectedAt}
                         />
                     </DataGate>
-                </section>
+                </PageSection>
 
-                <section id="fronts" className={styles.block} aria-labelledby="fronts-title">
-                    <p className={styles.sectionKicker}>Nesta legislatura</p>
-                    <h2 id="fronts-title" className={styles.title}>
-                        Frentes parlamentares
-                    </h2>
+                <PageSection id="fronts" icon="fronts" kicker="Nesta legislatura" title="Frentes parlamentares">
                     <p className={styles.lead}>
                         Grupos de deputados que se juntam em torno de um tema. Participar de uma frente não é uma votação.
                     </p>
@@ -445,14 +423,10 @@ export default async function DeputyProfilePage({ params }: ProfilePageProps) {
                             collectedAt={profile.frontsCollectedAt}
                         />
                     </DataGate>
-                </section>
+                </PageSection>
 
                 {profile.partyHistory.length > 0 && (
-                    <section id="parties" className={styles.block} aria-labelledby="parties-title">
-                        <p className={styles.sectionKicker}>Nesta legislatura</p>
-                        <h2 id="parties-title" className={styles.title}>
-                            Partidos
-                        </h2>
+                    <PageSection id="parties" icon="parties" kicker="Nesta legislatura" title="Partidos">
                         <p className={styles.lead}>Desde 1º de fevereiro de 2023.</p>
                         <DataGate skeleton={<PartyHistorySkeleton />}>
                             <PartyHistory periods={profile.partyHistory} />
@@ -462,7 +436,7 @@ export default async function DeputyProfilePage({ params }: ProfilePageProps) {
                                 collectedAt={profile.collectedAt}
                             />
                         </DataGate>
-                    </section>
+                    </PageSection>
                 )}
             </main>
         </PageTransition>

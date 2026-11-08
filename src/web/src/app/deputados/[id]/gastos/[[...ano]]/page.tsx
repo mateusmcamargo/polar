@@ -11,6 +11,8 @@ import { LinkPending } from "@/components/LinkPending/LinkPending";
 import { ListenButton } from "@/components/ListenButton/ListenButton";
 import { BenefitList, BenefitListSkeleton, QuotaSummary, QuotaSummarySkeleton } from "@/components/MoneySummary/MoneySummary";
 import { EXPENSE_TYPE_LABELS } from "@/components/MoneySummary/expenseTypeLabels";
+import { PageMap } from "@/components/PageMap/PageMap";
+import { PageSection } from "@/components/PageSection/PageSection";
 import { NAV_BACK, PageTransition } from "@/components/PageTransition/PageTransition";
 import { PartyBadge } from "@/components/PartyBadge/PartyBadge";
 import { QuotaLimit, QuotaLimitSkeleton } from "@/components/QuotaLimit/QuotaLimit";
@@ -110,6 +112,7 @@ export default async function DeputySpendingPage({ params }: SpendingPageProps) 
 
     return (
         <PageTransition>
+            <PageMap />
             <main id="conteudo" className={styles.page}>
                 <DataGate skeleton={<DeputyHeaderSkeleton photo="small" />}>
                     <nav className={styles.crumb} aria-label="Você está em">
@@ -153,11 +156,7 @@ export default async function DeputySpendingPage({ params }: SpendingPageProps) 
 
                 {spending && year ? (
                     <>
-                        <section className={styles.block} aria-labelledby="summary-title">
-                            <p className={styles.sectionKicker}>Em {year}</p>
-                            <h2 id="summary-title" className={styles.title}>
-                                Cota parlamentar
-                            </h2>
+                        <PageSection id="summary" icon="money" kicker={`Em ${year}`} title="Cota parlamentar">
                             <p className={styles.text}>
                                 A cota parlamentar paga despesas do mandato, como combustível, passagens e divulgação. As médias consideram
                                 todos os deputados com algum gasto no ano, inclusive suplentes que ficaram poucos meses no cargo.
@@ -193,13 +192,9 @@ export default async function DeputySpendingPage({ params }: SpendingPageProps) 
                                     />
                                 ))}
                             </DataGate>
-                        </section>
+                        </PageSection>
 
-                        <section className={styles.block} aria-labelledby="categories-title">
-                            <p className={styles.sectionKicker}>Em {year}</p>
-                            <h2 id="categories-title" className={styles.title}>
-                                Em que gastou
-                            </h2>
+                        <PageSection id="categories" icon="categories" kicker={`Em ${year}`} title="Em que gastou">
                             <p className={styles.text}>Cada tipo de gasto, do maior para o menor, com a parte do total.</p>
                             <DataGate skeleton={<CategoryListSkeleton />}>
                                 <CategoryList categories={spending.categories} total={spending.quota.total} flights={spending.flights} />
@@ -213,13 +208,9 @@ export default async function DeputySpendingPage({ params }: SpendingPageProps) 
                                     collectedAt={spending.quota.collectedAt}
                                 />
                             </DataGate>
-                        </section>
+                        </PageSection>
 
-                        <section className={styles.block} aria-labelledby="suppliers-title">
-                            <p className={styles.sectionKicker}>Em {year}</p>
-                            <h2 id="suppliers-title" className={styles.title}>
-                                Quem recebeu
-                            </h2>
+                        <PageSection id="suppliers" icon="suppliers" kicker={`Em ${year}`} title="Quem recebeu">
                             <p className={styles.text}>
                                 Empresas e pessoas que receberam dinheiro da cota, de quem recebeu mais para quem recebeu menos. Empresas
                                 aparecem com o CNPJ completo. Para proteger as pessoas, mostramos só uma parte do CPF.
@@ -232,13 +223,9 @@ export default async function DeputySpendingPage({ params }: SpendingPageProps) 
                                     collectedAt={spending.quota.collectedAt}
                                 />
                             </DataGate>
-                        </section>
+                        </PageSection>
 
-                        <section id={RECEIPTS_SECTION_ID} className={styles.block} aria-labelledby="receipts-title" tabIndex={-1}>
-                            <p className={styles.sectionKicker}>Em {year}</p>
-                            <h2 id="receipts-title" className={styles.title}>
-                                Todas as notas
-                            </h2>
+                        <PageSection id={RECEIPTS_SECTION_ID} icon="receipts" kicker={`Em ${year}`} title="Todas as notas" tabIndex={-1}>
                             <p className={styles.text}>
                                 Cada gasto apresentado à Câmara, do mais novo para o mais antigo. Use os filtros para achar um tipo de gasto,
                                 um mês ou um fornecedor.
@@ -251,7 +238,7 @@ export default async function DeputySpendingPage({ params }: SpendingPageProps) 
                                     collectedAt={spending.quota.collectedAt}
                                 />
                             </DataGate>
-                        </section>
+                        </PageSection>
                     </>
                 ) : (
                     <DataGate skeleton={<Skeleton width="min(24em, 80%)" />}>
@@ -260,11 +247,7 @@ export default async function DeputySpendingPage({ params }: SpendingPageProps) 
                 )}
 
                 {annualPage && year && (
-                    <section className={styles.block} aria-labelledby="benefits-title">
-                        <p className={styles.sectionKicker}>Em {year}</p>
-                        <h2 id="benefits-title" className={styles.title}>
-                            Benefícios do cargo
-                        </h2>
+                    <PageSection id="benefits" icon="benefits" kicker={`Em ${year}`} title="Benefícios do cargo">
                         <p className={styles.text}>
                             Além da cota, o cargo dá direito a salário, moradia em Brasília, uma verba para pagar a equipe do gabinete e viagens
                             em missão oficial.
@@ -304,7 +287,7 @@ export default async function DeputySpendingPage({ params }: SpendingPageProps) 
                                 collectedAt={collectionDate(DEPUTY_SALARY.collectedAt)}
                             />
                         </DataGate>
-                    </section>
+                    </PageSection>
                 )}
 
                 <Link className={styles.back} href={profilePath(profile, year)} transitionTypes={NAV_BACK}>

@@ -82,7 +82,7 @@ div.receipts {
     }
 
     span.tagRefused {
-        box-shadow: inset 0 0 0 1px var(--vote-abstain);
+        box-shadow: inset 0 0 0 1px var(--color-caution);
         color: var(--color-fg);
     }
 

@@ -91,26 +91,6 @@ main.page {
         gap: var(--space-3);
     }
 
-    section.block {
-        @include section-opening;
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-4);
-        scroll-margin-top: var(--space-5);
-
-        &:focus {
-            outline: none;
-        }
-    }
-
-    p.sectionKicker {
-        @include section-kicker;
-    }
-
-    h2.title {
-        @include section-title;
-    }
-
     h3.subtitle {
         margin-top: var(--space-3);
         font-size: var(--text-label);

@@ -92,6 +92,7 @@ main.page {
 
     span.dotOn {
         background: var(--vote-yes);
+        box-shadow: inset 0 0 0 1px var(--color-line-3);
     }
 
     span.dotOff {
@@ -129,23 +130,6 @@ main.page {
         align-items: center;
         justify-content: space-between;
         gap: var(--space-3);
-    }
-
-    section.block {
-        @include section-opening;
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-4);
-        // clears the sticky header
-        scroll-margin-top: 88px;
-    }
-
-    p.sectionKicker {
-        @include section-kicker;
-    }
-
-    h2.title {
-        @include section-title;
     }
 
     h3.subtitle {
