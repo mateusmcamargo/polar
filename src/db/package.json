@@ -7,8 +7,11 @@
         "./party-colors": "./src/partyColors.ts",
         "./deputy-salary": "./src/deputySalary.ts",
         "./quota-limits": "./src/deputyQuotaLimits.ts",
+        "./editorial": "./src/editorial.ts",
         "./rulers": "./src/rulers/index.ts",
-        "./glossary": "./src/glossary.ts"
+        "./marcos": "./src/marcos/index.ts",
+        "./glossary": "./src/glossary.ts",
+        "./vote-summaries": "./src/votes/summaries.ts"
     },
     "scripts": {
         "generate": "prisma generate",
