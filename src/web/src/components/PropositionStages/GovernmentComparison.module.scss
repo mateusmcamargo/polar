@@ -1,0 +1,14 @@
+span.comparison {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: var(--space-1);
+    color: var(--color-fg-2);
+    font-size: var(--text-micro);
+    font-weight: 700;
+
+    svg {
+        width: 16px;
+        height: 16px;
+        stroke-width: 3;
+    }
+}

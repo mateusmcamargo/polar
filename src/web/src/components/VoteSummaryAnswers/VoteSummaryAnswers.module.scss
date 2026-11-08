@@ -1,0 +1,42 @@
+dl.answers {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    margin: 0;
+
+    div.answer {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        // clears the sticky header
+        scroll-margin-top: 88px;
+    }
+
+    // the icon of the question is the same one of the page map
+    dt {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        font-size: var(--text-name);
+        font-weight: 700;
+
+        svg {
+            flex: none;
+            width: 1.2em;
+            height: 1.2em;
+        }
+    }
+
+    dd {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        max-width: 62ch;
+        margin: 0;
+    }
+}
+
+span.sources {
+    color: var(--color-fg-3);
+    font-size: var(--text-micro);
+}

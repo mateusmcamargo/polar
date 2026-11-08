@@ -1,0 +1,140 @@
+@use "mixins" as *;
+
+main.page {
+    @include page-gutter;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-7);
+    max-width: calc(var(--content-width-reading) + 2 * var(--page-gutter));
+    margin: 0 auto;
+    padding-block: var(--space-5) var(--space-8);
+
+    nav.crumb {
+        margin-bottom: calc(-1 * var(--space-5));
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+
+        a {
+            @include text-link-target;
+            color: inherit;
+        }
+    }
+
+    section.intro {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+    }
+
+    p.kicker {
+        @include block-label-title;
+        color: var(--color-fg-3);
+    }
+
+    h1.name {
+        font-size: var(--text-title);
+
+        abbr {
+            text-decoration: underline dotted;
+            text-underline-offset: 4px;
+        }
+    }
+
+    p.lead {
+        max-width: 62ch;
+        color: var(--color-fg-2);
+
+        strong {
+            color: var(--color-fg);
+        }
+    }
+
+    div.actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-3);
+    }
+
+    p.text {
+        max-width: 62ch;
+        margin-top: calc(-1 * var(--space-2));
+        color: var(--color-fg-2);
+    }
+
+    // a summary that is not reviewed yet: marked with the same ink outline as the other notices, never only by color
+    p.draftNotice {
+        max-width: 62ch;
+        padding: var(--space-3) var(--space-4);
+        background: var(--color-panel);
+        box-shadow: inset 0 0 0 2px var(--color-ink);
+    }
+
+    p.small {
+        max-width: 62ch;
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+    }
+
+    // the two answers of "Como está agora": the Câmara, then what comes after it
+    div.now {
+        display: flex;
+        flex-direction: column;
+        background: var(--color-panel);
+        box-shadow: inset 0 0 0 1px var(--color-line-2);
+
+        div.nowRow {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+            padding: var(--space-4);
+        }
+
+        div.nowRow + div.nowRow {
+            box-shadow: inset 0 1px 0 var(--color-line-2);
+        }
+
+        p.nowLabel {
+            @include block-label-title;
+            color: var(--color-fg-3);
+        }
+
+        p.headline {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: var(--space-2) var(--space-3);
+            max-width: 62ch;
+            font-size: var(--text-name);
+            font-weight: 700;
+        }
+
+        p.detail {
+            max-width: 62ch;
+            color: var(--color-fg-2);
+            font-variant-numeric: tabular-nums;
+        }
+    }
+
+    ul.links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-1) var(--space-5);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+
+        a {
+            @include text-link-target;
+        }
+    }
+
+    a.back {
+        @include control;
+        display: inline-flex;
+        align-self: flex-start;
+        align-items: center;
+        padding: 0 var(--space-4);
+        text-decoration: none;
+    }
+}
