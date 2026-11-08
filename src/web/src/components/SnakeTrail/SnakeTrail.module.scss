@@ -15,18 +15,27 @@ div.snake {
         overflow: visible;
         pointer-events: none;
 
+        // the trail is a row of small pills: dashes with round caps, so each one has rounded corners
         path {
             fill: none;
-            stroke-width: 2px;
+            stroke-width: 4px;
+            stroke-linecap: round;
+            stroke-dasharray: 6 10;
         }
 
         path.track {
             stroke: var(--color-line-2);
         }
 
-        // pathLength is 1, so the offset is the share of the path still empty, set on the page by HeaderProvider
         path.fill {
             stroke: var(--color-ink);
+        }
+
+        // the mask that shows the filled pills: pathLength is 1, so the offset is the share of the path still empty, set on the page by HeaderProvider
+        path.progress {
+            stroke: white;
+            stroke-width: 12px;
+            stroke-linecap: butt;
             stroke-dasharray: 1;
             stroke-dashoffset: var(--trail-offset, 1);
             transition: stroke-dashoffset var(--duration-fast) var(--ease-standard);
@@ -167,6 +176,105 @@ div.snake {
 
         li.right span.here {
             align-self: flex-end;
+        }
+    }
+    // the trail of the rail of computers: the nodes wind inside a narrow band at the center (--trail-span is its width, read by
+    // SnakeTrail.tsx) and the labels alternate outside it, at the left of a node on the left and at the right of a node on the right,
+    // so the trail reads as a path and not as two distant columns
+    &.compact {
+        --trail-span: 64px;
+        // smallest row, the label of two short lines; below the size that gives it, the rail scrolls
+        --trail-row-min: 48px;
+        // room under the last node for its label
+        --trail-end: var(--space-3);
+        // the snake takes the height the clock leaves in the rail, and the rows share it: the container is measured in its own height
+        // (cqh), so the rows follow the window; the min-height is the snake with every row at its smallest
+        container-type: size;
+        flex: 1 1 0;
+        height: auto;
+        min-height: calc(var(--trail-row-min) * (var(--count) - 1) + var(--trail-node) + var(--trail-end));
+        --trail-row: max(var(--trail-row-min), calc((100cqh - var(--trail-node) - var(--trail-end)) / (var(--count) - 1)));
+
+        svg.path {
+            right: auto;
+            left: calc((100% - var(--trail-span)) / 2);
+            width: var(--trail-span);
+        }
+
+        ol.nodes {
+            li,
+            li.right {
+                right: auto;
+                left: 0;
+                width: 100%;
+            }
+
+            // label | band | label: both sides share the room left by the band
+            a,
+            li.right a {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) var(--trail-span) minmax(0, 1fr);
+                gap: 0;
+                text-align: right;
+            }
+
+            span.node {
+                grid-column: 2;
+                grid-row: 1;
+                justify-self: start;
+            }
+
+            li.right span.node {
+                justify-self: end;
+            }
+
+            // the room beside the band is small, so the labels are tight and never break: name, years and mark each on one line
+            span.label {
+                grid-column: 1;
+                grid-row: 1;
+                align-items: flex-end;
+                margin-right: var(--space-1);
+                padding: 0;
+            }
+
+            span.name {
+                font-size: var(--text-micro);
+            }
+
+            span.name,
+            span.years,
+            span.here {
+                white-space: nowrap;
+            }
+
+            span.here {
+                padding: 0 4px;
+                font-size: 0.75rem;
+            }
+
+            span.node svg {
+                width: 18px;
+                height: 18px;
+            }
+
+            span.here {
+                align-self: flex-end;
+            }
+
+            li.right a {
+                text-align: left;
+            }
+
+            li.right span.label {
+                grid-column: 3;
+                align-items: flex-start;
+                margin-right: 0;
+                margin-left: var(--space-1);
+            }
+
+            li.right span.here {
+                align-self: flex-start;
+            }
         }
     }
 }

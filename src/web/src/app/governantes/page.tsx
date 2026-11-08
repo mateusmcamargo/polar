@@ -7,6 +7,7 @@ import { PageMap } from "@/components/PageMap/PageMap";
 import { EditorialSources } from "@/components/EditorialSources/EditorialSources";
 import { PageTransition } from "@/components/PageTransition/PageTransition";
 import { ROLE_DISPLAY, RulerCard } from "@/components/RulerCard/RulerCard";
+import { TRAIL_ICONS } from "@/components/SnakeTrail/trailIcons";
 import { ERA_ICONS } from "./eraIcons";
 import styles from "./page.module.scss";
 
@@ -75,10 +76,13 @@ export default function RulersPage() {
 
                 {RULER_GALLERY.map((era) => {
                     const headingId = `era-${era.people[0]?.slug ?? era.name}`;
+                    // the title carries the icon of the era in the trail, so the reader finds it again by the same mark
+                    const EraIcon = TRAIL_ICONS[ERA_ICONS[era.id] ?? "flag"];
                     return (
                         <section key={era.name} id={`era-${era.id}`} className={styles.era} aria-labelledby={headingId}>
                             <header className={styles.eraHeader}>
                                 <h2 id={headingId} className={styles.eraName}>
+                                    <EraIcon aria-hidden="true" />
                                     {era.name}
                                 </h2>
                                 <span className={styles.eraYears}>{era.years}</span>

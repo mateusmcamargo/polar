@@ -82,7 +82,7 @@ export default async function Image({ params }: ImageProps) {
                             display: "flex",
                             width: 340,
                             border: `6px solid ${INK}`,
-                            backgroundColor: "#F2C230",
+                            backgroundColor: "#F5CD52",
                             backgroundImage: dotTexture("rgba(18, 17, 16, 0.12)"),
                             backgroundSize: "10px 10px",
                             overflow: "hidden",

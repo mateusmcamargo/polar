@@ -5,14 +5,17 @@ main.page {
     display: flex;
     flex-direction: column;
     gap: var(--space-7);
-    max-width: calc(var(--content-width-wide) + 2 * var(--page-gutter));
+    max-width: calc(var(--content-width-gallery) + 2 * var(--page-gutter));
     margin: 0 auto;
     padding-block: var(--space-5) var(--space-8);
 
-    // from computers the left 240 px belong to the era trail (PageMap, fixed over this column)
+    // from computers the page is the era trail (PageMap, fixed over the left padding) and the gallery, with three equal gaps: left
+    // edge, between them and right edge (gallery-gap in _mixins.scss)
     @include from("large") {
-        max-width: calc(var(--content-width-wide) + 2 * var(--page-gutter) + 240px);
-        padding-left: calc(var(--page-gutter) + 240px);
+        max-width: none;
+        margin: 0;
+        padding-left: calc(2 * #{gallery-gap()} + var(--trail-width));
+        padding-right: gallery-gap();
     }
 
     section.intro {
@@ -101,8 +104,18 @@ main.page {
         @include section-opening;
     }
 
+    // the icon of the era is the same one of the trail
     h2.eraName {
         @include section-title;
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+
+        svg {
+            flex: none;
+            width: 1.2em;
+            height: 1.2em;
+        }
     }
 
     span.eraYears {
@@ -118,8 +131,9 @@ main.page {
         padding: 0;
         list-style: none;
 
+        // as many cards as fit, never more than 5 in a row: the minimum width is a fifth of the row (minus the gaps) when that is wider than 160 px
         @include from("small") {
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(max(160px, calc((100% - 4 * var(--space-4)) / 5)), 1fr));
         }
     }
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { plainGlossaryText } from "@polar/db/glossary";
 import { findGalleryEntry, RULER_PAGES, type RulerPage } from "@polar/db/rulers";
+import { AmountMark } from "@/components/AmountMark/AmountMark";
 import { ApprovalChart } from "@/components/ApprovalChart/ApprovalChart";
 import { CaseList } from "@/components/CaseList/CaseList";
 import { EditorialSources } from "@/components/EditorialSources/EditorialSources";
@@ -12,6 +13,7 @@ import { GlossaryHint } from "@/components/GlossaryHint/GlossaryHint";
 import { GlossaryText } from "@/components/GlossaryText/GlossaryText";
 import { ListenButton } from "@/components/ListenButton/ListenButton";
 import { PageMap } from "@/components/PageMap/PageMap";
+import { PageSection } from "@/components/PageSection/PageSection";
 import { NAV_BACK, PageTransition } from "@/components/PageTransition/PageTransition";
 import { PartyBadge } from "@/components/PartyBadge/PartyBadge";
 import { ThesisPair } from "@/components/ThesisPair/ThesisPair";
@@ -59,22 +61,10 @@ export default async function RulerDetailPage({ params }: RulerPageProps) {
     if (!page || !entry) {
         notFound();
     }
-    const sections = [
-        { id: "dados", label: "Dados" },
-        { id: "antes", label: "Antes da presidência" },
-        { id: "politicas", label: "Políticas" },
-        { id: "economia", label: "Economia" },
-        { id: "mundo", label: "Outros países" },
-        { id: "opiniao", label: "O que a população achava" },
-        { id: "investigacoes", label: "Investigações" },
-        ...(page.endOfTerm ? [{ id: "fim-do-mandato", label: "Fim do mandato" }] : []),
-        { id: "depois", label: "Depois da presidência" },
-        { id: "curiosidades", label: "Você sabia?" },
-    ];
 
     return (
         <PageTransition>
-            <PageMap sections={sections} />
+            <PageMap />
             <main id="conteudo" className={styles.page}>
                 <nav className={styles.crumb} aria-label="Você está em">
                     <Link href="/governantes" transitionTypes={NAV_BACK}>Governantes</Link> <span aria-hidden="true">›</span> {entry.name}
@@ -104,18 +94,14 @@ export default async function RulerDetailPage({ params }: RulerPageProps) {
                         </div>
                     </div>
                     <p className={styles.lead}>
-                        <GlossaryText text={page.summary} />
+                        <GlossaryText text={page.summary} highlightNumbers />
                     </p>
                     <ListenButton text={`${entry.name}. ${plainGlossaryText(page.summary)}`} />
                 </section>
 
                 <GlossaryHint />
 
-                <section id="dados" className={styles.block} aria-labelledby="dados-title">
-                    <p className={styles.sectionKicker}>A pessoa</p>
-                    <h2 id="dados-title" className={styles.title}>
-                        Dados pessoais e mandato
-                    </h2>
+                <PageSection id="dados" icon="person" kicker="A pessoa" title="Dados pessoais e mandato" label="Dados">
                     <dl className={styles.facts}>
                         {page.facts.rows.map((row) => (
                             <div key={row.label}>
@@ -125,76 +111,52 @@ export default async function RulerDetailPage({ params }: RulerPageProps) {
                         ))}
                     </dl>
                     <EditorialSources sources={page.facts.sources} />
-                </section>
+                </PageSection>
 
-                <section id="antes" className={styles.block} aria-labelledby="antes-title">
-                    <p className={styles.sectionKicker}>A pessoa</p>
-                    <h2 id="antes-title" className={styles.title}>
-                        Antes da presidência
-                    </h2>
+                <PageSection id="antes" icon="before" kicker="A pessoa" title="Antes da presidência">
                     <EditorialTimeline entries={page.before} />
-                </section>
+                </PageSection>
 
-                <section id="politicas" className={styles.block} aria-labelledby="politicas-title">
-                    <p className={styles.sectionKicker}>O governo</p>
-                    <h2 id="politicas-title" className={styles.title}>
-                        Principais políticas
-                    </h2>
-                    <p className={styles.text}>{page.policies.intro}</p>
-                    <EditorialTimeline entries={page.policies.entries} />
-                </section>
-
-                <section id="economia" className={styles.block} aria-labelledby="economia-title">
-                    <p className={styles.sectionKicker}>O governo</p>
-                    <h2 id="economia-title" className={styles.title}>
-                        A economia no período
-                    </h2>
-                    <p className={styles.text}>{page.economy.intro}</p>
-                    <EditorialTimeline entries={page.economy.entries} />
-                </section>
-
-                <section id="mundo" className={styles.block} aria-labelledby="mundo-title">
-                    <p className={styles.sectionKicker}>O governo</p>
-                    <h2 id="mundo-title" className={styles.title}>
-                        Relações com outros países
-                    </h2>
-                    <EditorialTimeline entries={page.world} />
-                </section>
-
-                <section id="opiniao" className={styles.block} aria-labelledby="opiniao-title">
-                    <p className={styles.sectionKicker}>O governo</p>
-                    <h2 id="opiniao-title" className={styles.title}>
-                        O que a população achava
-                    </h2>
+                <PageSection id="politicas" icon="policies" kicker="O governo" title="Principais políticas" label="Políticas">
                     <p className={styles.text}>
-                        <GlossaryText text={page.opinion.intro} />
+                        <GlossaryText text={page.policies.intro} highlightNumbers />
+                    </p>
+                    <EditorialTimeline entries={page.policies.entries} />
+                </PageSection>
+
+                <PageSection id="economia" icon="economy" kicker="O governo" title="A economia no período" label="Economia">
+                    <p className={styles.text}>
+                        <GlossaryText text={page.economy.intro} highlightNumbers />
+                    </p>
+                    <EditorialTimeline entries={page.economy.entries} />
+                </PageSection>
+
+                <PageSection id="mundo" icon="world" kicker="O governo" title="Relações com outros países" label="Outros países">
+                    <EditorialTimeline entries={page.world} />
+                </PageSection>
+
+                <PageSection id="opiniao" icon="opinion" kicker="O governo" title="O que a população achava">
+                    <p className={styles.text}>
+                        <GlossaryText text={page.opinion.intro} highlightNumbers />
                     </p>
                     <ApprovalChart
                         points={page.opinion.points}
                         description={`Avaliação do governo: ${page.opinion.points.map((point) => `${point.good}% em ${point.label}`).join(", ")}.`}
                     />
                     <p className={styles.text}>
-                        <GlossaryText text={page.opinion.note} />
+                        <GlossaryText text={page.opinion.note} highlightNumbers />
                     </p>
-                </section>
+                </PageSection>
 
-                <section id="investigacoes" className={styles.block} aria-labelledby="investigacoes-title">
-                    <p className={styles.sectionKicker}>Na Justiça</p>
-                    <h2 id="investigacoes-title" className={styles.title}>
-                        Investigações e processos
-                    </h2>
+                <PageSection id="investigacoes" icon="justice" kicker="Na Justiça" title="Investigações e processos" label="Investigações">
                     <p className={styles.text}>
-                        <GlossaryText text={page.cases.intro} />
+                        <GlossaryText text={page.cases.intro} highlightNumbers />
                     </p>
                     <CaseList cases={page.cases.items} gender={page.grammaticalGender} />
-                </section>
+                </PageSection>
 
                 {page.endOfTerm && (
-                    <section id="fim-do-mandato" className={styles.block} aria-labelledby="fim-title">
-                        <p className={styles.sectionKicker}>No Congresso</p>
-                        <h2 id="fim-title" className={styles.title}>
-                            {page.endOfTerm.heading}
-                        </h2>
+                    <PageSection id="fim-do-mandato" icon="congress" kicker="No Congresso" title={page.endOfTerm.heading} label="Fim do mandato">
                         <StatementText statement={page.endOfTerm.intro} />
                         <EditorialTimeline entries={page.endOfTerm.entries} />
                         <div className={styles.decided}>
@@ -209,14 +171,10 @@ export default async function RulerDetailPage({ params }: RulerPageProps) {
                         </div>
                         <h3 className={styles.subtitle}>Duas leituras do mesmo processo</h3>
                         <ThesisPair theses={page.endOfTerm.theses} />
-                    </section>
+                    </PageSection>
                 )}
 
-                <section id="depois" className={styles.block} aria-labelledby="depois-title">
-                    <p className={styles.sectionKicker}>Depois do cargo</p>
-                    <h2 id="depois-title" className={styles.title}>
-                        Depois da presidência
-                    </h2>
+                <PageSection id="depois" icon="after" kicker="Depois do cargo" title="Depois da presidência">
                     <EditorialTimeline entries={page.after.entries} />
                     {page.after.money.map((block) => (
                         <div key={block.label} className={styles.money}>
@@ -225,7 +183,10 @@ export default async function RulerDetailPage({ params }: RulerPageProps) {
                                 <div className={styles.figures}>
                                     {block.figures.map((figure) => (
                                         <p key={figure.value} className={styles.figure}>
-                                            <strong>{figure.value}</strong> {figure.caption}
+                                            <strong>
+                                                <AmountMark>{figure.value}</AmountMark>
+                                            </strong>{" "}
+                                            {figure.caption}
                                         </p>
                                     ))}
                                 </div>
@@ -235,23 +196,17 @@ export default async function RulerDetailPage({ params }: RulerPageProps) {
                             ))}
                         </div>
                     ))}
-                </section>
+                </PageSection>
 
-                <section id="curiosidades" className={styles.block} aria-labelledby="curiosidades-title">
-                    <p className={styles.sectionKicker}>Curiosidades</p>
-                    <h2 id="curiosidades-title" className={styles.title}>
-                        Você sabia?
-                    </h2>
-                    <div className={styles.field}>
-                        <ul className={styles.trivia}>
-                            {page.trivia.map((statement) => (
-                                <li key={statement.text}>
-                                    <StatementText statement={statement} />
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                </section>
+                <PageSection id="curiosidades" icon="trivia" kicker="Curiosidades" title="Você sabia?">
+                    <ul className={styles.trivia}>
+                        {page.trivia.map((statement) => (
+                            <li key={statement.text}>
+                                <StatementText statement={statement} />
+                            </li>
+                        ))}
+                    </ul>
+                </PageSection>
 
                 <footer className={styles.review}>
                     <p>

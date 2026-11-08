@@ -22,7 +22,8 @@ div.clock {
         }
 
         span.year {
-            font-size: var(--text-figure);
+            // the rail of the rulers page asks for a smaller year (--clock-year-size)
+            font-size: var(--clock-year-size, var(--text-figure));
             font-variant-numeric: tabular-nums;
             font-weight: 700;
             line-height: 1;

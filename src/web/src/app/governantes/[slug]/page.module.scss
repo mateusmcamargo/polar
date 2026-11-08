@@ -93,23 +93,6 @@ main.page {
         max-width: 62ch;
     }
 
-    section.block {
-        @include section-opening;
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-4);
-        // clears the sticky header
-        scroll-margin-top: 88px;
-    }
-
-    p.sectionKicker {
-        @include section-kicker;
-    }
-
-    h2.title {
-        @include section-title;
-    }
-
     h3.subtitle {
         font-size: var(--text-label);
     }
@@ -120,10 +103,8 @@ main.page {
     }
 
     dl.facts {
-        @include hairline-border;
         margin: 0;
-        border-radius: var(--radius-card);
-        background: var(--color-panel);
+        @include comic.comic-note;
 
         div {
             display: grid;
@@ -153,13 +134,11 @@ main.page {
     }
 
     div.decided {
-        @include hairline-border;
         display: flex;
         flex-direction: column;
         gap: var(--space-3);
         padding: var(--space-4);
-        border-radius: var(--radius-card);
-        background: var(--color-panel);
+        @include comic.comic-note;
 
         ul {
             display: flex;
@@ -171,13 +150,11 @@ main.page {
     }
 
     div.money {
-        @include hairline-border;
         display: flex;
         flex-direction: column;
         gap: var(--space-3);
         padding: var(--space-4);
-        border-radius: var(--radius-card);
-        background: var(--color-panel);
+        @include comic.comic-note;
     }
 
     h3.moneyLabel {
@@ -203,19 +180,21 @@ main.page {
         }
     }
 
-    // the only comic block of the page
-    div.field {
-        @include comic.comic-field;
-        padding: var(--space-5);
-    }
-
+    // the trivia are a comic sticker like the result of a vote, as wide as the column; the yellow is the same in both themes, so
+    // everything in it is dark, and the amount marks turn white there, because a yellow mark would vanish
     ul.trivia {
-        @include comic.comic-panel;
+        @include comic.comic-sticker;
+        // the offset shadow of the comic accent sits outside the box
+        margin: 0 7px 7px 0;
         display: flex;
         flex-direction: column;
         gap: var(--space-4);
-        margin: 0;
-        padding: var(--space-4) var(--space-4) var(--space-4) var(--space-6);
+        padding: var(--space-5) var(--space-5) var(--space-5) var(--space-6);
+        --mark-color: var(--color-panel);
+
+        * {
+            color: inherit;
+        }
     }
 
     footer.review {

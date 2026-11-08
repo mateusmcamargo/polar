@@ -1,7 +1,21 @@
 // glossary term inside a sentence: light sticker fill, thick dotted underline and a book mark, so it never relies on color alone
+// An inline block is moved to the next line as a whole when it does not fit, so the words and the book stay together. Its
+// width is capped at the container, so a term longer than a line still wraps inside itself instead of overflowing.
 a.term {
-    padding: 1px 2px;
-    background: var(--color-term-fill);
+    display: inline-block;
+    max-width: 100%;
+    padding: 1px 6px;
+    // two flat layers, each as wide as its progress: the fill appears from left to right when the text comes into view
+    // (reveal-mark), and the stronger fill of the hover follows the pointer in the same direction
+    background-image:
+        linear-gradient(var(--color-term-fill-hover), var(--color-term-fill-hover)),
+        linear-gradient(var(--color-term-fill), var(--color-term-fill));
+    background-repeat: no-repeat;
+    background-position: left center;
+    background-size:
+        var(--term-hover-progress) 100%,
+        var(--term-fill-progress) 100%;
+    transition: --term-hover-progress var(--duration-fill) var(--ease-out);
     color: inherit;
     text-decoration: underline dotted 2px var(--color-ink);
     text-underline-offset: 4px;
@@ -20,7 +34,7 @@ a.term {
     }
 
     &:hover {
-        background: var(--color-term-fill-hover);
+        --term-hover-progress: 100%;
     }
 
     @media (forced-colors: active) {

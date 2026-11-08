@@ -39,13 +39,24 @@ export function GlossaryContent({ idPrefix, currentId }: Readonly<GlossaryConten
         }
     }
 
+    // An entry stops below the sticky letter of its group, which would otherwise cover its top (the "Você clicou aqui" flag),
+    // and keeps its own top margin, so the outline of the highlighted entry is not cut either
+    function scrollListToEntry(entry: HTMLElement | null) {
+        const body = bodyRef.current;
+        if (body && entry) {
+            const letter = entry.closest("section")?.querySelector<HTMLElement>(":scope > h2, :scope > h3");
+            const coveredHeight = (letter?.getBoundingClientRect().height ?? 0) + Number.parseFloat(getComputedStyle(entry).marginTop || "0");
+            body.scrollTop += entry.getBoundingClientRect().top - body.getBoundingClientRect().top - coveredHeight;
+        }
+    }
+
     // the parent mounts a fresh copy for every request, so this runs once per request
     useEffect(() => {
         if (!currentId) {
             return;
         }
         const entry = document.getElementById(`${idPrefix}${glossaryEntryAnchor(currentId)}`);
-        scrollListTo(entry);
+        scrollListToEntry(entry);
         entry?.focus({ preventScroll: true });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);

@@ -1,4 +1,4 @@
-import { Crown, Flag, Radio, ScrollText, Ship, Shield, Vote, type LucideIcon } from "lucide-react";
+import { Crown, Flag, Radio, ScrollText, Ship, Shield, Vote, type LucideIcon, BrickWall, BrickWallShield } from "lucide-react";
 
 // icons of the trail, by name, so a server page can pass them to the client components as plain strings
 export const TRAIL_ICONS = {
@@ -7,7 +7,7 @@ export const TRAIL_ICONS = {
     flag: Flag,
     radio: Radio,
     vote: Vote,
-    shield: Shield,
+    brickWallShield: BrickWallShield,
     scroll: ScrollText,
 } as const satisfies Record<string, LucideIcon>;
 

@@ -7,6 +7,17 @@ import type { Source, Sources } from "./sources";
 const ACCESSED_ON = "2026-11-05";
 const ACCESSED_ON_NEW_ENTRIES = "2026-11-06";
 
+const ACCESSED_ON_VOTE_ENTRIES = "2026-11-06";
+
+function chamberRules(article: string): Source {
+    return {
+        title: `Regimento Interno da Câmara dos Deputados, ${article}`,
+        publisher: "Câmara dos Deputados",
+        url: "https://www2.camara.leg.br/legin/fed/rescad/1989/resolucaodacamaradosdeputados-17-21-setembro-1989-320110-normaatualizada-pl.html",
+        accessedOn: ACCESSED_ON_VOTE_ENTRIES,
+    };
+}
+
 function planalto(title: string, path: string, accessedOn: string = ACCESSED_ON): Source {
     return { title, publisher: "Planalto", url: `https://www.planalto.gov.br/ccivil_03/${path}`, accessedOn };
 }
@@ -15,6 +26,28 @@ const CONSTITUTION = planalto("Constituição Federal de 1988", "constituicao/co
 const CONSTITUTION_READ_AGAIN = planalto("Constituição Federal de 1988", "constituicao/constituicao.htm", ACCESSED_ON_NEW_ENTRIES);
 const CONSTITUTION_OF_1824 = planalto("Constituição Política do Império do Brasil, de 1824", "constituicao/constituicao24.htm", ACCESSED_ON_NEW_ENTRIES);
 const CRIMINAL_PROCEDURE_CODE = planalto("Código de Processo Penal (Decreto-Lei nº 3.689, de 1941)", "decreto-lei/del3689.htm");
+const ACCESSED_ON_LANDMARK_ENTRIES = "2026-11-07";
+
+const ITAIPU_TREATY = planalto("Decreto nº 72.707, de 1973 (promulga o Tratado de Itaipu e o Anexo C)", "decreto/antigos/d72707.htm", ACCESSED_ON_LANDMARK_ENTRIES);
+const ITAIPU_GENERATION_PAGE: Source = {
+    title: "Geração",
+    publisher: "Itaipu Binacional",
+    url: "https://www.itaipu.gov.br/energia/geracao",
+    accessedOn: ACCESSED_ON_LANDMARK_ENTRIES,
+};
+const ITAIPU_TARIFF_NEWS: Source = {
+    title: "Itaipu define tarifa para exercício de 2023",
+    publisher: "Itaipu Binacional",
+    url: "https://www.itaipu.gov.br/noticias/sala-de-imprensa/itaipu-define-tarifa-para-exercicio-de-2023",
+    accessedOn: ACCESSED_ON_LANDMARK_ENTRIES,
+};
+const ANEEL_ITAIPU_PASS_THROUGH_NEWS: Source = {
+    title: "Tarifa de Repasse da usina Itaipu para 2026 é aprovada pela ANEEL",
+    publisher: "Agência Nacional de Energia Elétrica",
+    url: "https://www.gov.br/aneel/pt-br/assuntos/noticias/2025/tarifa-de-repasse-da-usina-itaipu-para-2026-e-aprovada-pela-aneel",
+    accessedOn: ACCESSED_ON_LANDMARK_ENTRIES,
+};
+
 const PRESIDENCY_LIBRARY_GALLERY: Source = {
     title: "Galeria de ex-presidentes",
     publisher: "Biblioteca da Presidência da República",
@@ -36,6 +69,23 @@ export interface GlossaryEntry {
 // alphabetical by term; the panel and the /glossario page group them by first letter
 export const GLOSSARY: readonly GlossaryEntry[] = [
     {
+        id: "abstencao",
+        term: "Abstenção",
+        definition:
+            "Quando o deputado está na votação, mas não vota a favor nem contra. A abstenção conta para saber se havia deputados suficientes na votação (o quórum), mas não conta como voto Sim nem como voto Não.",
+        seeAlso: ["votacao-nominal"],
+        sources: [chamberRules("art. 183, § 2º")],
+    },
+    {
+        id: "anexo-c",
+        term: "Anexo C",
+        alsoKnownAs: "do Tratado de Itaipu",
+        definition:
+            "Parte do Tratado de Itaipu que diz como o custo da usina é calculado e dividido: quanto a usina paga de juros, de dívida, de operação e de royalties, e como esse custo vira a tarifa cobrada de quem compra a energia. O próprio Anexo C diz que deve ser revisto depois de 50 anos da entrada em vigor do Tratado.",
+        seeAlso: ["cuse", "royalties", "tratado-de-itaipu"],
+        sources: [ITAIPU_TREATY],
+    },
+    {
         id: "anistiado-politico",
         term: "Anistiado político",
         alsoKnownAs: "ou anistiada política",
@@ -50,6 +100,14 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
         definition: "Quando uma investigação ou um processo é encerrado sem condenação, por exemplo porque não há provas ou porque o fato não é crime.",
         example: "Uma investigação arquivada pode ser reaberta se aparecerem provas novas.",
         sources: [CRIMINAL_PROCEDURE_CODE],
+    },
+    {
+        id: "bloco-parlamentar",
+        term: "Bloco parlamentar",
+        definition: "Grupo de dois ou mais partidos que decidem agir juntos, com um só líder. Na Câmara, o bloco é tratado como se fosse um partido.",
+        example: "Os partidos de um bloco costumam seguir a mesma orientação de voto, mas cada deputado decide o próprio voto.",
+        seeAlso: ["orientacao"],
+        sources: [chamberRules("art. 12")],
     },
     {
         id: "brics",
@@ -79,6 +137,15 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
         sources: [planalto("Lei Complementar nº 64, de 1990", "leis/lcp/lcp64.htm")],
     },
     {
+        id: "cessao-de-energia",
+        term: "Cessão de energia",
+        definition:
+            "Quando um dos países sócios de Itaipu não usa toda a energia a que tem direito e deixa a parte que sobrou para o outro país comprar. O tratado dá a cada país o direito de comprar a energia que o outro não usa, e quem cede recebe uma remuneração por isso (300 dólares por gigawatt-hora cedido, no texto do tratado).",
+        example: "O Paraguai usa menos da metade da energia de Itaipu, e a parte que ele não usa pode ser comprada pelo Brasil.",
+        seeAlso: ["anexo-c", "gigawatt-hora"],
+        sources: [ITAIPU_TREATY],
+    },
+    {
         id: "crime-de-responsabilidade",
         term: "Crime de responsabilidade",
         definition:
@@ -86,6 +153,15 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
         example: "O presidente acusado de crime de responsabilidade é julgado pelo Senado.",
         seeAlso: ["impeachment"],
         sources: [planalto("Lei nº 1.079, de 1950", "leis/l1079.htm"), CONSTITUTION],
+    },
+    {
+        id: "cuse",
+        term: "Cuse",
+        alsoKnownAs: "Custo Unitário dos Serviços de Eletricidade",
+        definition:
+            "A tarifa de Itaipu: o valor, em dólares por quilowatt de potência contratada por mês, que cobre os custos da usina (operação, manutenção, administração, royalties e dívidas). É decidido pelo Conselho de Administração da Itaipu, formado por brasileiros e paraguaios. No Brasil, a tarifa que as distribuidoras pagam é a tarifa de repasse, que parte do Cuse.",
+        seeAlso: ["tarifa-de-repasse", "royalties"],
+        sources: [ITAIPU_TARIFF_NEWS],
     },
     {
         id: "delacao-premiada",
@@ -103,12 +179,30 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
         sources: [CRIMINAL_PROCEDURE_CODE],
     },
     {
+        id: "destaque",
+        term: "Destaque",
+        definition:
+            "Pedido para votar separadamente uma parte de um projeto, ou uma emenda (proposta de mudança no texto). Assim, os deputados podem aprovar o texto principal e ainda decidir, à parte, sobre aquele trecho.",
+        example: "Numa votação de destaque, o voto Sim pode manter o trecho no texto.",
+        seeAlso: ["requerimento"],
+        sources: [chamberRules("art. 161")],
+    },
+    {
         id: "diario-oficial-da-uniao",
         term: "Diário Oficial da União",
         alsoKnownAs: "DOU",
         definition: "Jornal oficial do governo federal. É nele que saem as leis, os decretos, as portarias e outros atos do governo.",
         seeAlso: ["portaria"],
         sources: [planalto("Decreto nº 9.191, de 2017 (regras para atos oficiais), art. 41", "_ato2015-2018/2017/decreto/d9191.htm", ACCESSED_ON_NEW_ENTRIES)],
+    },
+    {
+        id: "gigawatt-hora",
+        term: "Gigawatt-hora",
+        alsoKnownAs: "GWh",
+        definition: "Medida de energia. Um gigawatt-hora é um milhão de quilowatts-hora, a unidade que aparece na conta de luz.",
+        example: "Em 2025, Itaipu produziu 72.879 gigawatts-hora.",
+        seeAlso: ["mw-medio"],
+        sources: [ITAIPU_GENERATION_PAGE],
     },
     {
         id: "impeachment",
@@ -140,6 +234,14 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
         sources: [planalto("Lei Complementar nº 101, de 2000 (Lei de Responsabilidade Fiscal), art. 36", "leis/lcp/lcp101.htm", ACCESSED_ON_NEW_ENTRIES)],
     },
     {
+        id: "liberacao-do-voto",
+        term: "Liberação do voto",
+        alsoKnownAs: "Liberado",
+        definition: "Quando o líder do partido, do bloco ou do governo não indica como o grupo deve votar. Cada deputado decide sozinho.",
+        seeAlso: ["orientacao"],
+        sources: [chamberRules("art. 192, § 2º")],
+    },
+    {
         id: "ministerio-publico",
         term: "Ministério Público",
         alsoKnownAs: "MP",
@@ -156,6 +258,14 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
             "Ramo do Ministério Público que atua nos tribunais e nos juízes federais, no Supremo Tribunal Federal (o tribunal mais alto do país) e na Justiça Eleitoral. O chefe é o procurador-geral da República.",
         seeAlso: ["ministerio-publico", "procuradoria-geral-da-republica"],
         sources: [planalto("Lei Complementar nº 75, de 1993, arts. 25 e 37", "leis/lcp/lcp75.htm", ACCESSED_ON_NEW_ENTRIES)],
+    },
+    {
+        id: "mw-medio",
+        term: "MW médio",
+        alsoKnownAs: "megawatt médio",
+        definition: "Quanta energia uma usina entrega, em média, em cada hora de um período. Serve para comparar anos de tamanhos diferentes e para dividir a energia entre quem a compra.",
+        seeAlso: ["gigawatt-hora"],
+        sources: [ITAIPU_GENERATION_PAGE],
     },
     {
         id: "nova-republica",
@@ -191,6 +301,16 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
                 accessedOn: ACCESSED_ON_NEW_ENTRIES,
             },
         ],
+    },
+    {
+        id: "orientacao",
+        term: "Orientação",
+        alsoKnownAs: "orientação de bancada",
+        definition:
+            "Indicação que o líder de um partido, de um bloco ou do governo dá sobre como os deputados do grupo devem votar. É um recado dado antes da votação: cada deputado decide o próprio voto.",
+        example: "Se o líder do governo orienta Sim, o governo pede que os deputados aliados votem Sim.",
+        seeAlso: ["bloco-parlamentar", "liberacao-do-voto"],
+        sources: [chamberRules("art. 192, § 2º")],
     },
     {
         id: "plano-safra",
@@ -250,12 +370,28 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
         ],
     },
     {
+        id: "requerimento",
+        term: "Requerimento",
+        definition:
+            "Pedido feito por um deputado ao presidente da Câmara ou ao Plenário. Alguns são decididos na hora pelo presidente. Outros precisam ser votados pelos deputados, por exemplo o pedido para votar um projeto com urgência.",
+        seeAlso: ["urgencia"],
+        sources: [chamberRules("arts. 114 e 117")],
+    },
+    {
         id: "reu",
         term: "Réu",
         alsoKnownAs: "ou ré",
         definition: "Pessoa que responde a um processo na Justiça, depois que a acusação foi aceita. Ser réu não é o mesmo que ser condenado.",
         seeAlso: ["denuncia"],
         sources: [CRIMINAL_PROCEDURE_CODE],
+    },
+    {
+        id: "royalties",
+        term: "Royalties",
+        definition:
+            "Pagamento feito pelo uso de um bem natural. Em Itaipu, a usina paga royalties, em partes iguais, aos governos do Brasil e do Paraguai pelo uso da água do rio Paraná. O tratado fixa o valor em 650 dólares por gigawatt-hora gerado, com um mínimo anual.",
+        seeAlso: ["anexo-c", "gigawatt-hora"],
+        sources: [ITAIPU_TREATY],
     },
     {
         id: "supremo-tribunal-federal",
@@ -266,12 +402,29 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
         sources: [CONSTITUTION_READ_AGAIN],
     },
     {
+        id: "tarifa-de-repasse",
+        term: "Tarifa de repasse",
+        alsoKnownAs: "de Itaipu",
+        definition:
+            "O valor que as distribuidoras de energia do Sul, do Sudeste e do Centro-Oeste pagam pela energia de Itaipu a que têm direito. É fixada pela Aneel em dólares por quilowatt por mês e soma o Cuse que vale para o Brasil e o custo da energia que o Paraguai cede ao Brasil.",
+        seeAlso: ["cuse", "cessao-de-energia"],
+        sources: [ANEEL_ITAIPU_PASS_THROUGH_NEWS],
+    },
+    {
         id: "tcu",
         term: "TCU",
         alsoKnownAs: "Tribunal de Contas da União",
         definition:
             "Órgão que fiscaliza como o dinheiro público federal é gasto. Não faz parte da Justiça, mas pode mandar devolver dinheiro e aplicar multas.",
         sources: [CONSTITUTION],
+    },
+    {
+        id: "tratado-de-itaipu",
+        term: "Tratado de Itaipu",
+        definition:
+            "Acordo entre o Brasil e o Paraguai, assinado em Brasília em 26 de abril de 1973 e em vigor desde 13 de agosto de 1973, para usar juntos a energia do rio Paraná. Criou a Itaipu Binacional, dividiu a energia em partes iguais e deu a cada país o direito de comprar a que o outro não usar.",
+        seeAlso: ["anexo-c", "cessao-de-energia"],
+        sources: [ITAIPU_TREATY],
     },
     {
         id: "tribunal-regional-federal",
@@ -287,6 +440,37 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
         alsoKnownAs: "Tribunal Superior Eleitoral",
         definition: "Tribunal que organiza as eleições e julga os casos ligados a elas, como abuso de poder na campanha.",
         sources: [CONSTITUTION],
+    },
+    {
+        id: "turno",
+        term: "Turno",
+        definition: "Cada rodada de votação de uma proposta. Uma proposta de emenda à Constituição (PEC), por exemplo, precisa ser votada em dois turnos na Câmara.",
+        sources: [CONSTITUTION],
+    },
+    {
+        id: "urgencia",
+        term: "Urgência",
+        definition:
+            "Pedido para um projeto ser votado logo, sem esperar a sua vez na fila. Para valer, precisa ser aprovado pela maioria absoluta dos deputados (a metade mais um de todos os deputados, e não só dos que estão presentes).",
+        seeAlso: ["requerimento"],
+        sources: [chamberRules("art. 155")],
+    },
+    {
+        id: "votacao-nominal",
+        term: "Votação nominal",
+        definition:
+            "Votação em que cada deputado vota pelo nome, e o voto de cada um fica registrado e público. É usada, por exemplo, quando a regra pede mais votos para aprovar (quórum especial) ou quando o Plenário aceita o pedido de um deputado.",
+        example: "O polar mostra as votações nominais, porque só nelas dá para ver como cada deputado votou.",
+        seeAlso: ["votacao-simbolica"],
+        sources: [chamberRules("arts. 184 e 186")],
+    },
+    {
+        id: "votacao-simbolica",
+        term: "Votação simbólica",
+        definition:
+            "Votação em que o presidente da sessão pede que os deputados a favor fiquem sentados e anuncia o resultado. Ninguém vota pelo nome, então o voto de cada deputado não fica registrado.",
+        seeAlso: ["votacao-nominal"],
+        sources: [chamberRules("art. 185")],
     },
 ];
 
