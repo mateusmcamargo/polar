@@ -1,4 +1,4 @@
-import type { Thesis } from "@polar/db/rulers";
+import type { Thesis } from "@polar/db/editorial";
 import { EditorialSources } from "@/components/EditorialSources/EditorialSources";
 import { GlossaryText } from "@/components/GlossaryText/GlossaryText";
 import styles from "./ThesisPair.module.scss";
@@ -18,7 +18,7 @@ export function ThesisPair({ theses }: Readonly<ThesisPairProps>) {
                     <ul className={styles.arguments}>
                         {thesis.arguments.map((argument) => (
                             <li key={argument}>
-                                <GlossaryText text={argument} />
+                                <GlossaryText text={argument} highlightNumbers />
                             </li>
                         ))}
                     </ul>

@@ -1,0 +1,171 @@
+// the paper of the stub and the ink of the text are fixed on purpose: a printed ticket does not change with the theme; the
+// black edge follows the site ink, so it stays visible on the dark theme
+$stub-paper: #ffffff;
+$text-ink: #2b2620;
+$margin-red: #b5483a;
+$rule-blue: rgb(62 92 140 / 0.35);
+$edge: 3px;
+$shadow: 7px;
+$cut: 12px;
+$tear: 18px;
+// how far the last push of the print animation (reveal-print) leaves the ticket below its starting place; shared with the
+// animation through a custom property, so the room under the ticket always matches the movement
+$push: 24px;
+
+// fine grain: dark speckles on a transparent base, drawn by the browser (no image file)
+$grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .17 0 0 0 0 .13 0 0 0 0 .09 1.2 0 0 0 -.5'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+
+// ink stains: large soft blotches, dark where the noise is high
+$stains: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.03' numOctaves='4' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .17 0 0 0 0 .13 0 0 0 0 .09 0 0 0 2.4 -1.05'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3C/svg%3E");
+
+figure.print {
+    display: flex;
+    flex-direction: column;
+    max-width: 20rem;
+    --print-push: #{$push};
+    // centered in the column, like the printer over it
+    margin: var(--space-2) auto;
+
+    // the mouth of the instant printer: a white rectangle 44 px high with a 3 px black edge, wider than the ticket, with the black
+    // slit where the paper comes out, wider than the photo. It is behind the photo, whose top edge hangs just below the slit, as
+    // if the ticket had slid out and settled lower. The ticket is centered under it: the tray has the same room on both sides
+    div.mouth {
+        position: relative;
+        z-index: 0;
+        height: 44px;
+        margin: 0 -16px -17px;
+        border: $edge solid var(--color-ink);
+        background: $stub-paper;
+
+        &::after {
+            content: "";
+            position: absolute;
+            top: 15px;
+            right: 8px;
+            left: 8px;
+            height: 12px;
+            background: var(--color-ink);
+        }
+    }
+
+    // The tray clips the ticket at the mouth, so while it is printed the ticket comes out from the slot. It has the same room on
+    // both sides, so the ticket is centered, and it is large enough for the black edge and the offset shadow of the cards.
+    div.tray {
+        position: relative;
+        z-index: 1;
+        // clips only the top (the mouth); the other sides are open, so nothing is cut whatever the size of the ticket
+        clip-path: inset(0 -100vmax -100vmax);
+        padding: 0 calc($shadow + $edge) calc($shadow + $edge + var(--print-push));
+    }
+
+    // The black edge and the offset shadow are drawn from the shape of the paper, cuts included: four hard copies of it
+    // 3 px away on each side make the edge, and one more, 7 px away, is the shadow. They are shadows of the shape that
+    // is left after the masks, so nothing is painted over a cut.
+    div.shape {
+        filter: drop-shadow($edge 0 0 var(--color-ink)) drop-shadow(-$edge 0 0 var(--color-ink)) drop-shadow(0 $edge 0 var(--color-ink))
+            drop-shadow(0 (-$edge) 0 var(--color-ink)) drop-shadow($shadow $shadow 0 var(--color-ink));
+    }
+
+    // the photo: the bottom corners are cut by a quarter circle each, which together with the corners of the stub make the half
+    // circle cut on each side of the perforation
+    div.photo {
+        position: relative;
+        isolation: isolate;
+        mask-image: radial-gradient(circle $cut at 0 100%, transparent calc($cut - 0.5px), #000 $cut), radial-gradient(circle $cut at 100% 100%, transparent calc($cut - 0.5px), #000 $cut);
+        mask-composite: intersect;
+        -webkit-mask-composite: source-in;
+
+        img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        // old ink, in light layers that fade in from the edges and leave the middle of the photo clear: halftone dots and ink
+        // stains, then a fine grain with a warm tone
+        &::before,
+        &::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            mix-blend-mode: multiply;
+        }
+
+        &::before {
+            background-image: radial-gradient(circle, rgb(43 38 32 / 0.5) 0.9px, transparent 1.4px), $stains;
+            background-size: 4px 4px, 320px 320px;
+            mask-image: radial-gradient(ellipse at 50% 50%, transparent 52%, #000 100%);
+            opacity: 0.38;
+        }
+
+        &::after {
+            background-color: #ece4d0;
+            background-image: $grain;
+            background-size: 180px 180px;
+            opacity: 0.16;
+        }
+    }
+
+    // the detachable stub: a dashed perforation on top, with the top corners cut by a quarter circle each
+    figcaption.stub {
+        border-top: $edge dashed var(--color-ink);
+        mask-image: radial-gradient(circle $cut at 0 0, transparent calc($cut - 0.5px), #000 $cut), radial-gradient(circle $cut at 100% 0, transparent calc($cut - 0.5px), #000 $cut);
+        mask-composite: intersect;
+        -webkit-mask-composite: source-in;
+    }
+
+    // the caption on ruled white paper with a red margin line, ending in the tear-off edge of the reference ticket
+    // (.local/examples/ticket/hqdefault.jpg): a row of half circles cut from the bottom edge, a whole number of them across the
+    // width (the mask repeats "round", so they are never cut at the ends), and a dashed fold line above them
+    div.stubBody {
+        position: relative;
+        padding: 3px var(--space-3) calc($tear + var(--space-4)) var(--space-6);
+        background-color: $stub-paper;
+        background-image:
+            linear-gradient(to right, transparent calc(var(--space-5) - 1px), $margin-red calc(var(--space-5) - 1px), $margin-red var(--space-5), transparent var(--space-5)),
+            repeating-linear-gradient(to bottom, transparent 0, transparent calc(1.5rem - 1px), $rule-blue calc(1.5rem - 1px), $rule-blue 1.5rem);
+        color: $text-ink;
+        font-size: var(--text-micro);
+        line-height: 1.5rem;
+        mask-image: radial-gradient(circle at 50% 100%, transparent 10px, #000 10.5px), linear-gradient(#000, #000);
+        mask-size: 26px $tear, 100% calc(100% - $tear);
+        mask-position: bottom, top;
+        mask-repeat: round no-repeat, no-repeat;
+
+        a {
+            color: inherit;
+        }
+
+        &::after {
+            content: "";
+            position: absolute;
+            right: var(--space-3);
+            bottom: calc($tear + var(--space-2));
+            left: var(--space-3);
+            border-top: 2px dashed var(--color-ink);
+        }
+    }
+
+    @media (forced-colors: active) {
+        div.mouth {
+            border: 3px solid CanvasText;
+            background: Canvas;
+        }
+
+        div.shape {
+            filter: none;
+            outline: 3px solid CanvasText;
+        }
+
+        div.photo::before,
+        div.photo::after {
+            display: none;
+        }
+
+        div.stubBody {
+            background: Canvas;
+            color: CanvasText;
+        }
+    }
+}

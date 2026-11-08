@@ -1,7 +1,9 @@
 import Image from "next/image";
-import type { PlenaryVote, Statement, TimelineEntry } from "@polar/db/rulers";
+import type { PlenaryVote, Statement, TimelineEntry } from "@polar/db/editorial";
 import { EditorialSources } from "@/components/EditorialSources/EditorialSources";
 import { GlossaryText } from "@/components/GlossaryText/GlossaryText";
+import { OldPrint } from "@/components/OldPrint/OldPrint";
+import { VoteBadge } from "@/components/VoteBadge/VoteBadge";
 import styles from "./EditorialTimeline.module.scss";
 
 export function StatementText({ statement }: Readonly<{ statement: Statement }>) {
@@ -9,11 +11,12 @@ export function StatementText({ statement }: Readonly<{ statement: Statement }>)
     return (
         <div className={styles.statement}>
             <p>
-                {statement.lead && <strong>{statement.lead}</strong>} <GlossaryText text={statement.text} />
+                {statement.lead && <strong>{statement.lead}</strong>} <GlossaryText text={statement.text} highlightNumbers />
             </p>
-            {image && (
+            {image?.look === "old-print" && <OldPrint image={image} />}
+            {image && image.look !== "old-print" && (
                 <figure className={styles.photo}>
-                    <Image src={image.file} alt={image.alt} width={320} height={451} sizes="(min-width: 600px) 320px, 80vw" />
+                    <Image src={image.file} alt={image.alt} width={image.width} height={image.height} sizes="(min-width: 600px) 320px, 80vw" />
                     <figcaption>
                         {image.caption} Foto: <a href={image.sourceUrl}>{image.author}</a>, licença {image.license}, via Wikimedia Commons.
                     </figcaption>
@@ -37,19 +40,22 @@ function VoteBar({ vote }: Readonly<{ vote: PlenaryVote }>) {
                 <span className={styles.no} style={{ width: percent(vote.no, total) }} />
                 {vote.abstentions > 0 && <span className={styles.abstain} style={{ width: percent(vote.abstentions, total) }} />}
             </div>
+            {/* the same badges as the vote pages (icon, word and color); the text after the count says what the vote was about */}
             <ul className={styles.legend}>
                 <li>
-                    <span className={`${styles.swatch} ${styles.yes}`} aria-hidden="true" />
-                    <strong>{vote.yes}</strong> {vote.yesLabel}
+                    <VoteBadge choice="YES" size="small" />
+                    <strong>{vote.yes}</strong>
+                    <span>{vote.yesLabel}</span>
                 </li>
                 <li>
-                    <span className={`${styles.swatch} ${styles.no}`} aria-hidden="true" />
-                    <strong>{vote.no}</strong> {vote.noLabel}
+                    <VoteBadge choice="NO" size="small" />
+                    <strong>{vote.no}</strong>
+                    <span>{vote.noLabel}</span>
                 </li>
                 {vote.abstentions > 0 && (
                     <li>
-                        <span className={`${styles.swatch} ${styles.abstain}`} aria-hidden="true" />
-                        <strong>{vote.abstentions}</strong> {vote.abstentions === 1 ? "abstenção" : "abstenções"}
+                        <VoteBadge choice="ABSTENTION" size="small" />
+                        <strong>{vote.abstentions}</strong>
                     </li>
                 )}
             </ul>

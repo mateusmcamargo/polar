@@ -1,4 +1,4 @@
-import type { Sources } from "@polar/db/rulers";
+import type { Sources } from "@polar/db/editorial";
 import styles from "./EditorialSources.module.scss";
 
 interface EditorialSourcesProps {

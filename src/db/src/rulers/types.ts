@@ -2,42 +2,10 @@
 // every statement needs at least one source, so a statement without one fails the type check
 // statement texts may mark glossary terms as [[id]] or [[id|shown text]], see glossary.ts
 
-import type { Source, Sources } from "../sources";
+import type { FactRow, PlenaryVote, Source, Sources, Statement, StatementImage, Thesis, TimelineEntry } from "../editorial";
 
-export type { Source, Sources };
-
-// photo shown under a statement; the author and the license are always shown with it
-export interface StatementImage {
-    file: string;
-    alt: string;
-    caption: string;
-    author: string;
-    license: string;
-    sourceUrl: string;
-}
-
-export interface Statement {
-    // short bold lead, such as the name of a law
-    lead?: string;
-    text: string;
-    sources: Sources;
-    image?: StatementImage;
-}
-
-export interface TimelineEntry {
-    // short label shown on the left, such as "2011" or "abr 2016"
-    when: string;
-    statements: readonly Statement[];
-    vote?: PlenaryVote;
-}
-
-export interface PlenaryVote {
-    yes: number;
-    no: number;
-    abstentions: number;
-    yesLabel: string;
-    noLabel: string;
-}
+// the shared editorial types keep their old home for the ruler files and components
+export type { FactRow, PlenaryVote, Source, Sources, Statement, StatementImage, Thesis, TimelineEntry };
 
 // stages of docs/EDITORIAL.md, "Investigations and controversies"
 export type CaseStage = "investigation" | "charged" | "defendant" | "convicted" | "acquitted" | "closed" | "timeBarred" | "annulled";
@@ -53,18 +21,6 @@ export interface Case {
     // in order, the last step is the current stage
     steps: readonly [CaseStep, ...CaseStep[]];
     defense: Statement | null;
-}
-
-export interface Thesis {
-    heading: string;
-    holders: string;
-    arguments: readonly string[];
-    sources: Sources;
-}
-
-export interface FactRow {
-    label: string;
-    value: string;
 }
 
 export interface MoneyFigure {
