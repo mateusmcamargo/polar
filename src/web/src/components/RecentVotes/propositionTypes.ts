@@ -23,3 +23,8 @@ export const PROPOSITION_TYPE_NAMES: Readonly<Record<string, string>> = {
     SUG: "Sugestão",
     TVR: "Ato de concessão de rádio e TV",
 };
+
+// page of the proposition on the site of the Câmara; the sourceUrl in the database is the JSON of the open data API
+export function propositionPageUrl(propositionId: number): string {
+    return `https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao=${propositionId}`;
+}

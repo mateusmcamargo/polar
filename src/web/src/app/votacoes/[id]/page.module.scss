@@ -1,0 +1,121 @@
+@use "mixins" as *;
+
+main.page {
+    @include page-gutter;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-7);
+    max-width: calc(var(--content-width-reading) + 2 * var(--page-gutter));
+    margin: 0 auto;
+    padding-block: var(--space-5) var(--space-8);
+
+    nav.crumb {
+        margin-bottom: calc(-1 * var(--space-5));
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+
+        a {
+            @include text-link-target;
+            color: inherit;
+        }
+    }
+
+    section.intro {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+    }
+
+    p.kicker {
+        @include block-label-title;
+        color: var(--color-fg-3);
+    }
+
+    h1.name {
+        font-size: var(--text-title);
+
+        abbr {
+            text-decoration: underline dotted;
+            text-underline-offset: 4px;
+        }
+    }
+
+    p.lead {
+        max-width: 62ch;
+        color: var(--color-fg-2);
+    }
+
+    div.actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-3);
+    }
+
+    p.text {
+        max-width: 62ch;
+        margin-top: calc(-1 * var(--space-2));
+        color: var(--color-fg-2);
+    }
+
+    p.summary {
+        max-width: 62ch;
+        font-size: var(--text-name);
+    }
+
+    p.small {
+        max-width: 62ch;
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+    }
+
+    a.highlightLink {
+        @include control;
+        position: relative;
+        display: inline-flex;
+        align-self: flex-start;
+        align-items: center;
+        padding: 0 var(--space-4);
+        box-shadow: inset 0 0 0 2px var(--color-ink);
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    ul.propositions {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+
+        li {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        p.propositionName {
+            font-weight: 700;
+
+            abbr {
+                text-decoration: underline dotted;
+                text-underline-offset: 3px;
+            }
+        }
+
+        p.ementa {
+            max-width: 62ch;
+            color: var(--color-fg-2);
+        }
+    }
+
+    a.back {
+        @include control;
+        display: inline-flex;
+        align-self: flex-start;
+        align-items: center;
+        padding: 0 var(--space-4);
+        text-decoration: none;
+    }
+}

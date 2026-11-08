@@ -1,0 +1,74 @@
+label.checkbox {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    gap: var(--space-3);
+    min-height: 44px;
+    padding-right: var(--space-3);
+    cursor: pointer;
+
+    // the real input covers the box, invisible, so a tap anywhere on the box or the label reaches it
+    input.input {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        width: 24px;
+        height: 24px;
+        margin: 0;
+        opacity: 0;
+        transform: translateY(-50%);
+        cursor: pointer;
+    }
+
+    span.box {
+        display: grid;
+        flex: none;
+        width: 24px;
+        height: 24px;
+        place-items: center;
+        background: var(--color-panel);
+        box-shadow: inset 0 0 0 2px var(--color-ink);
+        color: var(--color-bg);
+
+        svg {
+            width: 18px;
+            height: 18px;
+            stroke-width: 3.5;
+            opacity: 0;
+        }
+    }
+
+    &:hover span.box {
+        background: var(--color-panel-2);
+    }
+
+    input.input:checked + span.box {
+        background: var(--color-ink);
+
+        svg {
+            opacity: 1;
+        }
+    }
+
+    input.input:focus-visible + span.box {
+        outline: 2px solid var(--color-focus);
+        outline-offset: 2px;
+    }
+
+    span.text {
+        font-size: var(--text-label);
+    }
+
+    @media (forced-colors: active) {
+        span.box {
+            border: 2px solid CanvasText;
+            background: Canvas;
+            color: CanvasText;
+        }
+
+        input.input:checked + span.box {
+            background: Canvas;
+        }
+    }
+}

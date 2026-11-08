@@ -1,6 +1,6 @@
 import type { DeputyVoteGroup } from "@polar/db";
 import { VoteBadge } from "@/components/VoteBadge/VoteBadge";
-import { PROPOSITION_TYPE_NAMES } from "./propositionTypes";
+import { PROPOSITION_TYPE_NAMES, propositionPageUrl } from "./propositionTypes";
 import { classifyVote } from "./voteKinds";
 import { SkeletonRows } from "@/components/Skeleton/Skeleton";
 import styles from "./RecentVotes.module.scss";
@@ -65,7 +65,7 @@ export function RecentVotes({ groups }: Readonly<RecentVotesProps>) {
                             </ul>
                             {proposition && (
                                 <p className={styles.link}>
-                                    <a href={proposition.sourceUrl}>Ver a proposta no site da Câmara</a>
+                                    <a href={propositionPageUrl(proposition.id)}>Ver a proposta no site da Câmara</a>
                                 </p>
                             )}
                         </details>

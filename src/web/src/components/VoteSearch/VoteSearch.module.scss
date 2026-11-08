@@ -1,0 +1,116 @@
+@use "mixins" as *;
+@use "comic";
+
+div.search {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+
+    div.searchField {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+
+        label {
+            font-size: var(--text-label);
+            font-weight: 700;
+        }
+    }
+
+    div.searchBox {
+        position: relative;
+    }
+
+    svg.searchIcon {
+        @include search-icon;
+    }
+
+    input.searchInput {
+        @include search-input;
+        padding-right: 52px;
+    }
+
+    button.clearText {
+        position: absolute;
+        top: 50%;
+        right: 4px;
+        display: grid;
+        width: 44px;
+        height: 44px;
+        place-items: center;
+        border: 0;
+        background: none;
+        color: var(--color-fg-2);
+        cursor: pointer;
+        transform: translateY(-50%);
+
+        svg {
+            width: 20px;
+            height: 20px;
+        }
+    }
+
+    p.hint {
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+    }
+
+    div.filters {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--space-3);
+
+        @include from("small") {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    div.status {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-3);
+        font-size: var(--text-label);
+    }
+
+    button.clear,
+    button.more {
+        @include control;
+        padding: 0 var(--space-4);
+        font-weight: 700;
+    }
+
+    button.more {
+        align-self: flex-start;
+    }
+
+    div.emptyField {
+        @include comic.comic-field;
+        padding: var(--space-6) var(--space-4) var(--space-7);
+    }
+
+    div.empty {
+        @include comic.comic-panel;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+        max-width: 36ch;
+        padding: var(--space-4) var(--space-5) var(--space-5);
+    }
+
+    p.emptyLabel {
+        @include comic.comic-label;
+    }
+
+    button.sticker {
+        @include comic.comic-sticker;
+        @include comic.comic-pressable;
+        align-self: flex-start;
+        min-height: 48px;
+        margin-top: var(--space-2);
+        padding: 0 var(--space-5);
+        font-weight: 700;
+        cursor: pointer;
+    }
+}

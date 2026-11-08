@@ -1,0 +1,130 @@
+@use "mixins" as *;
+@use "comic";
+
+div.result {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+
+    div.sticker {
+        @include comic.comic-sticker;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-1);
+        align-self: flex-start;
+        // the offset shadow of the comic accent sits outside the box
+        margin: 0 7px 7px 0;
+        padding: var(--space-4) var(--space-5);
+    }
+
+    p.label {
+        @include comic.comic-label;
+        font-size: var(--text-micro);
+    }
+
+    // the numbers of the sticker: heavier and on white, the same in both themes because the yellow sticker does not change
+    span.count {
+        padding: 0 var(--space-1);
+        background: #FFFFFF;
+        color: var(--color-on-sticker);
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+    }
+
+    div.headline {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-4);
+    }
+
+    p.word {
+        font-size: var(--text-figure);
+        font-weight: 800;
+        line-height: 1.1;
+    }
+
+    // a round seal with a double ink ring, tilted like a stamp; the icon says the result
+    span.seal {
+        display: grid;
+        flex: none;
+        width: 52px;
+        height: 52px;
+        place-items: center;
+        border-radius: var(--radius-pill);
+        box-shadow:
+            // the outer ring does not follow the theme: it sits on the yellow sticker, which is the same in both
+            0 0 0 3px var(--color-on-sticker),
+            inset 0 0 0 3px var(--color-sticker),
+            inset 0 0 0 4.5px var(--color-ink);
+        rotate: -8deg;
+        // the color of the page and the inverse for the icon, in both themes
+        background: var(--color-bg);
+        color: var(--color-fg);
+
+        svg {
+            width: 26px;
+            height: 26px;
+            stroke-width: 3.5;
+        }
+
+        @media (forced-colors: active) {
+            box-shadow: none;
+            border: 3px solid CanvasText;
+            background: Canvas;
+            color: CanvasText;
+        }
+    }
+
+    div.bar {
+        display: flex;
+        height: 28px;
+        // an outline, because an inset shadow would sit under the colored segments
+        outline: 2px solid var(--color-ink);
+        outline-offset: -2px;
+
+        span {
+            display: block;
+            height: 100%;
+        }
+
+        span.yes {
+            background: var(--vote-yes);
+        }
+
+        span.no {
+            background: var(--vote-no);
+        }
+
+        span.abstain {
+            background: var(--vote-abstain);
+        }
+
+        span.obstruct {
+            background: var(--vote-obstruct);
+        }
+    }
+
+    ul.counts {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: var(--space-2) var(--space-5);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+
+        li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-3);
+            padding-bottom: var(--space-2);
+            box-shadow: inset 0 -1px 0 var(--color-line-2);
+        }
+
+        strong {
+            font-size: var(--text-name);
+            font-variant-numeric: tabular-nums;
+        }
+    }
+}

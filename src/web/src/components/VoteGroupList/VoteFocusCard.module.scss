@@ -1,0 +1,55 @@
+section.card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    background: var(--color-panel);
+    box-shadow: inset 0 0 0 2px var(--color-ink);
+
+    p.kicker {
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    h2.title {
+        font-size: var(--text-name);
+        font-weight: 700;
+
+        abbr {
+            text-decoration: underline dotted;
+            text-underline-offset: 3px;
+        }
+    }
+
+    p.you {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-2) var(--space-3);
+    }
+
+    p.result {
+        color: var(--color-fg-2);
+        font-variant-numeric: tabular-nums;
+    }
+
+    ul.links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-1) var(--space-5);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+
+        a {
+            // holds the LinkPending sweep
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            min-height: 44px;
+        }
+    }
+}

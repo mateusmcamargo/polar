@@ -6,6 +6,10 @@ export interface VoteKind {
     // used in "no texto principal" next to the badge of a group
     phrase: string;
     isMainText: boolean;
+    // a vote about how the voting goes, not about the content: requests, preferences, appeals and opinions
+    isProcedural: boolean;
+    // 1 or 2 for the main text of a proposition voted in turns, otherwise null
+    round: 1 | 2 | null;
     result: string;
 }
 
@@ -15,16 +19,17 @@ interface KindRule {
     phrase: string;
     feminine: boolean;
     isMainText?: boolean;
+    isProcedural?: boolean;
 }
 
 const KIND_RULES: readonly KindRule[] = [
-    { pattern: /^requerimento/i, label: "Requerimento", phrase: "no requerimento", feminine: false },
-    { pattern: /^prefer[eê]ncia/i, label: "Pedido de preferência", phrase: "no pedido de preferência", feminine: false },
+    { pattern: /^requerimento/i, label: "Requerimento", phrase: "no requerimento", feminine: false, isProcedural: true },
+    { pattern: /^prefer[eê]ncia/i, label: "Pedido de preferência", phrase: "no pedido de preferência", feminine: false, isProcedural: true },
     { pattern: /^reda[cç][aã]o final/i, label: "Redação final", phrase: "na redação final", feminine: true },
     { pattern: /^emendas? de reda[cç][aã]o/i, label: "Ajuste de redação", phrase: "no ajuste de redação", feminine: true },
     { pattern: /^emenda/i, label: "Emenda", phrase: "na emenda", feminine: true },
-    { pattern: /^parecer/i, label: "Parecer", phrase: "no parecer", feminine: false },
-    { pattern: /^recurso/i, label: "Recurso", phrase: "no recurso", feminine: false },
+    { pattern: /^parecer/i, label: "Parecer", phrase: "no parecer", feminine: false, isProcedural: true },
+    { pattern: /^recurso/i, label: "Recurso", phrase: "no recurso", feminine: false, isProcedural: true },
     { pattern: /^(dispositivos|parte|inclus[aã]o|destaque)/i, label: "Parte do texto", phrase: "na parte do texto", feminine: true },
     {
         pattern: /^(projeto|substitutivo|subemenda substitutiva|proposta de emenda|medida provis[oó]ria|mensagem)/i,
@@ -35,18 +40,18 @@ const KIND_RULES: readonly KindRule[] = [
     },
 ];
 
-const DECISION_PATTERN = /^(aprovad|rejeitad)[oa]s?((?:, [^,]+)*,)? (?:o|a|os|as) ([\s\S]+)$/i;
+const DECISION_PATTERN = /^((?:aprovad|rejeitad)[oa]s?)((?:, [^,]+)*,)? (?:o|a|os|as) ([\s\S]+)$/i;
 const AMENDMENT_TEXT_PATTERN = /^(mantid|suprimid)[oa]s? (?:o|os) textos?/i;
 const VOTE_COUNT_PATTERN = /Sim: (\d+); Não: (\d+)/;
 
-function roundOf(clauses: string | undefined): string {
+function roundOf(clauses: string | undefined): 1 | 2 | null {
     if (/primeiro turno/i.test(clauses ?? "")) {
-        return ", 1º turno";
+        return 1;
     }
     if (/segundo turno/i.test(clauses ?? "")) {
-        return ", 2º turno";
+        return 2;
     }
-    return "";
+    return null;
 }
 
 function resultWord(approved: boolean | null, feminine: boolean): string {
@@ -71,6 +76,8 @@ export function classifyVote(description: string, approved: boolean | null): Vot
             label: "Destaque: manter o texto",
             phrase: "no destaque",
             isMainText: false,
+            isProcedural: false,
+            round: null,
             result: `${kept ? "Mantido" : "Retirado"}${countText}`,
         };
     }
@@ -82,13 +89,21 @@ export function classifyVote(description: string, approved: boolean | null): Vot
             label: "Outra votação",
             phrase: "nesta votação",
             isMainText: false,
+            isProcedural: false,
+            round: null,
             result: `${resultWord(approved, true)}${countText}`,
         };
     }
+    const round = rule.isMainText ? roundOf(decision?.[2]) : null;
+    // the gender and number of the result follow the official description: "Aprovada" for a proposta, "Aprovado" for a projeto
+    const decisionWord = decision?.[1] ?? "";
+    const resultText = decisionWord ? `${decisionWord.charAt(0).toUpperCase()}${decisionWord.slice(1).toLowerCase()}` : resultWord(approved, rule.feminine);
     return {
-        label: `${rule.label}${rule.isMainText ? roundOf(decision?.[2]) : ""}`,
+        label: `${rule.label}${round ? `, ${round}º turno` : ""}`,
         phrase: rule.phrase,
         isMainText: rule.isMainText ?? false,
-        result: `${resultWord(approved, rule.feminine)}${countText}`,
+        isProcedural: rule.isProcedural ?? false,
+        round,
+        result: `${resultText}${countText}`,
     };
 }

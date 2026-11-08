@@ -1,0 +1,112 @@
+@use "mixins" as *;
+
+figure.figure {
+    position: relative;
+    margin: 0;
+
+    svg.drawing {
+        width: 100%;
+        height: auto;
+    }
+
+    // color never stands alone: the legend pairs each fill with an icon, a word and a count, and a seat without a vote is an
+    // empty dashed square, a shape that differs from every filled seat
+    rect {
+        transition: opacity var(--duration-medium) var(--ease-standard);
+
+        @include from("medium") {
+            cursor: pointer;
+
+            &:hover {
+                stroke: var(--color-ink);
+                stroke-width: 1.4;
+            }
+        }
+
+        // a thin outline keeps the light green and yellow seats visible on the light background
+        &.yes,
+        &.no,
+        &.abstain,
+        &.obstruct,
+        &.presiding {
+            stroke: var(--color-line-3);
+            stroke-width: 0.5;
+        }
+
+        &.yes {
+            fill: var(--vote-yes);
+        }
+
+        &.no {
+            fill: var(--vote-no);
+        }
+
+        &.abstain {
+            fill: var(--vote-abstain);
+        }
+
+        &.obstruct {
+            fill: var(--vote-obstruct);
+        }
+
+        &.presiding {
+            fill: var(--vote-presiding);
+        }
+
+        &.notVoted {
+            fill: none;
+            stroke: var(--vote-absent);
+            stroke-width: 1.1;
+            stroke-dasharray: 1.6 1.2;
+        }
+
+        &.dimmed {
+            opacity: 0.14;
+        }
+
+        &.focused {
+            stroke: var(--color-ink);
+            stroke-width: 2;
+            stroke-dasharray: none;
+        }
+    }
+
+    text.total {
+        fill: var(--color-fg);
+        font-family: var(--font-sans);
+        font-size: 38px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        text-anchor: middle;
+    }
+
+    text.totalLabel {
+        fill: var(--color-fg-3);
+        font-family: var(--font-sans);
+        font-size: 14px;
+        text-anchor: middle;
+    }
+
+    div.tooltip {
+        @include hairline-border(--color-line-3);
+        position: absolute;
+        z-index: 5;
+        display: flex;
+        flex-direction: column;
+        padding: var(--space-2) var(--space-3);
+        border-radius: var(--radius-small);
+        background: var(--color-panel);
+        font-size: var(--text-micro);
+        white-space: nowrap;
+        pointer-events: none;
+        transform: translate(-50%, calc(-100% - 14px));
+
+        &[hidden] {
+            display: none;
+        }
+    }
+
+    strong.tooltipName {
+        font-size: var(--text-label);
+    }
+}

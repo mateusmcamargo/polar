@@ -4,7 +4,9 @@ span.badge {
     gap: var(--space-1);
     min-height: 32px;
     padding: 0 var(--space-3) 0 var(--space-2);
-    border: 2px solid currentColor;
+    border: 2px solid var(--badge-fill, currentColor);
+    background: var(--badge-fill, transparent);
+    color: var(--badge-text, inherit);
     border-radius: var(--radius-small);
     font-size: var(--text-label);
     font-weight: 700;
@@ -14,6 +16,20 @@ span.badge {
         width: 18px;
         height: 18px;
         stroke-width: 3;
+    }
+
+    // the badge section of a legend button: no outer border or corners, the full height of the button and its own padding
+    &.fill {
+        align-self: stretch;
+        min-height: 44px;
+        padding: 0 var(--space-3);
+        border-width: 0;
+        border-radius: 0;
+
+        // an empty badge has no fill, so a dashed line on its right side tells it apart from the number
+        &.absent {
+            border-width: 0 2px 0 0;
+        }
     }
 
     &.small {
@@ -26,20 +42,58 @@ span.badge {
         }
     }
 
+    // a filled chip: the color is the fill and the word and icon keep their own contrast
     &.yes {
-        color: var(--vote-yes);
+        --badge-fill: var(--vote-yes);
+        --badge-text: var(--vote-yes-on);
     }
 
     &.no {
-        color: var(--vote-no);
+        --badge-fill: var(--vote-no);
+        --badge-text: var(--vote-no-on);
     }
 
     &.abstain {
-        color: var(--vote-abstain);
+        --badge-fill: var(--vote-abstain);
+        --badge-text: var(--vote-abstain-on);
     }
 
     &.obstruct {
-        color: var(--vote-obstruct);
+        --badge-fill: var(--vote-obstruct);
+        --badge-text: var(--vote-obstruct-on);
+    }
+
+    &.presiding {
+        --badge-fill: var(--vote-presiding);
+        --badge-text: var(--vote-presiding-on);
+    }
+
+    // the seal of ResultBadge: round, page colored, with a ring and the tilt of a stamp, as in the result card
+    span.seal {
+        display: grid;
+        flex: none;
+        width: 20px;
+        height: 20px;
+        margin-left: 2px;
+        // more room between the seal and the word than between a plain icon and its word
+        margin-right: var(--space-2);
+        place-items: center;
+        border-radius: var(--radius-pill);
+        background: var(--color-bg);
+        box-shadow: 0 0 0 1.5px var(--seal-ring, #121110);
+        color: var(--color-fg);
+        rotate: -8deg;
+
+        svg {
+            width: 12px;
+            height: 12px;
+            stroke-width: 3.5;
+        }
+    }
+
+    // the neutral badge has no fill, so its ring follows the theme
+    &.absent span.seal {
+        --seal-ring: var(--color-ink);
     }
 
     &.absent {

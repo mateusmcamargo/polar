@@ -1,0 +1,199 @@
+@use "comic";
+
+// each proposition is a card, and the card grows when its votes are shown
+ul.groups {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li.group {
+        @include comic.comic-card;
+    }
+
+    // the whole body is one link to the page of the proposition
+    a.body,
+    div.body {
+        // holds the LinkPending sweep
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-2);
+        padding: var(--space-4);
+        color: inherit;
+        text-decoration: none;
+    }
+
+    // the arrow in the top right corner says that the card opens the page of the proposition
+    a.body {
+        padding-right: calc(var(--space-4) + 36px);
+
+        svg.openMark {
+            position: absolute;
+            top: var(--space-4);
+            right: var(--space-4);
+            width: 24px;
+            height: 24px;
+            stroke-width: 2.5;
+        }
+    }
+
+    a.body:hover p.title {
+        text-decoration: underline;
+        text-underline-offset: 3px;
+    }
+
+    // a separate control at the bottom, never inside the link: the text on the left, a chevron that turns over when it is open
+    button.toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-3);
+        width: 100%;
+        min-height: 44px;
+        padding: 0 var(--space-4);
+        border: 0;
+        background: transparent;
+        box-shadow: inset 0 1px 0 var(--color-line);
+        color: var(--color-fg);
+        font: inherit;
+        font-size: var(--text-micro);
+        font-weight: 700;
+        text-align: left;
+        cursor: pointer;
+
+        // the button keeps the gray of its opened section until it is closed
+        &:hover,
+        &[aria-expanded="true"] {
+            background: var(--color-panel-2);
+        }
+
+        // no press scale in the list, unlike the other buttons (globals.scss)
+        &:not(:disabled):active {
+            scale: none;
+        }
+
+        svg {
+            flex: none;
+            width: 24px;
+            height: 24px;
+            stroke-width: 2.5;
+            transition: rotate var(--duration-slide) var(--ease-out);
+        }
+
+        &[aria-expanded="true"] svg {
+            rotate: 180deg;
+        }
+
+    }
+
+    p.meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-1) var(--space-3);
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+    }
+
+    p.title {
+        font-weight: 700;
+
+        abbr {
+            text-decoration: underline dotted;
+            text-underline-offset: 3px;
+        }
+    }
+
+    // every badge of the row has the same height (28 px) and its own icon
+    div.badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2);
+    }
+
+    span.tag {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-1);
+        min-height: 28px;
+        padding: 0 var(--space-3) 0 var(--space-2);
+        background: var(--color-panel-2);
+        box-shadow: inset 0 0 0 1px var(--color-line-3);
+        font-size: var(--text-micro);
+        font-weight: 700;
+        white-space: nowrap;
+
+        svg {
+            width: 16px;
+            height: 16px;
+            stroke-width: 3;
+        }
+
+        // "Virou lei" is blue, the same blue as the seat of the presiding deputy
+        &.lawTag {
+            background: var(--vote-presiding);
+            box-shadow: none;
+            color: var(--vote-presiding-on);
+        }
+    }
+
+    // beside the title: the sticker yellow, so the propositions with a summary stand out in the list
+    div.titleRow {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-2) var(--space-3);
+    }
+
+    span.summaryTag {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-1);
+        min-height: 28px;
+        padding: 0 var(--space-3) 0 var(--space-2);
+        background: var(--color-sticker);
+        color: var(--color-on-sticker);
+        font-size: var(--text-micro);
+        font-weight: 700;
+        white-space: nowrap;
+
+        svg {
+            width: 16px;
+            height: 16px;
+            stroke-width: 3;
+        }
+    }
+
+    p.ementa {
+        display: -webkit-box;
+        overflow: hidden;
+        color: var(--color-fg-2);
+        font-size: var(--text-label);
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+    }
+
+    // opening and closing animate the height through the grid rows; the inert closed panel leaves the tab order and the screen reader
+    div.panel {
+        display: grid;
+        grid-template-rows: 0fr;
+        transition: grid-template-rows var(--duration-slide) var(--ease-out);
+
+        &[data-open="true"] {
+            grid-template-rows: 1fr;
+        }
+
+        div.panelInner {
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        // the spacing is inside the clipped box, so it grows and shrinks with the height
+        div.panelContent {
+            padding: var(--space-2) var(--space-4) var(--space-4);
+        }
+    }
+}
