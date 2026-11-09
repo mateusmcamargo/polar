@@ -21,6 +21,11 @@ const VOTE_STYLES: Readonly<Record<string, VoteStyle>> = {
     LIBERATED: { label: "Liberou o voto", icon: Unlock, className: styles.absent },
 };
 
+// the word of a choice, for a text that shows the badge beside the name of the same thing
+export function voteChoiceLabel(choice: string): string {
+    return VOTE_STYLES[choice]?.label ?? "Ausente";
+}
+
 interface VoteBadgeProps {
     choice: string;
     // "fill" is the badge section of a legend button: it takes the whole height and the left side of its container
