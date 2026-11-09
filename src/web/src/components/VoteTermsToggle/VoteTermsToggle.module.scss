@@ -1,0 +1,35 @@
+@use "mixins" as *;
+
+button.toggle {
+    @include hairline-border;
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    padding: 0 var(--space-3);
+    border: 0;
+    border-radius: var(--radius-tag);
+    background: var(--color-panel);
+    color: var(--color-fg);
+    font: inherit;
+    font-size: var(--text-micro);
+    font-weight: 700;
+    cursor: pointer;
+
+    svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    // on: the ink fill says the list is filtered, and the check of aria-pressed does the same for screen readers
+    &[aria-pressed="true"] {
+        background: var(--color-ink);
+        color: var(--color-bg);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--color-focus);
+        outline-offset: 2px;
+    }
+}

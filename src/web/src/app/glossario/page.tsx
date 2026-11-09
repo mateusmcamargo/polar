@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import { GLOSSARY, GLOSSARY_ACCESSED_ON } from "@polar/db/glossary";
-import { groupByLetter, GlossaryList } from "@/components/GlossaryList/GlossaryList";
-import { glossaryEntryAnchor } from "@/components/GlossaryText/GlossaryText";
+import { GLOSSARY_ACCESSED_ON } from "@polar/db/glossary";
+import { GlossaryPageContent } from "@/components/GlossaryPageContent/GlossaryPageContent";
 import { PageTransition } from "@/components/PageTransition/PageTransition";
 import styles from "./page.module.scss";
 
@@ -11,8 +10,6 @@ export const metadata: Metadata = {
     alternates: { canonical: "/glossario" },
 };
 
-const TERM_NAMES: Readonly<Record<string, string>> = Object.fromEntries(GLOSSARY.map((entry) => [entry.id, entry.term]));
-const GROUPS = groupByLetter(GLOSSARY);
 const ACCESSED_ON_TEXT = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(new Date(`${GLOSSARY_ACCESSED_ON}T12:00:00-03:00`));
 
 // the whole glossary as a page: what a term link opens without JavaScript, and a page that can be shared
@@ -30,14 +27,7 @@ export default function GlossaryPage() {
                         ela vem.
                     </p>
                 </section>
-                <nav className={styles.letters} aria-label="Letras do dicionário">
-                    {GROUPS.map((group) => (
-                        <a key={group.letter} href={`#letra-${group.letter}`}>
-                            {group.letter}
-                        </a>
-                    ))}
-                </nav>
-                <GlossaryList groups={GROUPS} idPrefix="" termNames={TERM_NAMES} seeAlsoHref={(id) => `#${glossaryEntryAnchor(id)}`} letterHeading="h2" />
+                <GlossaryPageContent />
                 <p className={styles.note}>Fontes consultadas até {ACCESSED_ON_TEXT}.</p>
             </main>
         </PageTransition>

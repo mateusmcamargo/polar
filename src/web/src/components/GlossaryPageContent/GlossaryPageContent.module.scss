@@ -1,0 +1,20 @@
+@use "mixins" as *;
+
+nav.shortcuts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+
+    a {
+        @include hairline-border;
+        display: grid;
+        place-items: center;
+        min-width: 44px;
+        min-height: 44px;
+        border-radius: var(--radius-tag);
+        color: var(--color-fg);
+        font-size: var(--text-micro);
+        font-weight: 700;
+        text-decoration: none;
+    }
+}

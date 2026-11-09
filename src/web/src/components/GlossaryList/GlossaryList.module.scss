@@ -81,8 +81,24 @@ div.list {
     }
 
     dt.term {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-1);
         font-size: var(--text-body);
         font-weight: 700;
+    }
+
+    // the group of a vote term, above the term or its badge
+    span.kind {
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+        font-weight: 400;
+        letter-spacing: 0.04em;
+    }
+
+    span.name {
+        font-size: var(--text-body);
     }
 
     span.alias {

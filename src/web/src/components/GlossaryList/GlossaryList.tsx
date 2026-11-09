@@ -1,10 +1,33 @@
 import type { GlossaryEntry } from "@polar/db/glossary";
 import { EditorialSources } from "@/components/EditorialSources/EditorialSources";
+import { VoteBadge, voteChoiceLabel } from "@/components/VoteBadge/VoteBadge";
 import styles from "./GlossaryList.module.scss";
 
 export interface GlossaryLetterGroup {
+    // first letter, or the id part of a group of vote terms; the key of the group and part of its anchor
     letter: string;
+    // heading of a group that is not a letter
+    title?: string;
     entries: GlossaryEntry[];
+}
+
+const VOTE_KIND_CAPTIONS: Readonly<Record<NonNullable<GlossaryEntry["voteKind"]>, string>> = {
+    vote: "Tipo de voto",
+    voting: "Tipo de votação",
+    orientation: "Tipo de orientação",
+};
+
+const VOTE_GROUPS: readonly { kind: NonNullable<GlossaryEntry["voteKind"]>; letter: string; title: string }[] = [
+    { kind: "vote", letter: "tipos-de-voto", title: "Tipos de voto" },
+    { kind: "orientation", letter: "tipos-de-orientacao", title: "Tipos de orientação" },
+    { kind: "voting", letter: "tipos-de-votacao", title: "Tipos de votação" },
+];
+
+// the terms about votes, one group per kind, for the "Votações" shortcut; a kind with no entry left (after a search) has no group
+export function groupVoteTerms(entries: readonly GlossaryEntry[]): GlossaryLetterGroup[] {
+    return VOTE_GROUPS.map(({ kind, letter, title }) => ({ letter, title, entries: entries.filter((entry) => entry.voteKind === kind) })).filter(
+        (group) => group.entries.length > 0,
+    );
 }
 
 export function withoutAccents(text: string): string {
@@ -38,7 +61,7 @@ export function GlossaryList({ groups, idPrefix, termNames, currentId = null, se
             {groups.map((group) => (
                 <section key={group.letter} aria-labelledby={`${idPrefix}letra-${group.letter}`}>
                     <LetterHeading id={`${idPrefix}letra-${group.letter}`} className={styles.letter}>
-                        {group.letter}
+                        {group.title ?? group.letter}
                     </LetterHeading>
                     <dl className={styles.entries}>
                         {group.entries.map((entry) => (
@@ -55,7 +78,16 @@ export function GlossaryList({ groups, idPrefix, termNames, currentId = null, se
                                     </p>
                                 )}
                                 <dt className={styles.term}>
-                                    {entry.term}
+                                    {entry.voteKind && <span className={styles.kind}>{VOTE_KIND_CAPTIONS[entry.voteKind]}</span>}
+                                    {entry.voteChoice ? (
+                                        <>
+                                            {/* the badge is the term; when its word differs from the term, the term follows it in text */}
+                                            <VoteBadge choice={entry.voteChoice} />
+                                            {voteChoiceLabel(entry.voteChoice) !== entry.term && <span className={styles.name}>{entry.term}</span>}
+                                        </>
+                                    ) : (
+                                        entry.term
+                                    )}
                                     {entry.alsoKnownAs && <span className={styles.alias}> {entry.alsoKnownAs}</span>}
                                 </dt>
                                 <dd className={styles.body}>
