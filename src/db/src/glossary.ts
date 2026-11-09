@@ -8,14 +8,20 @@ const ACCESSED_ON = "2026-11-05";
 const ACCESSED_ON_NEW_ENTRIES = "2026-11-06";
 
 const ACCESSED_ON_VOTE_ENTRIES = "2026-11-06";
+const ACCESSED_ON_VOTE_TERMS = "2026-11-08";
 
-function chamberRules(article: string): Source {
+function chamberRules(article: string, accessedOn: string = ACCESSED_ON_VOTE_ENTRIES): Source {
     return {
         title: `Regimento Interno da Câmara dos Deputados, ${article}`,
         publisher: "Câmara dos Deputados",
         url: "https://www2.camara.leg.br/legin/fed/rescad/1989/resolucaodacamaradosdeputados-17-21-setembro-1989-320110-normaatualizada-pl.html",
-        accessedOn: ACCESSED_ON_VOTE_ENTRIES,
+        accessedOn,
     };
+}
+
+// source of the vote terms, read again on 2026-11-08
+function voteTermRules(article: string): Source {
+    return chamberRules(article, ACCESSED_ON_VOTE_TERMS);
 }
 
 function planalto(title: string, path: string, accessedOn: string = ACCESSED_ON): Source {
@@ -55,9 +61,18 @@ const PRESIDENCY_LIBRARY_GALLERY: Source = {
     accessedOn: ACCESSED_ON,
 };
 
+// the choices the vote pages show as a badge (VoteBadge), so a term of the dictionary can wear the same color and icon
+export type GlossaryVoteChoice = "YES" | "NO" | "ABSTENTION" | "OBSTRUCTION" | "ARTICLE_17" | "NOT_VOTED" | "LIBERATED";
+
+// group of the vote terms, shown above the term: how a deputy votes, how a voting goes, how a leader guides the vote
+export type GlossaryVoteKind = "vote" | "voting" | "orientation";
+
 export interface GlossaryEntry {
     id: string;
     term: string;
+    // vote terms only: the term is shown as the badge of this choice
+    voteChoice?: GlossaryVoteChoice;
+    voteKind?: GlossaryVoteKind;
     // other name or form, such as the full name of an acronym
     alsoKnownAs?: string;
     definition: string;
@@ -71,10 +86,21 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
     {
         id: "abstencao",
         term: "Abstenção",
+        voteChoice: "ABSTENTION",
+        voteKind: "vote",
         definition:
             "Quando o deputado está na votação, mas não vota a favor nem contra. A abstenção conta para saber se havia deputados suficientes na votação (o quórum), mas não conta como voto Sim nem como voto Não.",
         seeAlso: ["votacao-nominal"],
         sources: [chamberRules("art. 183, § 2º")],
+    },
+    {
+        id: "ajuste-de-redacao",
+        term: "Ajuste de redação",
+        voteKind: "voting",
+        definition:
+            "Mudança que só corrige erro de linguagem, defeito ou erro evidente no texto já aprovado. Não muda o que os deputados decidiram.",
+        seeAlso: ["redacao-final"],
+        sources: [voteTermRules("art. 195, caput e § 2º")],
     },
     {
         id: "anexo-c",
@@ -181,6 +207,7 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
     {
         id: "destaque",
         term: "Destaque",
+        voteKind: "voting",
         definition:
             "Pedido para votar separadamente uma parte de um projeto, ou uma emenda (proposta de mudança no texto). Assim, os deputados podem aprovar o texto principal e ainda decidir, à parte, sobre aquele trecho.",
         example: "Numa votação de destaque, o voto Sim pode manter o trecho no texto.",
@@ -194,6 +221,15 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
         definition: "Jornal oficial do governo federal. É nele que saem as leis, os decretos, as portarias e outros atos do governo.",
         seeAlso: ["portaria"],
         sources: [planalto("Decreto nº 9.191, de 2017 (regras para atos oficiais), art. 41", "_ato2015-2018/2017/decreto/d9191.htm", ACCESSED_ON_NEW_ENTRIES)],
+    },
+    {
+        id: "emenda",
+        term: "Emenda",
+        voteKind: "voting",
+        definition:
+            "Proposta de mudança em outra proposição, como um projeto. Pode tirar um trecho, juntar outras emendas, trocar, mudar ou acrescentar um trecho. Quando a emenda vai a voto, os deputados decidem se a mudança entra.",
+        seeAlso: ["destaque"],
+        sources: [voteTermRules("art. 118, § 1º")],
     },
     {
         id: "gigawatt-hora",
@@ -237,6 +273,8 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
         id: "liberacao-do-voto",
         term: "Liberação do voto",
         alsoKnownAs: "Liberado",
+        voteChoice: "LIBERATED",
+        voteKind: "orientation",
         definition: "Quando o líder do partido, do bloco ou do governo não indica como o grupo deve votar. Cada deputado decide sozinho.",
         seeAlso: ["orientacao"],
         sources: [chamberRules("art. 192, § 2º")],
@@ -268,10 +306,41 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
         sources: [ITAIPU_GENERATION_PAGE],
     },
     {
+        id: "nao",
+        term: "Não",
+        voteChoice: "NO",
+        voteKind: "vote",
+        definition:
+            "Voto contra o que está sendo votado. Numa votação de destaque para manter o texto, o voto Não tira o trecho do texto.",
+        seeAlso: ["sim", "destaque"],
+        sources: [voteTermRules("art. 187, § 1º, VI")],
+    },
+    {
+        id: "nao-votou",
+        term: "Não votou",
+        voteChoice: "NOT_VOTED",
+        voteKind: "vote",
+        definition:
+            "O deputado estava em exercício no dia da votação, mas a lista de votos da Câmara não traz voto dele. A lista não informa o motivo, e o polar também não.",
+        seeAlso: ["votacao-nominal"],
+        sources: [voteTermRules("art. 187, § 1º, VI")],
+    },
+    {
         id: "nova-republica",
         term: "Nova República",
         definition: "Período da história do Brasil que começa em 1985, com o fim da ditadura militar, e continua até hoje.",
         sources: [PRESIDENCY_LIBRARY_GALLERY],
+    },
+    {
+        id: "obstrucao",
+        term: "Obstrução",
+        voteChoice: "OBSTRUCTION",
+        voteKind: "vote",
+        definition:
+            "Estratégia de um partido ou bloco para atrasar ou impedir uma votação, por exemplo não participando dela. Na lista de votos da Câmara aparece como Obstrução, no lugar de Sim ou Não. O Regimento chama de obstrução parlamentar legítima a que as bancadas ou as lideranças aprovam e comunicam à Mesa (a direção da Câmara): nesse caso, a ausência na votação não conta como falta.",
+        example: "Se o líder do partido orienta Obstrução, os deputados do partido podem registrar esse voto em vez de Sim ou Não.",
+        seeAlso: ["orientacao", "abstencao"],
+        sources: [voteTermRules("art. 82, § 6º")],
     },
     {
         id: "onu",
@@ -313,6 +382,33 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
         sources: [chamberRules("art. 192, § 2º")],
     },
     {
+        id: "parecer",
+        term: "Parecer",
+        voteKind: "voting",
+        definition:
+            "Posição escrita de uma comissão sobre um assunto que ela estudou. Quando um parecer é votado no Plenário, os deputados decidem sobre a posição da comissão.",
+        seeAlso: ["texto-principal"],
+        sources: [voteTermRules("art. 126")],
+    },
+    {
+        id: "parte-do-texto",
+        term: "Parte do texto",
+        voteKind: "voting",
+        definition:
+            "Trecho de um projeto votado separadamente, geralmente porque um destaque pediu. O resto do projeto é votado em conjunto, no texto principal.",
+        seeAlso: ["destaque", "texto-principal"],
+        sources: [voteTermRules("arts. 161, I, e 189")],
+    },
+    {
+        id: "pedido-de-preferencia",
+        term: "Pedido de preferência",
+        voteKind: "voting",
+        definition:
+            "Pedido de um deputado para votar ou discutir uma proposição antes de outras do mesmo grupo. Quando o pedido vai a voto, o resultado decide a ordem da votação, não o conteúdo do projeto.",
+        seeAlso: ["requerimento"],
+        sources: [voteTermRules("art. 160")],
+    },
+    {
         id: "plano-safra",
         term: "Plano Safra",
         definition: "Programa do governo federal que oferece crédito rural, com condições melhores, para quem produz no campo.",
@@ -346,6 +442,16 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
         sources: [planalto("Decreto nº 9.191, de 2017 (regras para atos oficiais)", "_ato2015-2018/2017/decreto/d9191.htm")],
     },
     {
+        id: "presidia-a-sessao",
+        term: "Presidia a sessão",
+        voteChoice: "ARTICLE_17",
+        voteKind: "vote",
+        definition:
+            "Na lista de votos, a Câmara registra “Artigo 17” para o deputado que presidia a sessão. Segundo o Regimento, o Presidente da Câmara só vota em Plenário em votação secreta ou para desempatar uma votação aberta.",
+        seeAlso: ["votacao-nominal"],
+        sources: [voteTermRules("art. 17, § 1º")],
+    },
+    {
         id: "procuradoria-geral-da-republica",
         term: "Procuradoria-Geral da República",
         alsoKnownAs: "PGR",
@@ -353,6 +459,24 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
             "Parte do Ministério Público Federal (o ramo do Ministério Público que atua nos tribunais federais) que acusa autoridades, como ministros e o presidente, no Supremo Tribunal Federal (o tribunal mais alto do país).",
         seeAlso: ["ministerio-publico-federal", "supremo-tribunal-federal"],
         sources: [CONSTITUTION, planalto("Lei Complementar nº 75, de 1993", "leis/lcp/lcp75.htm")],
+    },
+    {
+        id: "recurso",
+        term: "Recurso",
+        voteKind: "voting",
+        definition:
+            "Pedido para que o Plenário (todos os deputados reunidos) examine uma decisão tomada em outra instância da Câmara. Um projeto aprovado só por comissões, por exemplo, vai ao Plenário se um décimo dos deputados fizer esse pedido e o Plenário aceitar.",
+        seeAlso: ["requerimento"],
+        sources: [voteTermRules("art. 132, § 2º")],
+    },
+    {
+        id: "redacao-final",
+        term: "Redação final",
+        voteKind: "voting",
+        definition:
+            "Última votação do texto de um projeto, já escrito conforme o que os deputados decidiram nas votações anteriores. Faz parte do turno em que a votação terminou.",
+        seeAlso: ["ajuste-de-redacao", "turno"],
+        sources: [voteTermRules("art. 195, caput e § 1º")],
     },
     {
         id: "regencia",
@@ -372,6 +496,7 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
     {
         id: "requerimento",
         term: "Requerimento",
+        voteKind: "voting",
         definition:
             "Pedido feito por um deputado ao presidente da Câmara ou ao Plenário. Alguns são decididos na hora pelo presidente. Outros precisam ser votados pelos deputados, por exemplo o pedido para votar um projeto com urgência.",
         seeAlso: ["urgencia"],
@@ -392,6 +517,16 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
             "Pagamento feito pelo uso de um bem natural. Em Itaipu, a usina paga royalties, em partes iguais, aos governos do Brasil e do Paraguai pelo uso da água do rio Paraná. O tratado fixa o valor em 650 dólares por gigawatt-hora gerado, com um mínimo anual.",
         seeAlso: ["anexo-c", "gigawatt-hora"],
         sources: [ITAIPU_TREATY],
+    },
+    {
+        id: "sim",
+        term: "Sim",
+        voteChoice: "YES",
+        voteKind: "vote",
+        definition:
+            "Voto a favor do que está sendo votado. Numa votação de destaque para manter o texto, o voto Sim mantém o trecho no texto.",
+        seeAlso: ["nao", "destaque"],
+        sources: [voteTermRules("art. 187, § 1º, VI")],
     },
     {
         id: "supremo-tribunal-federal",
@@ -417,6 +552,15 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
         definition:
             "Órgão que fiscaliza como o dinheiro público federal é gasto. Não faz parte da Justiça, mas pode mandar devolver dinheiro e aplicar multas.",
         sources: [CONSTITUTION],
+    },
+    {
+        id: "texto-principal",
+        term: "Texto principal",
+        voteKind: "voting",
+        definition:
+            "Votação do projeto (ou do texto que o substitui) em conjunto, antes dos destaques, que votam à parte os trechos separados. Uma proposta pode ter mais de um turno.",
+        seeAlso: ["parte-do-texto", "turno"],
+        sources: [voteTermRules("arts. 162, II, e 189")],
     },
     {
         id: "tratado-de-itaipu",

@@ -45,7 +45,8 @@ div.content {
         overflow-x: auto;
         padding-bottom: 2px;
 
-        button {
+        // the letters only; the vote shortcut has its own style
+        button:not([aria-pressed]) {
             @include hairline-border;
             flex: none;
             min-width: 40px;

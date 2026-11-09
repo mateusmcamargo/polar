@@ -3,9 +3,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Search } from "lucide-react";
 import { GLOSSARY } from "@polar/db/glossary";
-import { groupByLetter, GlossaryList, withoutAccents } from "@/components/GlossaryList/GlossaryList";
+import { groupByLetter, groupVoteTerms, GlossaryList, withoutAccents } from "@/components/GlossaryList/GlossaryList";
 import { GLOSSARY_PAGE_PATH, glossaryEntryAnchor } from "@/components/GlossaryText/GlossaryText";
 import { ScrollSlider } from "@/components/ScrollSlider/ScrollSlider";
+import { VoteTermsToggle } from "@/components/VoteTermsToggle/VoteTermsToggle";
 import styles from "./GlossaryContent.module.scss";
 
 const TERM_NAMES: Readonly<Record<string, string>> = Object.fromEntries(GLOSSARY.map((entry) => [entry.id, entry.term]));
@@ -22,14 +23,16 @@ interface GlossaryContentProps {
 export function GlossaryContent({ idPrefix, currentId }: Readonly<GlossaryContentProps>) {
     const bodyRef = useRef<HTMLDivElement>(null);
     const [query, setQuery] = useState("");
+    const [votesOnly, setVotesOnly] = useState(false);
 
     const groups = useMemo(() => {
         const normalizedQuery = withoutAccents(query.trim());
+        const inScope = votesOnly ? GLOSSARY.filter((entry) => entry.voteKind) : GLOSSARY;
         const entries = normalizedQuery
-            ? GLOSSARY.filter((entry) => withoutAccents(`${entry.term} ${entry.alsoKnownAs ?? ""} ${entry.definition}`).includes(normalizedQuery))
-            : GLOSSARY;
-        return groupByLetter(entries);
-    }, [query]);
+            ? inScope.filter((entry) => withoutAccents(`${entry.term} ${entry.alsoKnownAs ?? ""} ${entry.definition}`).includes(normalizedQuery))
+            : inScope;
+        return votesOnly ? groupVoteTerms(entries) : groupByLetter(entries);
+    }, [query, votesOnly]);
 
     // moves the list itself and nothing around it: the parent may be sliding open, and scrollIntoView would scroll it too
     function scrollListTo(element: HTMLElement | null) {
@@ -69,15 +72,15 @@ export function GlossaryContent({ idPrefix, currentId }: Readonly<GlossaryConten
                     <Search aria-hidden="true" />
                     <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Procurar uma palavra" autoComplete="off" />
                 </label>
-                {groups.length > 0 && (
-                    <nav className={styles.letters} aria-label="Letras do dicionário">
-                        {groups.map((group) => (
+                <nav className={styles.letters} aria-label="Atalhos do dicionário">
+                    <VoteTermsToggle isOn={votesOnly} onToggle={() => setVotesOnly((isOn) => !isOn)} />
+                    {!votesOnly &&
+                        groups.map((group) => (
                             <button key={group.letter} type="button" onClick={() => scrollListTo(document.getElementById(`${idPrefix}letra-${group.letter}`))}>
                                 {group.letter}
                             </button>
                         ))}
-                    </nav>
-                )}
+                </nav>
             </div>
             <ScrollSlider direction="vertical" ref={bodyRef} className={styles.body} frameClassName={styles.bodyFrame}>
                 {groups.length > 0 ? (
