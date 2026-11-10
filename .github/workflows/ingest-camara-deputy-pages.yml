@@ -2,7 +2,7 @@ name: Ingest Câmara deputy pages
 
 on:
     schedule:
-        # every Sunday at 10:00 UTC; the pages are read slowly, about 15 minutes per year
+        # every Sunday at 10:00 UTC; the pages are read slowly, about 30 minutes per year with the committee pages
         - cron: "0 10 * * 0"
     workflow_dispatch:
         inputs:

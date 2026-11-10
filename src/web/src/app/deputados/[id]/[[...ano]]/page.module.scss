@@ -165,4 +165,10 @@ main.page {
             height: 20px;
         }
     }
+
+    p.note {
+        max-width: 62ch;
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+    }
 }

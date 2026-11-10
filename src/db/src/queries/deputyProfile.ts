@@ -1,4 +1,5 @@
 import { prisma } from "../client";
+import { plenaryVotesCte, voteMetricsCtes } from "./voteMetricsSql";
 import { groupByProposition, readPropositionSummaries, yearRange, type PropositionSummary } from "./votes";
 
 // first day of the 57th legislature in Brasília time
@@ -109,6 +110,23 @@ export interface DeputyAnnualPage {
     collectedAt: Date;
 }
 
+// the unjustified committee absences of one year, by kind of meeting and by what else the deputy attended at the time
+export interface CommitteeAbsenceBreakdown {
+    unjustified: number;
+    hearings: number; // "Audiência Pública"
+    votingMeetings: number; // types with deliberation, such as "Reunião Deliberativa"
+    otherMeetings: number;
+    // presence registered in another committee meeting or plenary session at the same time; when one of the two
+    // events has no published end, the same day in Brasília counts as the same time
+    clashing: number;
+    notClashing: number;
+    // events missing from the events file, so their time is unknown
+    unchecked: number;
+    sourceUrl: string;
+    collectedAt: Date;
+    eventsCollectedAt: Date | null;
+}
+
 export interface DeputyQuotaSpending {
     total: number;
     stateAverage: number;
@@ -123,6 +141,7 @@ export interface DeputyYear {
     votesCollectedAt: Date | null;
     latestVoteGroups: DeputyVoteGroup[];
     annualPage: DeputyAnnualPage | null;
+    committeeAbsences: CommitteeAbsenceBreakdown | null;
     quota: DeputyQuotaSpending | null;
 }
 
@@ -165,7 +184,7 @@ function latestDate(dates: Date[]): Date | null {
 }
 
 // party runs inside the legislature, newest first; parties missing from the parties table come back as null
-function buildPartyHistory(
+export function buildPartyHistory(
     statusChanges: { changedAt: Date; situation: string; partyId: number | null }[],
     partiesById: Map<number, DeputyProfileParty>,
 ): DeputyPartyPeriod[] {
@@ -315,43 +334,7 @@ export async function getDeputyProfile(deputyId: number): Promise<DeputyProfile 
 async function readVoteMetrics(deputyId: number, year: number): Promise<MetricsRow | undefined> {
     const { start, end } = yearRange(year);
     const rows = await prisma.$queryRaw<MetricsRow[]>`
-        with plenary_votes as (
-            select v.id, v.occurred_at, v.collected_at from votes v
-            join individual_votes own on own.vote_id = v.id and own.deputy_id = ${deputyId}
-            where v.is_nominal and v.organ_acronym = 'PLEN' and v.occurred_at >= ${start}::timestamp and v.occurred_at < ${end}::timestamp
-                and own.choice <> 'ARTICLE_17'
-        ), cast_votes as (
-            select iv.vote_id, iv.deputy_id, iv.choice::text as choice, coalesce(history.party_id, d.party_id) as party_id
-            from individual_votes iv
-            join plenary_votes pv on pv.id = iv.vote_id
-            join deputies d on d.id = iv.deputy_id
-            left join lateral (
-                select s.party_id from deputy_status_changes s
-                where s.deputy_id = iv.deputy_id and s.changed_at <= pv.occurred_at
-                order by s.changed_at desc
-                limit 1
-            ) history on true
-            where iv.choice <> 'ARTICLE_17'
-        ), party_choices as (
-            select vote_id, party_id, choice,
-                rank() over (partition by vote_id, party_id order by count(*) desc) as position,
-                sum(count(*)) over (partition by vote_id, party_id) as party_voters
-            from cast_votes
-            where party_id is not null
-            group by vote_id, party_id, choice
-        ), party_majorities as materialized (
-            -- ties and parties with a single voter have no majority
-            select vote_id, party_id, min(choice) as choice
-            from party_choices
-            where position = 1 and party_voters >= 2
-            group by vote_id, party_id
-            having count(*) = 1
-        ), government_orientations as materialized (
-            select o.vote_id, o.choice::text as choice
-            from vote_orientations o
-            join plenary_votes pv on pv.id = o.vote_id
-            where o.kind = 'GOVERNMENT' and o.choice <> 'LIBERATED'
-        )
+        with ${plenaryVotesCte({ start, end, deputyId })}, ${voteMetricsCtes({ materialize: true })}
         select
             count(gov.vote_id) as government_votes,
             count(gov.vote_id) filter (where cv.choice = gov.choice) as government_aligned,
@@ -473,12 +456,75 @@ async function readAnnualPage(deputyId: number, year: number): Promise<DeputyAnn
     };
 }
 
+interface CommitteeAbsenceRow {
+    unjustified: bigint;
+    hearings: bigint;
+    voting_meetings: bigint;
+    clashing: bigint;
+    unchecked: bigint;
+    collected_at: Date | null;
+    events_collected_at: Date | null;
+}
+
+// null when the year has no unjustified committee absence or the meeting list was not collected
+async function readCommitteeAbsences(deputyId: number, year: number): Promise<CommitteeAbsenceBreakdown | null> {
+    const [row] = await prisma.$queryRaw<CommitteeAbsenceRow[]>`
+        with missed as (
+            select a.meeting_type, a.collected_at, e.id as event_id, e.starts_at, e.ends_at
+            from committee_absences a
+            left join events e on e.id = a.event_id
+            where a.deputy_id = ${deputyId} and a.year = ${year} and not a.justified
+        )
+        select
+            count(*) as unjustified,
+            count(*) filter (where meeting_type = 'Audiência Pública') as hearings,
+            count(*) filter (where meeting_type like '%Delibera%') as voting_meetings,
+            count(*) filter (where event_id is null) as unchecked,
+            count(*) filter (where event_id is not null and exists (
+                select 1
+                from event_attendances p
+                join events other on other.id = p.event_id
+                where p.deputy_id = ${deputyId}
+                    and other.id <> missed.event_id
+                    and case
+                        when missed.ends_at is not null and other.ends_at is not null
+                            then other.starts_at < missed.ends_at and other.ends_at > missed.starts_at
+                        else (other.starts_at at time zone 'UTC' at time zone 'America/Sao_Paulo')::date
+                            = (missed.starts_at at time zone 'UTC' at time zone 'America/Sao_Paulo')::date
+                    end
+            )) as clashing,
+            max(collected_at) as collected_at,
+            (select max(collected_at) from events where starts_at >= make_date(${year}, 1, 1) and starts_at < make_date(${year} + 1, 1, 1)) as events_collected_at
+        from missed`;
+    if (!row || row.unjustified === 0n || !row.collected_at) {
+        return null;
+    }
+    const unjustified = Number(row.unjustified);
+    const hearings = Number(row.hearings);
+    const votingMeetings = Number(row.voting_meetings);
+    const clashing = Number(row.clashing);
+    const unchecked = Number(row.unchecked);
+    return {
+        unjustified,
+        hearings,
+        votingMeetings,
+        otherMeetings: unjustified - hearings - votingMeetings,
+        clashing,
+        notClashing: unjustified - clashing - unchecked,
+        unchecked,
+        sourceUrl: `https://www.camara.leg.br/deputados/${deputyId}/presenca-comissoes/${year}`,
+        collectedAt: row.collected_at,
+        eventsCollectedAt: row.events_collected_at,
+    };
+}
+
 // the figures of one year: vote metrics, latest votes, attendance, benefits and quota spending
 export async function getDeputyYear(deputyId: number, stateCode: string, year: number): Promise<DeputyYear> {
-    const [metrics, latestVoteGroups, annualPage, quota] = await Promise.all([
+    const [metrics, latestVoteGroups, annualPage, committeeAbsences, quota] = await Promise.all([
         readVoteMetrics(deputyId, year),
         readLatestVoteGroups(deputyId, year),
         readAnnualPage(deputyId, year),
+        readCommitteeAbsences(deputyId, year),
         readQuotaSpending(deputyId, stateCode, year),
     ]);
     return {
@@ -492,6 +538,7 @@ export async function getDeputyYear(deputyId: number, stateCode: string, year: n
         votesCollectedAt: metrics?.collected_at ?? null,
         latestVoteGroups,
         annualPage,
+        committeeAbsences,
         quota,
     };
 }

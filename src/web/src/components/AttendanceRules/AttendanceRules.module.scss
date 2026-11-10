@@ -1,0 +1,189 @@
+@use "mixins" as *;
+
+div.rules {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    margin-top: var(--space-4);
+
+    h3.title {
+        font-size: var(--text-name);
+    }
+
+    div.ruleList {
+        display: flex;
+        flex-direction: column;
+    }
+
+    section.rule {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        padding-block: var(--space-4);
+        box-shadow: inset 0 -1px 0 var(--color-line-2);
+
+        &:first-child {
+            box-shadow:
+                inset 0 2px 0 var(--color-ink),
+                inset 0 -1px 0 var(--color-line-2);
+        }
+    }
+
+    h4.question {
+        font-size: var(--text-label);
+    }
+
+    // plenary and committees stacked on phones, side by side from the small breakpoint
+    dl.answers {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--space-3);
+        margin: 0;
+        font-size: var(--text-label);
+
+        @include from("small") {
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-5);
+        }
+
+        dt {
+            @include block-label-title;
+            color: var(--color-fg-2);
+        }
+
+        dd {
+            margin: 0;
+        }
+    }
+
+    span.law {
+        display: block;
+        margin-top: var(--space-1);
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+    }
+
+    p.note {
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+
+        a {
+            @include text-link-target;
+            color: inherit;
+        }
+    }
+
+    div.panel {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+        padding: var(--space-4);
+        background: var(--color-panel);
+        @include hairline-border;
+    }
+
+    h4.panelTitle {
+        font-size: var(--text-label);
+    }
+
+    // the kinds of meeting differ by fill pattern, not only by shade
+    .hearing {
+        background: var(--color-ink);
+    }
+
+    .voting {
+        background: repeating-linear-gradient(90deg, var(--color-fg-3) 0 3px, transparent 3px 6px);
+    }
+
+    .other {
+        background: repeating-linear-gradient(135deg, var(--color-line-3) 0 2px, transparent 2px 6px);
+    }
+
+    div.bar {
+        display: flex;
+        height: 18px;
+        overflow: hidden;
+        @include hairline-border(--color-line-3);
+
+        i {
+            display: block;
+            height: 100%;
+        }
+    }
+
+    dl.rows {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        margin: 0;
+        font-size: var(--text-label);
+        font-variant-numeric: tabular-nums;
+
+        div {
+            display: flex;
+            justify-content: space-between;
+            gap: var(--space-3);
+        }
+
+        dt {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        dd {
+            margin: 0;
+        }
+    }
+
+    span.key {
+        flex: none;
+        width: 14px;
+        height: 14px;
+        @include hairline-border(--color-line-3);
+    }
+
+    p.text {
+        max-width: 65ch;
+        color: var(--color-fg-2);
+        font-size: var(--text-label);
+    }
+
+    div.figures {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+
+        p {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--space-1);
+            font-size: var(--text-label);
+
+            @include from("small") {
+                grid-template-columns: 7.5em 1fr;
+                gap: var(--space-4);
+                align-items: baseline;
+            }
+        }
+
+        strong {
+            font-size: var(--text-figure);
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        small {
+            color: var(--color-fg-2);
+            font-size: var(--text-label);
+            font-weight: 400;
+        }
+    }
+
+    p.calc {
+        max-width: 65ch;
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+    }
+}

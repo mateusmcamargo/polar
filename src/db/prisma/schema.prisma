@@ -83,15 +83,16 @@ model Deputy {
     sourceUrl     String   @map("source_url")
     collectedAt   DateTime @map("collected_at")
 
-    party           Party?                @relation(fields: [partyId], references: [id])
-    statusHistory   DeputyStatusChange[]
-    votes           IndividualVote[]
-    attendances     EventAttendance[]
-    organs          OrganMembership[]
-    fronts          FrontMembership[]
-    expenses        Expense[]
-    flightSummary   DeputyFlightSummary[]
-    annualSummaries DeputyAnnualSummary[]
+    party             Party?                @relation(fields: [partyId], references: [id])
+    statusHistory     DeputyStatusChange[]
+    votes             IndividualVote[]
+    attendances       EventAttendance[]
+    organs            OrganMembership[]
+    fronts            FrontMembership[]
+    expenses          Expense[]
+    flightSummary     DeputyFlightSummary[]
+    annualSummaries   DeputyAnnualSummary[]
+    committeeAbsences CommitteeAbsence[]
 
     @@index([stateCode])
     @@index([partyId])
@@ -385,4 +386,22 @@ model DeputyAnnualSummary {
 
     @@id([deputyId, year])
     @@map("deputy_annual_summaries")
+}
+
+// each committee meeting missed in the year, from the committee attendance page of the deputy
+// (camara.leg.br/deputados/{id}/presenca-comissoes/{year}), collected with the annual summary; presences are not stored
+model CommitteeAbsence {
+    deputyId    Int      @map("deputy_id")
+    year        Int      @db.SmallInt
+    position    Int // row order on the page: a meeting of two committees is listed once per committee
+    eventId     Int      @map("event_id") // not a foreign key, a few events are missing from the events file
+    organName   String   @map("organ_name")
+    meetingType String   @map("meeting_type") // as published, such as "Audiência Pública" or "Reunião Deliberativa"
+    justified   Boolean // "Ausência justificada" or "Escusa"
+    collectedAt DateTime @map("collected_at")
+
+    deputy Deputy @relation(fields: [deputyId], references: [id])
+
+    @@id([deputyId, year, position])
+    @@map("committee_absences")
 }

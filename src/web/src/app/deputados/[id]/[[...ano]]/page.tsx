@@ -3,9 +3,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight, CircleAlert } from "lucide-react";
-import { METRICS_START_DATE, type DeputyProfile, type DeputyYear } from "@polar/db";
+import { METRICS_START_DATE, MIN_COUNTED_VOTES, type DeputyProfile, type DeputyYear, type PeerComparison as PeerComparisonData } from "@polar/db";
+import { AttendanceRules } from "@/components/AttendanceRules/AttendanceRules";
 import { AttendanceSummary, AttendanceSummarySkeleton } from "@/components/AttendanceSummary/AttendanceSummary";
 import { DataGate } from "@/components/DebugDataToggle/DataGate";
+import { DeputyTimeline, DeputyTimelineSkeleton } from "@/components/DeputyTimeline/DeputyTimeline";
 import { BRAZILIAN_STATES } from "@/components/DeputySearch/brazilianStates";
 import { FrontList, FrontListSkeleton } from "@/components/FrontList/FrontList";
 import { LinkPending } from "@/components/LinkPending/LinkPending";
@@ -13,6 +15,7 @@ import { ListenButton } from "@/components/ListenButton/ListenButton";
 import { BenefitList, BenefitListSkeleton, QuotaSummary, QuotaSummarySkeleton } from "@/components/MoneySummary/MoneySummary";
 import { PageMap } from "@/components/PageMap/PageMap";
 import { PageSection } from "@/components/PageSection/PageSection";
+import { PeerComparison, PeerComparisonSkeleton, type PeerRuler } from "@/components/PeerComparison/PeerComparison";
 import { OrganList, OrganListSkeleton } from "@/components/OrganList/OrganList";
 import { NAV_BACK, NAV_FORWARD, PageTransition } from "@/components/PageTransition/PageTransition";
 import { PartyBadge } from "@/components/PartyBadge/PartyBadge";
@@ -23,7 +26,7 @@ import { SourceNote } from "@/components/SourceNote/SourceNote";
 import { SummaryMetrics, SummaryMetricsSkeleton, type SummaryMetric } from "@/components/SummaryMetrics/SummaryMetrics";
 import { YearSelector } from "@/components/YearSelector/YearSelector";
 import { DeputyHeaderSkeleton } from "../DeputyHeaderSkeleton";
-import { loadDeputyYear, resolveProfileYear, type ResolvedProfile } from "../deputyProfileData";
+import { loadDeputyMovement, loadDeputyYear, loadPeerComparison, resolveProfileYear, type ResolvedProfile } from "../deputyProfileData";
 import styles from "./page.module.scss";
 
 // every ingestion runs at most once a day, and runs mark the pages stale through /api/revalidate
@@ -161,6 +164,26 @@ function buildSummaryMetrics(yearData: DeputyYear): SummaryMetric[] {
     ];
 }
 
+// the four numbers of the year of this deputy against the same numbers of every deputy with a rate in that year; null when this deputy
+// is not among them (fewer than the minimum of counted votes), because then there is no rate to place on the ruler
+function buildPeerRulers(peers: PeerComparisonData, deputyId: number): PeerRuler[] | null {
+    const own = peers.points.find((point) => point.deputyId === deputyId);
+    if (!own) {
+        return null;
+    }
+    const column = (pick: (point: PeerComparisonData["points"][number]) => number | null) =>
+        peers.points.flatMap((point) => {
+            const value = pick(point);
+            return value === null ? [] : [value];
+        });
+    return [
+        { id: "government", label: "Votou como o governo", kind: "rate", values: column((point) => point.governmentRate), own: own.governmentRate },
+        { id: "quota", label: "Cota parlamentar", kind: "money", values: column((point) => point.quota), own: own.quota },
+        { id: "office", label: "Verba de gabinete usada", kind: "money", values: column((point) => point.officeBudgetSpent), own: own.officeBudgetSpent },
+        { id: "housing", label: "Auxílio-moradia", kind: "money", values: column((point) => point.housingAllowance), own: own.housingAllowance },
+    ];
+}
+
 function listenText(profile: DeputyProfile, yearData: DeputyYear | null, summaryMetrics: SummaryMetric[]): string {
     const parts = [`${profile.politicalName}. ${roleSentence(profile)}`];
     if (profile.party) {
@@ -200,7 +223,12 @@ export default async function DeputyProfilePage({ params }: ProfilePageProps) {
         notFound();
     }
     const { profile, year } = resolved;
-    const yearData = year ? await loadDeputyYear(profile.id, profile.stateCode, year) : null;
+    const [yearData, peers, movement] = await Promise.all([
+        year ? loadDeputyYear(profile.id, profile.stateCode, year) : null,
+        year ? loadPeerComparison(year) : null,
+        loadDeputyMovement(profile.id),
+    ]);
+    const peerRulers = peers ? buildPeerRulers(peers, profile.id) : null;
     const summaryMetrics = yearData ? buildSummaryMetrics(yearData) : [];
     const state = statePhrase(profile.stateCode);
     const outOfOfficeReason = profile.outOfOffice ? OUT_OF_OFFICE_REASONS[profile.outOfOffice.situation] : undefined;
@@ -328,6 +356,7 @@ export default async function DeputyProfilePage({ params }: ProfilePageProps) {
                                             sourceUrl={yearData.annualPage.sourceUrl}
                                             collectedAt={yearData.annualPage.collectedAt}
                                         />
+                                        <AttendanceRules year={yearData.year} deputyName={profile.politicalName} breakdown={yearData.committeeAbsences} />
                                     </>
                                 ) : (
                                     <p className={styles.empty}>A Câmara não publicou o resumo de presença deste ano.</p>
@@ -381,6 +410,35 @@ export default async function DeputyProfilePage({ params }: ProfilePageProps) {
                                 </>
                             )}
                         </PageSection>
+
+                        {peers && peerRulers && (
+                            <PageSection
+                                id="peers"
+                                icon="result"
+                                kicker={`Em ${yearData.year}`}
+                                title={`Comparado com os colegas em ${yearData.year}`}
+                                label="Comparado com os colegas"
+                            >
+                                <DataGate skeleton={<PeerComparisonSkeleton />}>
+                                    <PeerComparison deputyName={profile.politicalName} rulers={peerRulers} />
+                                    <p className={styles.note}>
+                                        Entram os {peers.points.length} deputados com pelo menos {MIN_COUNTED_VOTES} votações contadas em {yearData.year}. Auxílio-moradia R$ 0 quer
+                                        dizer que não recebeu no ano.
+                                    </p>
+                                    <SourceNote
+                                        sourceName="Câmara dos Deputados, votações nominais do plenário"
+                                        sourceUrl={DADOS_ABERTOS_URL}
+                                        collectedAt={peers.votesCollectedAt}
+                                    />
+                                    <SourceNote sourceName="Câmara dos Deputados, cota parlamentar (CEAP)" sourceUrl={QUOTA_URL} collectedAt={peers.quotaCollectedAt} />
+                                    <SourceNote
+                                        sourceName={`Câmara dos Deputados, página do perfil de cada deputado (${yearData.year})`}
+                                        sourceUrl={DADOS_ABERTOS_URL}
+                                        collectedAt={peers.annualCollectedAt}
+                                    />
+                                </DataGate>
+                            </PageSection>
+                        )}
                     </>
                 ) : (
                     <DataGate skeleton={<Skeleton width="min(24em, 80%)" />}>
@@ -390,6 +448,30 @@ export default async function DeputyProfilePage({ params }: ProfilePageProps) {
                                 : `O polar tem votos, presença e gastos a partir de ${METRICS_START_DATE.slice(0, 4)}, e o período no cargo terminou antes.`}
                         </p>
                     </DataGate>
+                )}
+
+                {(movement.metrics.length > 0 || movement.monthlyQuota.length > 0) && (
+                    <PageSection id="timeline" icon="timeline" kicker="Nesta legislatura" title="Ao longo do mandato">
+                        <DataGate skeleton={<DeputyTimelineSkeleton />}>
+                            <DeputyTimeline deputyName={profile.politicalName} movement={movement} />
+                            <SourceNote
+                                sourceName="Câmara dos Deputados, votações nominais do plenário"
+                                sourceUrl={DADOS_ABERTOS_URL}
+                                collectedAt={movement.votesCollectedAt}
+                            />
+                            <SourceNote sourceName="Câmara dos Deputados, cota parlamentar (CEAP)" sourceUrl={QUOTA_URL} collectedAt={movement.quotaCollectedAt} />
+                            <SourceNote
+                                sourceName="Câmara dos Deputados, página do perfil (verba de gabinete e auxílio-moradia)"
+                                sourceUrl={profile.sourceUrl}
+                                collectedAt={movement.yearBenefits.at(-1)?.collectedAt ?? null}
+                            />
+                            <SourceNote
+                                sourceName="Câmara dos Deputados, página do perfil (salário)"
+                                sourceUrl={movement.salary.sourceUrl}
+                                collectedAt={new Date(`${movement.salary.collectedAt}T12:00:00-03:00`)}
+                            />
+                        </DataGate>
+                    </PageSection>
                 )}
 
                 <PageSection id="organs" icon="organs" kicker="Nesta legislatura" title="Comissões">
