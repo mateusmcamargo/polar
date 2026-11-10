@@ -12,9 +12,10 @@ Os dados sobre a atividade política no Brasil são públicos, mas estão espalh
 - **Agenda do legislativo:** sessões plenárias, reuniões de comissões e audiências.
 - **Pra onde foi o dinheiro?** Como cada deputado usou a cota parlamentar e os benefícios do cargo, com o comprovante de cada gasto.
 - **Vínculos:** quem financiou a campanha de cada deputado e para onde ele destinou as emendas parlamentares.
-- **Presença:** em quais sessões e reuniões cada deputado esteve presente.
+- **Presença:** em quantos dias de votação do plenário e em quantas reuniões de comissão cada deputado esteve, com cada falta em comissão por tipo de reunião e se coincidiu com outro compromisso registrado.
 - **Do voto à lei:** o caminho que cada proposta toma antes de ser aprovada ou negada.
-- **Histórico de parlamentares:** mandatos, partidos, comissões e posicionamentos ao longo do tempo.
+- **Histórico de parlamentares:** mandatos, partidos, trocas de partido, comissões e posicionamentos ao longo do tempo.
+- **Movimento dos partidos:** o quanto cada partido e cada deputado votou com o governo e com o próprio partido a cada trimestre, e a afinidade de votos entre partidos.
 - **Comparações:** parlamentares lado a lado, mostrando dados com as mesmas métricas e a mesma fonte.
 
 ## Princípios
@@ -28,12 +29,13 @@ Os dados sobre a atividade política no Brasil são públicos, mas estão espalh
 ## Fontes de dados
 
 - [Dados Abertos da Câmara dos Deputados](https://dadosabertos.camara.leg.br/)
+- [Páginas dos deputados no site da Câmara](https://www.camara.leg.br/deputados), para a presença e os benefícios, que só são publicados nesse formato.
 
 Novas fontes serão incorporadas, entre elas indicadores socioeconômicos do IBGE e do Banco Central, o Senado Federal, o Tribunal Superior Eleitoral e o Portal da Transparência.
 
 ## Situação do projeto
 
-Em desenvolvimento. O planejamento e a estrutura do projeto estão prontos. A primeira funcionalidade será o acompanhamento de votações, sessões, reuniões e gastos dos deputados federais.
+Em desenvolvimento. Já estão no ar, em ambiente de desenvolvimento, as páginas de votações e propostas, o perfil de cada deputado com presença e gastos, o movimento dos partidos e as páginas de governantes e marcos. Os dados cobrem os deputados federais.
 
 ## Código aberto
 
