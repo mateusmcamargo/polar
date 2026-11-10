@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
-import { getChamberComposition, listDeputiesForSearch } from "@polar/db";
+import { getChamberComposition, getPartyMovement, listDeputiesForSearch, MIN_COMMON_VOTES } from "@polar/db";
 import { DeputySearch } from "@/components/DeputySearch/DeputySearch";
 import { ListenButton } from "@/components/ListenButton/ListenButton";
+import { PageSection } from "@/components/PageSection/PageSection";
+import { PartyAffinity } from "@/components/PartyAffinity/PartyAffinity";
+import { PartyMap } from "@/components/PartyMap/PartyMap";
 import { PageTransition } from "@/components/PageTransition/PageTransition";
 import { SourceNote } from "@/components/SourceNote/SourceNote";
 import styles from "./page.module.scss";
@@ -20,7 +23,7 @@ export const metadata: Metadata = {
 };
 
 export default async function DeputiesPage() {
-    const [{ deputies, collectedAt }, chamber] = await Promise.all([listDeputiesForSearch(), getChamberComposition()]);
+    const [{ deputies, collectedAt }, chamber, movement] = await Promise.all([listDeputiesForSearch(), getChamberComposition(), getPartyMovement()]);
     const periodText =
         chamber.firstVoteAt && chamber.lastVoteAt
             ? `Período: votações do Plenário de ${voteDateFormat.format(chamber.firstVoteAt)} a ${voteDateFormat.format(chamber.lastVoteAt)}.`
@@ -59,6 +62,46 @@ export default async function DeputiesPage() {
                         />
                     }
                 />
+                <div className={styles.movement}>
+                    <PageSection id="mapa-dos-partidos" kicker="Desde 2025" title="Como os partidos se movem" icon="orientation" inMap={false}>
+                        <p className={styles.sectionLead}>
+                            Cada círculo é um partido. Na horizontal: em quantos % das votações os deputados do partido votaram como o governo pediu. Na vertical: em
+                            quantos % votaram como a maioria do próprio partido. A linha fina liga os trimestres anteriores.
+                        </p>
+                        <PartyMap
+                            parties={movement.parties}
+                            quarters={movement.quarters}
+                            nominalVotes={movement.nominalVotes}
+                            votesWithoutResult={movement.votesWithoutResult}
+                            sourceNote={
+                                <SourceNote
+                                    sourceName="Câmara dos Deputados, Dados Abertos (votações, orientações e comissões)"
+                                    sourceUrl="https://dadosabertos.camara.leg.br/"
+                                    collectedAt={movement.votesCollectedAt}
+                                />
+                            }
+                        />
+                    </PageSection>
+                    <PageSection id="quem-vota-junto" kicker="Desde 2025" title="Quem vota junto" icon="voters" className={styles.affinity} inMap={false}>
+                        <p className={styles.sectionLead}>
+                            Escolha um partido. No gráfico, cada ponta é outro partido: quanto mais longe do centro, mais vezes os dois votaram do mesmo lado, em cada
+                            100 votações em que tinham uma posição clara. A lista de barras traz os mesmos números.
+                        </p>
+                        <PartyAffinity
+                            parties={movement.parties}
+                            quarters={movement.quarters}
+                            affinity={movement.affinity}
+                            minCommonVotes={MIN_COMMON_VOTES}
+                            sourceNote={
+                                <SourceNote
+                                    sourceName="Câmara dos Deputados, Dados Abertos (votações nominais do Plenário)"
+                                    sourceUrl="https://dadosabertos.camara.leg.br/"
+                                    collectedAt={movement.votesCollectedAt}
+                                />
+                            }
+                        />
+                    </PageSection>
+                </div>
             </main>
         </PageTransition>
     );

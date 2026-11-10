@@ -9,6 +9,7 @@ const ACCESSED_ON_NEW_ENTRIES = "2026-11-06";
 
 const ACCESSED_ON_VOTE_ENTRIES = "2026-11-06";
 const ACCESSED_ON_VOTE_TERMS = "2026-11-08";
+const ACCESSED_ON_MOVEMENT_TERMS = "2026-11-10";
 
 function chamberRules(article: string, accessedOn: string = ACCESSED_ON_VOTE_ENTRIES): Source {
     return {
@@ -172,6 +173,14 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
         sources: [ITAIPU_TREATY],
     },
     {
+        id: "comissao-permanente",
+        term: "Comissão permanente",
+        definition:
+            "Grupo fixo de deputados que faz parte da estrutura da Câmara e cuida de uma área, como saúde ou educação. Discute os projetos dessa área, acompanha os planos do governo e fiscaliza o orçamento da União. Não acaba quando termina uma tarefa, ao contrário da comissão temporária.",
+        example: "Cada comissão permanente tem um presidente e vice-presidentes, escolhidos entre os deputados que a formam.",
+        sources: [chamberRules("arts. 22 e 23", ACCESSED_ON_MOVEMENT_TERMS)],
+    },
+    {
         id: "crime-de-responsabilidade",
         term: "Crime de responsabilidade",
         definition:
@@ -253,6 +262,13 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
         definition:
             "Mau uso do cargo público, feito de propósito, como enriquecer de forma ilegal ou causar prejuízo aos cofres públicos (o dinheiro do governo). Pode levar a multa, perda do cargo e suspensão dos direitos políticos (ficar sem poder votar nem ser candidato), mas não à prisão.",
         sources: [planalto("Lei nº 8.429, de 1992", "leis/l8429.htm"), planalto("Lei nº 14.230, de 2021", "_ato2019-2022/2021/lei/l14230.htm")],
+    },
+    {
+        id: "janela-partidaria",
+        term: "Janela partidária",
+        definition:
+            "Período de 30 dias, antes do prazo de filiação exigido para disputar a eleição seguinte, em que quem tem mandato pode trocar de partido sem perder o mandato. Fora desse período, quem deixa o partido pelo qual foi eleito perde o mandato, a não ser que prove uma justa causa, como a mudança substancial do programa do partido ou uma grave discriminação política pessoal.",
+        sources: [planalto("Lei nº 9.096, de 1995 (art. 22-A)", "leis/l9096.htm", ACCESSED_ON_MOVEMENT_TERMS)],
     },
     {
         id: "junta-militar",

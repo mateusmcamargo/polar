@@ -1,4 +1,5 @@
 import { prisma } from "../client";
+import { plenaryVotesCte, voteMetricsCtes } from "./voteMetricsSql";
 
 // first day of the votes used by the metrics, see "Metrics" in USE_CASES.md
 export const METRICS_START_DATE = "2025-01-01";
@@ -36,44 +37,9 @@ interface PeriodRow {
     last_vote_at: Date | null;
 }
 
-// each vote counts for the party the deputy had on the day of the vote, taken from the status history
 async function readMetricsByDeputy(): Promise<Map<number, MetricsRow>> {
     const rows = await prisma.$queryRaw<MetricsRow[]>`
-        with plenary_votes as (
-            select id, occurred_at from votes
-            where is_nominal and organ_acronym = 'PLEN' and occurred_at >= ${METRICS_START_DATE}::date
-        ), cast_votes as (
-            select iv.vote_id, iv.deputy_id, iv.choice::text as choice, coalesce(history.party_id, d.party_id) as party_id
-            from individual_votes iv
-            join plenary_votes pv on pv.id = iv.vote_id
-            join deputies d on d.id = iv.deputy_id
-            left join lateral (
-                select s.party_id from deputy_status_changes s
-                where s.deputy_id = iv.deputy_id and s.changed_at <= pv.occurred_at
-                order by s.changed_at desc
-                limit 1
-            ) history on true
-            where iv.choice <> 'ARTICLE_17'
-        ), party_choices as (
-            select vote_id, party_id, choice,
-                rank() over (partition by vote_id, party_id order by count(*) desc) as position,
-                sum(count(*)) over (partition by vote_id, party_id) as party_voters
-            from cast_votes
-            where party_id is not null
-            group by vote_id, party_id, choice
-        ), party_majorities as (
-            -- ties and parties with a single voter have no majority
-            select vote_id, party_id, min(choice) as choice
-            from party_choices
-            where position = 1 and party_voters >= 2
-            group by vote_id, party_id
-            having count(*) = 1
-        ), government_orientations as (
-            select o.vote_id, o.choice::text as choice
-            from vote_orientations o
-            join plenary_votes pv on pv.id = o.vote_id
-            where o.kind = 'GOVERNMENT' and o.choice <> 'LIBERATED'
-        )
+        with ${plenaryVotesCte({ start: METRICS_START_DATE })}, ${voteMetricsCtes({ materialize: false })}
         select cv.deputy_id,
             count(gov.vote_id) as government_votes,
             count(gov.vote_id) filter (where cv.choice = gov.choice) as government_aligned,

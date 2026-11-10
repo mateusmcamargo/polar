@@ -28,4 +28,33 @@ main.page {
             color: var(--color-fg-2);
         }
     }
+
+    div.movement {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-7);
+        padding-block: var(--space-7) var(--space-8);
+
+        p.sectionLead {
+            max-width: 62ch;
+            color: var(--color-fg-2);
+        }
+
+        // "Quem vota junto" on computers: the kicker, the title, the lead and the blocks of PartyAffinity form six rows in the left
+        // column, at the reading width, and the list of PartyAffinity spans all of them in the right column. The last row takes the
+        // extra height, because the list is taller than the radar
+        @include from("large") {
+            section.affinity {
+                display: grid;
+                grid-template-columns: var(--content-width-reading) minmax(0, 1fr);
+                grid-template-rows: repeat(5, auto) 1fr;
+                align-items: start;
+                column-gap: var(--space-5);
+
+                > * {
+                    grid-column: 1;
+                }
+            }
+        }
+    }
 }

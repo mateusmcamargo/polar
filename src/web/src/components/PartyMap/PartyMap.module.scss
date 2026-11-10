@@ -1,0 +1,273 @@
+@use "mixins" as *;
+
+div.map {
+    max-width: var(--content-width-reading);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+
+    div.controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: var(--space-3) var(--space-5);
+    }
+
+    div.group {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-1);
+        min-width: 0;
+    }
+
+    span.groupLabel {
+        color: var(--color-fg-2);
+        font-size: var(--text-micro);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    // phones: one row that slides sideways
+    div.choices {
+        @include one-row-slider;
+    }
+
+    button.choice {
+        @include choice-button;
+    }
+
+    div.drawing {
+        @include hairline-border;
+        background: var(--color-panel);
+
+        svg {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        // phones draw the tall layout (360 × 440), computers the wide one (640 × 520)
+        svg.wide {
+            display: none;
+
+            @include from("small") {
+                display: block;
+            }
+        }
+
+        svg.narrow {
+            @include from("small") {
+                display: none;
+            }
+        }
+
+        line.grid {
+            stroke: var(--color-line);
+        }
+
+        line.axis {
+            stroke: var(--color-line-3);
+        }
+
+        text.tick {
+            fill: var(--color-fg-3);
+            font-family: var(--font-sans);
+            font-size: 13px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        text.axisTitle {
+            fill: var(--color-fg-2);
+            font-family: var(--font-sans);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        polyline.trail,
+        polyline.trailStrong {
+            fill: none;
+            stroke: var(--color-fg);
+            stroke-linejoin: round;
+        }
+
+        polyline.trail {
+            stroke-opacity: 0.55;
+            stroke-width: 1px;
+        }
+
+        polyline.trailStrong {
+            stroke-width: 2.5px;
+        }
+
+        circle.trailDot {
+            fill: var(--color-panel);
+            stroke: var(--color-ink);
+            stroke-width: 1.5px;
+        }
+
+        // the party is told by its color and by the acronym written next to the circle
+        circle.party {
+            fill-opacity: 0.88;
+            stroke: var(--color-ink);
+            stroke-width: 1.5px;
+            cursor: pointer;
+
+            &[data-empty] {
+                fill: var(--color-panel);
+                fill-opacity: 1;
+            }
+
+            &[data-selected] {
+                stroke-width: 3px;
+            }
+        }
+
+        text.partyLabel {
+            fill: var(--color-fg);
+            font-family: var(--font-sans);
+            font-size: 13px;
+            font-weight: 700;
+            paint-order: stroke;
+            stroke: var(--color-panel);
+            stroke-width: 3px;
+            stroke-linejoin: round;
+            pointer-events: none;
+        }
+    }
+
+    p.note,
+    p.method {
+        max-width: 62ch;
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+    }
+
+    button.legendButton {
+        @include control;
+        @include hairline-border(--color-line-2);
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-2);
+        padding: 0 var(--space-3) 0 var(--space-2);
+
+        &[aria-pressed="true"] {
+            background: var(--color-panel-2);
+            box-shadow: inset 0 0 0 2px var(--color-ink);
+        }
+    }
+
+    span.swatch {
+        flex: none;
+        width: 14px;
+        height: 14px;
+        box-shadow: inset 0 0 0 1px var(--color-ink);
+    }
+
+    span.legendAcronym {
+        font-weight: 700;
+        letter-spacing: 0.02em;
+    }
+
+    span.legendValue {
+        color: var(--color-fg-2);
+        font-variant-numeric: tabular-nums;
+    }
+
+    div.card {
+        @include hairline-border;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        padding: var(--space-4);
+        background: var(--color-panel);
+
+        p.cardTitle {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: var(--space-2);
+            font-size: var(--text-name);
+            font-weight: 700;
+        }
+
+        p.hint {
+            color: var(--color-fg-3);
+            font-size: var(--text-micro);
+        }
+
+        dl.facts {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: var(--space-1) var(--space-4);
+            margin: 0;
+
+            dt {
+                color: var(--color-fg-2);
+            }
+
+            dd {
+                margin: 0;
+                font-weight: 700;
+                font-variant-numeric: tabular-nums;
+            }
+        }
+
+        span.factNote {
+            color: var(--color-fg-3);
+            font-size: var(--text-micro);
+            font-weight: 400;
+        }
+
+        a.link {
+            @include text-link-target;
+            align-self: flex-start;
+            color: var(--color-fg);
+            text-decoration: underline;
+        }
+    }
+
+    details.table {
+        summary {
+            @include touch-target;
+            display: flex;
+            align-items: center;
+            font-size: var(--text-label);
+            font-weight: 600;
+            cursor: pointer;
+        }
+    }
+
+    div.tableScroll {
+        max-height: 320px;
+        overflow: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: var(--text-label);
+        font-variant-numeric: tabular-nums;
+
+        th,
+        td {
+            padding: var(--space-2);
+            text-align: left;
+            vertical-align: top;
+            white-space: nowrap;
+            box-shadow: inset 0 1px 0 var(--color-line);
+        }
+
+        thead th {
+            color: var(--color-fg-3);
+            font-size: var(--text-micro);
+        }
+    }
+
+    @media (forced-colors: active) {
+        circle.party {
+            fill: Canvas;
+            stroke: CanvasText;
+        }
+    }
+}

@@ -1,0 +1,249 @@
+@use "mixins" as *;
+
+div.timeline {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+
+    p.lead {
+        max-width: 62ch;
+        color: var(--color-fg-2);
+    }
+
+    figure.chart {
+        @include hairline-border;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        margin: 0;
+        padding: var(--space-3) 0 0;
+        background: var(--color-panel);
+
+        svg {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        // phones draw the tall layout (360 wide) and larger text, computers the wide one (640 wide)
+        svg.wide {
+            display: none;
+
+            @include from("small") {
+                display: block;
+            }
+        }
+
+        svg.narrow {
+            @include from("small") {
+                display: none;
+            }
+
+            text.tick,
+            text.panelTitle,
+            text.endLabel,
+            text.changeLabel {
+                font-size: 13px;
+            }
+        }
+
+        ul.legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-1) var(--space-4);
+            margin: 0;
+            padding: 0 var(--space-3);
+            list-style: none;
+            font-size: var(--text-label);
+
+            li {
+                display: inline-flex;
+                align-items: center;
+                gap: var(--space-2);
+            }
+
+            svg {
+                width: 32px;
+                height: 8px;
+                overflow: visible;
+            }
+        }
+
+        line.grid {
+            stroke: var(--color-line);
+        }
+
+        line.axis {
+            stroke: var(--color-line-3);
+        }
+
+        line.separator {
+            stroke: var(--color-line-2);
+            stroke-dasharray: 2 4;
+        }
+
+        text.tick {
+            fill: var(--color-fg-3);
+            font-family: var(--font-sans);
+            font-size: 12px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        text.panelTitle {
+            fill: var(--color-fg-2);
+            font-family: var(--font-sans);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        rect.noData {
+            fill: var(--color-panel-2);
+            opacity: 0.8;
+        }
+
+        // the government is the continuous line and the party the dashed one, so they are told apart without color
+        path.line,
+        path.lineDashed,
+        line.line,
+        line.lineDashed {
+            fill: none;
+            stroke: var(--color-fg);
+            stroke-linejoin: round;
+            stroke-width: 2.5px;
+        }
+
+        path.lineDashed,
+        line.lineDashed {
+            stroke-dasharray: 7 5;
+        }
+
+        circle.dot {
+            fill: var(--color-panel);
+            stroke: var(--color-ink);
+            stroke-width: 2px;
+        }
+
+        text.endLabel {
+            fill: var(--color-fg);
+            font-family: var(--font-sans);
+            font-size: 12px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            paint-order: stroke;
+            stroke: var(--color-panel);
+            stroke-width: 3px;
+            stroke-linejoin: round;
+        }
+
+        rect.bar {
+            fill: var(--color-fg);
+        }
+
+        line.change {
+            stroke: var(--color-ink);
+            stroke-width: 2px;
+        }
+
+        text.changeLabel {
+            fill: var(--color-fg);
+            font-family: var(--font-sans);
+            font-size: 12px;
+            font-weight: 700;
+        }
+    }
+
+    div.years {
+        @include hairline-border;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        padding: var(--space-4);
+        background: var(--color-panel);
+
+        h3.yearsTitle {
+            font-size: var(--text-name);
+            font-weight: 700;
+        }
+
+        p.note {
+            color: var(--color-fg-3);
+            font-size: var(--text-micro);
+        }
+
+        dl {
+            display: grid;
+            gap: var(--space-2);
+            margin: 0;
+
+            div {
+                display: grid;
+                grid-template-columns: auto 1fr;
+                gap: var(--space-1) var(--space-3);
+            }
+
+            dt {
+                color: var(--color-fg-2);
+                font-variant-numeric: tabular-nums;
+            }
+
+            dd {
+                margin: 0;
+                font-weight: 700;
+            }
+        }
+    }
+
+    p.sentence {
+        max-width: 62ch;
+        font-weight: 600;
+    }
+
+    details.table {
+        summary {
+            @include touch-target;
+            display: flex;
+            align-items: center;
+            font-size: var(--text-label);
+            font-weight: 600;
+            cursor: pointer;
+        }
+    }
+
+    div.tableScroll {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+        max-height: 360px;
+        overflow: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: var(--text-label);
+        font-variant-numeric: tabular-nums;
+
+        th,
+        td {
+            padding: var(--space-2);
+            text-align: left;
+            vertical-align: top;
+            box-shadow: inset 0 1px 0 var(--color-line);
+        }
+
+        thead th {
+            color: var(--color-fg-3);
+            font-size: var(--text-micro);
+        }
+    }
+
+    @media (forced-colors: active) {
+        rect.bar {
+            fill: CanvasText;
+        }
+
+        line.change {
+            stroke: CanvasText;
+        }
+    }
+}

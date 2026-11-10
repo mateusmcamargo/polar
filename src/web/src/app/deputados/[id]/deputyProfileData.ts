@@ -1,11 +1,13 @@
 import { cache } from "react";
-import { getDeputyProfile, getDeputySpending, getDeputyVotes, getDeputyYear, type DeputyProfile } from "@polar/db";
+import { getDeputyMovement, getDeputyProfile, getDeputySpending, getDeputyVotes, getDeputyYear, getPeerComparison, type DeputyProfile } from "@polar/db";
 
 // metadata, the page and the share image read the same profile in one render
 export const loadDeputyProfile = cache(getDeputyProfile);
 export const loadDeputyYear = cache(getDeputyYear);
 export const loadDeputySpending = cache(getDeputySpending);
 export const loadDeputyVotes = cache(getDeputyVotes);
+export const loadDeputyMovement = cache(getDeputyMovement);
+export const loadPeerComparison = cache(getPeerComparison);
 
 // a valid id is a positive integer without leading zeros or signs
 export function parseDeputyId(text: string): number | null {

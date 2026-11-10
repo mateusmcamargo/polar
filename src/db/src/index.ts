@@ -4,6 +4,7 @@ export { listDeputiesForSearch, type DeputySearchData, type DeputySearchEntry } 
 export {
     getDeputyProfile,
     getDeputyYear,
+    type CommitteeAbsenceBreakdown,
     type DeputyAnnualPage,
     type DeputyAttendance,
     type DeputyBenefits,
@@ -25,6 +26,23 @@ export {
     type DeputySpendingCategory,
     type DeputySpendingSupplier,
 } from "./queries/deputySpending";
+export {
+    getDeputyMovement,
+    getPartyMovement,
+    getPeerComparison,
+    MIN_COMMON_VOTES,
+    MIN_COUNTED_VOTES,
+    type DeputyMonthlyQuota,
+    type DeputyMovement,
+    type DeputyQuarterMetrics,
+    type DeputyYearBenefits,
+    type PartyAffinityPair,
+    type PartyMovement,
+    type PartyMovementParty,
+    type PartyQuarter,
+    type PeerComparison,
+    type PeerPoint,
+} from "./queries/partyMovement";
 export { getPropositionDetail, type PropositionDetail } from "./queries/propositions";
 export {
     getDeputyVotes,

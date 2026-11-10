@@ -1,0 +1,363 @@
+@use "mixins" as *;
+
+div.affinity {
+    // the same width as the party map and the hemicycle; on computers the list goes beside this column
+    max-width: var(--content-width-reading);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+
+    div.controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: var(--space-3) var(--space-5);
+    }
+
+    div.group {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-1);
+        min-width: 0;
+    }
+
+    span.groupLabel {
+        color: var(--color-fg-2);
+        font-size: var(--text-micro);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    // phones: one row that slides sideways
+    div.choices {
+        @include one-row-slider;
+    }
+
+    button.choice {
+        @include choice-button;
+    }
+
+    button.partyButton {
+        @include control;
+        @include hairline-border(--color-line-2);
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-2);
+        padding: 0 var(--space-3) 0 var(--space-2);
+        font-weight: 700;
+        letter-spacing: 0.02em;
+
+        &[aria-pressed="true"] {
+            background: var(--color-panel-2);
+            box-shadow: inset 0 0 0 2px var(--color-ink);
+        }
+    }
+
+    span.swatch {
+        flex: none;
+        width: 14px;
+        height: 14px;
+        box-shadow: inset 0 0 0 1px var(--color-ink);
+    }
+
+    // computers: the section is a grid (page.module.scss) with the kicker, the title and the lead in the left column, at the reading
+    // width, and this component hands its blocks to that grid: the setup, the radar and the notes go under the lead, and the list
+    // takes the whole right column, from the top of the section. Below 1200 px one column, with the list under the radar, because
+    // beside it the radar would be drawn too small to read
+    @include from("large") {
+        display: contents;
+
+        div.card {
+            grid-column: 2;
+            grid-row: 1 / span 6;
+            align-self: start;
+        }
+    }
+
+    // the party buttons and the period and limit choices
+    div.setup {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+        min-width: 0;
+    }
+
+    div.chartColumn {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+        min-width: 0;
+    }
+
+    div.notes {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+        min-width: 0;
+    }
+
+    // on phones the drawing goes edge to edge, because the acronyms along the axes need the width
+    div.chart {
+        @include hairline-border;
+        position: relative;
+        margin-inline: calc(-1 * max(var(--page-gutter), env(safe-area-inset-left, 0px)))
+            calc(-1 * max(var(--page-gutter), env(safe-area-inset-right, 0px)));
+        background: var(--color-panel);
+
+        @include from("small") {
+            margin-inline: 0;
+        }
+
+        // phones draw the small layout (360 × 380) with the names along the axes, computers the wide one (640 × 540)
+        div.wide {
+            display: none;
+
+            @include from("small") {
+                display: block;
+                position: relative;
+            }
+        }
+
+        div.narrow {
+            position: relative;
+
+            @include from("small") {
+                display: none;
+            }
+
+            text.chipText {
+                font-size: 11px;
+            }
+        }
+
+        svg {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        polygon.ring,
+        line.spoke {
+            fill: none;
+            stroke: var(--color-line-2);
+            stroke-width: 1px;
+        }
+
+        polygon.limit {
+            fill: none;
+            stroke: var(--color-fg-3);
+            stroke-dasharray: 5 4;
+            stroke-width: 1.5px;
+        }
+
+        text.ringValue {
+            fill: var(--color-fg-3);
+            font-family: var(--font-sans);
+            font-size: 12px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        polygon.shape {
+            fill: var(--color-fg);
+            fill-opacity: 0.14;
+            stroke: var(--color-fg);
+            stroke-linejoin: round;
+            stroke-width: 2.5px;
+        }
+
+        // a node over the limit is filled, one under it is hollow, and the names of the strong ones are bold
+        circle.node {
+            fill: var(--color-panel);
+            stroke: var(--color-ink);
+            stroke-width: 2px;
+
+            &[data-strong] {
+                fill: var(--color-ink);
+            }
+        }
+
+        // the name of a party is written on a rectangle in its color; a node over the limit has a thicker outline
+        g.chip {
+            cursor: pointer;
+        }
+
+        rect.chipBox {
+            fill: var(--color-panel-2);
+            stroke: var(--color-ink);
+            stroke-width: 1px;
+
+            &[data-strong] {
+                stroke-width: 2.5px;
+            }
+        }
+
+        text.chipText {
+            fill: var(--color-fg);
+            font-family: var(--font-sans);
+            font-size: 13px;
+            font-weight: 700;
+            pointer-events: none;
+        }
+
+        text.center {
+            fill: var(--color-fg);
+            font-family: var(--font-sans);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        // invisible area around each node: 32 px wide, so a fingertip can reach it
+        circle.hit {
+            fill: transparent;
+            cursor: pointer;
+
+            &:focus-visible {
+                outline: none;
+                stroke: var(--color-ink);
+                stroke-dasharray: 3 3;
+                stroke-width: 3px;
+            }
+        }
+
+        div.tip {
+            position: absolute;
+            z-index: 2;
+            display: grid;
+            gap: var(--space-2);
+            justify-items: start;
+            width: max-content;
+            max-width: min(240px, 70%);
+            padding: var(--space-3);
+            background: var(--color-panel);
+            box-shadow: inset 0 0 0 2px var(--color-ink);
+            font-size: var(--text-label);
+            line-height: 1.35;
+
+            translate: var(--tip-x) var(--tip-y);
+
+            &[data-horizontal="start"] {
+                --tip-x: -12px;
+            }
+
+            &[data-horizontal="center"] {
+                --tip-x: -50%;
+            }
+
+            &[data-horizontal="end"] {
+                --tip-x: calc(-100% + 12px);
+            }
+
+            &[data-vertical="above"] {
+                --tip-y: calc(-100% - 14px);
+            }
+
+            &[data-vertical="below"] {
+                --tip-y: 14px;
+            }
+
+            // the tooltip of a mouse follows the pointer, so it never takes the pointer events
+            &[data-follow] {
+                pointer-events: none;
+            }
+
+            p.tipFigure {
+                font-size: var(--text-name);
+                font-weight: 700;
+                font-variant-numeric: tabular-nums;
+            }
+
+            button.tipButton {
+                @include touch-target;
+                padding: 0 var(--space-3);
+                border: 0;
+                border-radius: var(--radius-small);
+                background: var(--color-fg);
+                color: var(--color-bg);
+                font: inherit;
+                font-size: var(--text-label);
+                text-align: left;
+                cursor: pointer;
+            }
+        }
+    }
+
+    p.note {
+        max-width: 62ch;
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+    }
+
+    div.card {
+        @include hairline-border;
+        container-type: inline-size;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+        padding: var(--space-4);
+        background: var(--color-panel);
+
+        p.cardTitle {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: var(--space-2);
+            font-size: var(--text-name);
+            font-weight: 700;
+        }
+
+        ul.bars {
+            display: grid;
+            gap: var(--space-3);
+            margin: 0;
+            padding: 0;
+            list-style: none;
+
+            // the bar goes under the name while the card is narrow (a phone, or the column beside the radar) and beside it when the card is wide
+            li {
+                display: grid;
+                grid-template-columns: 1fr auto;
+                gap: var(--space-1) var(--space-3);
+                align-items: center;
+
+                span.track {
+                    grid-column: 1 / -1;
+                    grid-row: 2;
+                }
+
+                @container (min-width: 460px) {
+                    grid-template-columns: minmax(96px, 150px) 1fr auto;
+
+                    span.track {
+                        grid-column: auto;
+                        grid-row: auto;
+                    }
+                }
+            }
+        }
+
+        span.track {
+            @include hairline-border;
+            height: 20px;
+            background: var(--color-panel-2);
+        }
+
+        span.fill {
+            display: block;
+            height: 100%;
+            background: var(--color-fg-3);
+            opacity: 0.45;
+
+            &[data-strong] {
+                background: var(--color-ink);
+                opacity: 1;
+            }
+        }
+
+        span.value {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            text-align: right;
+        }
+    }
+}

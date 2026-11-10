@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent } from "react";
+import { useMemo, useRef, useState, type MouseEvent, type PointerEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import type { ChamberSeat } from "@polar/db";
@@ -9,6 +9,7 @@ import { GlossaryText } from "@/components/GlossaryText/GlossaryText";
 import { NAV_FORWARD } from "@/components/PageTransition/PageTransition";
 import { PartyBadge } from "@/components/PartyBadge/PartyBadge";
 import { ScrollSlider } from "@/components/ScrollSlider/ScrollSlider";
+import { TwoRowSlider } from "@/components/TwoRowSlider/TwoRowSlider";
 import { groupSeatsByParty, MIN_COUNTED_VOTES, partyLabel, type SeatWithRates } from "./chamberParties";
 import { CENTER_X, CENTER_Y, HEMICYCLE_HEIGHT, HEMICYCLE_WIDTH, layoutSeats, SEAT_SIZE } from "./seatLayout";
 import { SkeletonArea } from "@/components/Skeleton/Skeleton";
@@ -16,21 +17,6 @@ import styles from "./Hemicycle.module.scss";
 
 const DESKTOP_QUERY = "(min-width: 900px)";
 const NEUTRAL_SEAT_COLOR = "var(--color-fg-3)";
-
-// phones show the legend as a slider of two packed rows: odd items on top, even items below, so the order still reads from
-// left to right. The list gets the width of its longest row, measured, because css cannot size a wrapping row on its own
-function fitLegendRows(list: HTMLUListElement) {
-    // the items stretch to fill their row only once fitted, so they are measured with the stretch turned off
-    list.removeAttribute("data-fitted");
-    const widths = [...list.children].map((item) => item.getBoundingClientRect().width);
-    const gap = Number.parseFloat(getComputedStyle(list).columnGap) || 0;
-    const rowWidth = (parity: number) => {
-        const row = widths.filter((_, index) => index % 2 === parity);
-        return row.reduce((total, width) => total + width, 0) + gap * Math.max(row.length - 1, 0);
-    };
-    list.style.setProperty("--legend-row-width", `${Math.ceil(Math.max(rowWidth(0), rowWidth(1)))}px`);
-    list.setAttribute("data-fitted", "");
-}
 
 function percent(rate: number): string {
     return `${Math.round(rate * 100)}%`;
@@ -62,31 +48,12 @@ interface HemicycleProps {
 export function Hemicycle({ seats, periodText, highlightedIds, highlightText, selectedAcronym, onSelectParty }: Readonly<HemicycleProps>) {
     const router = useRouter();
     const figureRef = useRef<HTMLElement>(null);
-    const legendRef = useRef<HTMLUListElement>(null);
     const tooltipRef = useRef<HTMLDivElement>(null);
     const [hoveredSeat, setHoveredSeat] = useState<SeatWithRates | null>(null);
     const [isListOpen, setIsListOpen] = useState(false);
     const [isMethodOpen, setIsMethodOpen] = useState(false);
 
     const parties = useMemo(() => groupSeatsByParty(seats), [seats]);
-    // measured before the first paint after hydration, again when the parties change and after the web font loads, which
-    // changes the width of the labels
-    useLayoutEffect(() => {
-        const list = legendRef.current;
-        if (!list) {
-            return;
-        }
-        fitLegendRows(list);
-        let isCurrent = true;
-        void document.fonts.ready.then(() => {
-            if (isCurrent) {
-                fitLegendRows(list);
-            }
-        });
-        return () => {
-            isCurrent = false;
-        };
-    }, [parties]);
     const positions = useMemo(() => layoutSeats(parties.map((party) => party.seats.length)), [parties]);
     const selectedParty = parties.find((party) => party.acronym === selectedAcronym) ?? null;
     const litCount = highlightedIds ? seats.filter((seat) => highlightedIds.has(seat.id)).length : seats.length;
@@ -203,25 +170,23 @@ export function Hemicycle({ seats, periodText, highlightedIds, highlightText, se
                 </span>
             </div>
 
-            <ScrollSlider className={styles.legendScroll}>
-                <ul ref={legendRef} className={styles.legend} aria-label="Partidos, do mais ao menos alinhado ao governo">
-                    {parties.map((party) => (
-                        <li key={party.acronym}>
-                            <button
-                                type="button"
-                                className={styles.legendButton}
-                                aria-pressed={party.acronym === selectedAcronym}
-                                onClick={() => onSelectParty(party.acronym === selectedAcronym ? "" : party.acronym)}
-                            >
-                                <span className={styles.swatch} style={{ background: PARTY_COLORS[party.acronym]?.color ?? NEUTRAL_SEAT_COLOR }} />
-                                <span className={styles.legendAcronym}>{party.label}</span>
-                                <span className={styles.legendSeats}>{party.seats.length}</span>
-                                {party.governmentRate === null && <span className={styles.legendFlag}>poucos votos</span>}
-                            </button>
-                        </li>
-                    ))}
-                </ul>
-            </ScrollSlider>
+            <TwoRowSlider label="Partidos, do mais ao menos alinhado ao governo" remeasureOn={parties}>
+                {parties.map((party) => (
+                    <li key={party.acronym}>
+                        <button
+                            type="button"
+                            className={styles.legendButton}
+                            aria-pressed={party.acronym === selectedAcronym}
+                            onClick={() => onSelectParty(party.acronym === selectedAcronym ? "" : party.acronym)}
+                        >
+                            <span className={styles.swatch} style={{ background: PARTY_COLORS[party.acronym]?.color ?? NEUTRAL_SEAT_COLOR }} />
+                            <span className={styles.legendAcronym}>{party.label}</span>
+                            <span className={styles.legendSeats}>{party.seats.length}</span>
+                            {party.governmentRate === null && <span className={styles.legendFlag}>poucos votos</span>}
+                        </button>
+                    </li>
+                ))}
+            </TwoRowSlider>
             <p className={styles.hint}>Toque em um partido, ou num estado do mapa abaixo, para ver onde estão os seus deputados.</p>
 
             <p className={styles.litSummary} aria-live="polite">

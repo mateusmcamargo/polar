@@ -1,0 +1,117 @@
+@use "mixins" as *;
+
+div.peers {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+
+    p.lead {
+        max-width: 62ch;
+        color: var(--color-fg-2);
+    }
+
+    div.rows {
+        display: grid;
+        gap: var(--space-4);
+    }
+
+    div.row {
+        @include hairline-border;
+        display: grid;
+        gap: var(--space-2);
+        min-width: 0;
+        padding: var(--space-4);
+        background: var(--color-panel);
+    }
+
+    div.head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--space-1) var(--space-4);
+    }
+
+    h3.name {
+        font-size: var(--text-name);
+        font-weight: 700;
+    }
+
+    p.amount {
+        font-size: var(--text-title);
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }
+
+    // the ruler is stretched to the width of the card, so its strokes do not scale with it
+    div.ruler {
+        position: relative;
+        height: 32px;
+        margin-top: var(--space-3);
+
+        svg {
+            display: block;
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        line.baseline {
+            stroke: var(--color-line-3);
+            stroke-width: 1px;
+            vector-effect: non-scaling-stroke;
+        }
+
+        path.slices {
+            fill: none;
+            stroke: var(--color-fg-3);
+            stroke-width: 2px;
+            vector-effect: non-scaling-stroke;
+        }
+
+        // the deputy of the page: a black bar with an arrow above it
+        span.marker {
+            position: absolute;
+            top: 2px;
+            bottom: 2px;
+            width: 4px;
+            margin-left: -2px;
+            background: var(--color-ink);
+
+            &::before {
+                content: "";
+                position: absolute;
+                top: -12px;
+                left: 50%;
+                translate: -50% 0;
+                border: 8px solid transparent;
+                border-top-color: var(--color-ink);
+                border-bottom-width: 0;
+            }
+        }
+    }
+
+    p.ends {
+        display: flex;
+        justify-content: space-between;
+        gap: var(--space-3);
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+        font-variant-numeric: tabular-nums;
+    }
+
+    p.sentence {
+        max-width: 62ch;
+        font-weight: 600;
+    }
+
+    @media (forced-colors: active) {
+        span.marker {
+            background: CanvasText;
+        }
+
+        path.slices {
+            stroke: CanvasText;
+        }
+    }
+}
