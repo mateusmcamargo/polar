@@ -43,7 +43,7 @@ export function MainNav({ placement }: Readonly<MainNavProps>) {
             <ul className={styles.list}>
                 {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
                     <li key={href}>
-                        <Link href={href} className={styles.link} aria-current={isCurrentSection(pathname, href) ? "page" : undefined}>
+                        <Link href={href} prefetch={false} className={styles.link} aria-current={isCurrentSection(pathname, href) ? "page" : undefined}>
                             {placement === "bottom" && (
                                 <span className={styles.iconBox}>
                                     <Icon aria-hidden="true" />

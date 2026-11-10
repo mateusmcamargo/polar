@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type CSSProperties, type MouseEvent } from "react";
-import type { PageMapSection } from "@/components/SiteHeader/HeaderProvider";
+import { useHeader, type PageMapSection } from "@/components/SiteHeader/HeaderProvider";
 import { TRAIL_ICONS } from "./trailIcons";
 import styles from "./SnakeTrail.module.scss";
 
@@ -28,10 +28,11 @@ function snakePath(width: number, node: number, row: number, count: number): str
 }
 
 // a trail in the shape of a snake: the eras are nodes that alternate between the left and the right edge, joined by a path that fills
-// as the page scrolls (the share comes from HeaderProvider as --trail-offset). Scrolling goes back in time, so the first node is the
+// as the page scrolls (the share comes from HeaderProvider as --trail-offset, written on this element only). Scrolling goes back in time, so the first node is the
 // most recent era and the path fills toward the oldest one
 export function SnakeTrail({ sections, currentId, onNavigate, compact = false }: Readonly<SnakeTrailProps>) {
     const containerRef = useRef<HTMLDivElement>(null);
+    const { trailOffsetRef } = useHeader();
     const [path, setPath] = useState("");
     const currentIndex = sections.findIndex((section) => section.id === currentId);
     // the filled part of the trail is the pills shown through this mask; ids cannot hold the colons of useId
@@ -55,14 +56,16 @@ export function SnakeTrail({ sections, currentId, onNavigate, compact = false }:
                 setPath(snakePath(width, node, row, sections.length));
             }
         }
+        // a trail that mounts later starts where the others are
+        container.style.setProperty("--trail-offset", trailOffsetRef.current);
         draw(container);
         const observer = new ResizeObserver(() => draw(container));
         observer.observe(container);
         return () => observer.disconnect();
-    }, [sections.length]);
+    }, [sections.length, trailOffsetRef]);
 
     return (
-        <div ref={containerRef} className={compact ? `${styles.snake} ${styles.compact}` : styles.snake} style={{ "--count": sections.length } as CSSProperties}>
+        <div ref={containerRef} data-trail className={compact ? `${styles.snake} ${styles.compact}` : styles.snake} style={{ "--count": sections.length } as CSSProperties}>
             <svg className={styles.path} aria-hidden="true">
                 <defs>
                     <mask id={maskId} maskUnits="userSpaceOnUse" x="-50%" y="-50%" width="200%" height="200%">

@@ -46,6 +46,8 @@ interface HeaderContextValue {
     registerSection: (section: PageMapSection) => () => void;
     // the header puts its progress line here, and scrolling moves it through the dom
     progressRef: RefObject<HTMLElement | null>;
+    // last value of --trail-offset, for a trail that mounts between two scroll frames
+    trailOffsetRef: RefObject<string>;
     // the chronological clock follows the scroll without rendering: it is told the year on every update and answers by writing to the dom
     subscribeChrono: (listener: (state: ChronoState) => void) => () => void;
     glossaryRequest: GlossaryRequest;
@@ -77,6 +79,7 @@ export function HeaderProvider({ children }: Readonly<{ children: ReactNode }>) 
     const [currentId, setCurrentId] = useState<string | null>(null);
     const [glossaryRequest, setGlossaryRequest] = useState<GlossaryRequest>({ termId: null, count: 0, opener: null });
     const progressRef = useRef<HTMLElement | null>(null);
+    const trailOffsetRef = useRef("1");
     const chronoListeners = useRef(new Set<(state: ChronoState) => void>());
     const chronoState = useRef<ChronoState>(NO_YEAR);
 
@@ -160,7 +163,14 @@ export function HeaderProvider({ children }: Readonly<{ children: ReactNode }>) 
                 const nextTop = tops[foundIndex + 1] ?? top + 1;
                 travelled = (foundIndex + Math.min(1, Math.max(0, (line - top) / (nextTop - top)))) / lastIndex;
             }
-            page.style.setProperty("--trail-offset", String(1 - travelled));
+            // written on the trails only: a custom property set on the root would restyle the whole document on every scroll frame
+            const trailOffset = String(1 - travelled);
+            trailOffsetRef.current = trailOffset;
+            for (const trail of document.querySelectorAll<HTMLElement>("[data-trail]")) {
+                if (trail.style.getPropertyValue("--trail-offset") !== trailOffset) {
+                    trail.style.setProperty("--trail-offset", trailOffset);
+                }
+            }
             // estimated year: the last year of the era at its top, its first year at its bottom
             const firstEra = sections[0];
             const foundEra = sections[foundIndex];
@@ -195,7 +205,6 @@ export function HeaderProvider({ children }: Readonly<{ children: ReactNode }>) 
         window.addEventListener("resize", scheduleUpdate);
         return () => {
             cancelAnimationFrame(frame);
-            document.documentElement.style.removeProperty("--trail-offset");
             chronoState.current = NO_YEAR;
             window.removeEventListener("scroll", scheduleUpdate);
             window.removeEventListener("resize", scheduleUpdate);
@@ -203,7 +212,7 @@ export function HeaderProvider({ children }: Readonly<{ children: ReactNode }>) 
     }, [sections]);
 
     const value = useMemo(
-        () => ({ sections, currentId: sections.length > 0 ? currentId : null, registerSections, registerSection, progressRef, subscribeChrono, glossaryRequest, openGlossary }),
+        () => ({ sections, currentId: sections.length > 0 ? currentId : null, registerSections, registerSection, progressRef, trailOffsetRef, subscribeChrono, glossaryRequest, openGlossary }),
         [sections, currentId, registerSections, registerSection, subscribeChrono, glossaryRequest, openGlossary],
     );
 

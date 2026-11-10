@@ -397,7 +397,12 @@ section.results {
         list-style: none;
     }
 
+    // rows far from the scroll window skip style, layout and paint until they get close (513 rows); the clip margin keeps the hover
+    // background of the link, which reaches past the row, and the intrinsic size keeps the scrollbar steady
     li.item {
+        content-visibility: auto;
+        contain-intrinsic-size: auto 81px;
+        overflow-clip-margin: var(--space-2);
         box-shadow: inset 0 -1px 0 var(--color-line);
     }
 

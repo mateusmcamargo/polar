@@ -88,7 +88,8 @@ export function GlossaryDialog() {
                     <X aria-hidden="true" />
                 </button>
             </header>
-            <GlossaryContent key={contentKey} idPrefix={PANEL_PREFIX} currentId={termId} />
+            {/* the content is mounted on the first request, so closed panels do not cost html on every page */}
+            {contentKey > 0 && <GlossaryContent key={contentKey} idPrefix={PANEL_PREFIX} currentId={termId} />}
         </dialog>
     );
 }

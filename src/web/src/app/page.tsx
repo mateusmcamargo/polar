@@ -57,7 +57,7 @@ export default function HomePage() {
                     <ul className={styles.shortcuts}>
                         {SHORTCUTS.map(({ href, label, title, text, icon: Icon }) => (
                             <li key={href}>
-                                <Link href={href} className={styles.shortcut} transitionTypes={NAV_FORWARD}>
+                                <Link href={href} prefetch={false} className={styles.shortcut} transitionTypes={NAV_FORWARD}>
                                     <Icon className={styles.icon} aria-hidden="true" />
                                     <span className={styles.body}>
                                         <span className={styles.label}>{label}</span>

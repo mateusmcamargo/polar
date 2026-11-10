@@ -17,17 +17,19 @@ interface PageSectionProps {
     className?: string;
     // -1 lets a script move the focus to the section after jumping to it
     tabIndex?: number;
+    // false keeps the section out of the page map, for a page that has no map of its own (default true)
+    inMap?: boolean;
     children: ReactNode;
 }
 
 // a section of a page: ink rule, kicker and title with its icon (DESIGN.md, "Page map"). It also registers itself in the page map, so
 // the map is never written by hand and follows the page: a section that is not rendered is not in the map
-export function PageSection({ id, title, icon, label, kicker, className, tabIndex, children }: Readonly<PageSectionProps>) {
+export function PageSection({ id, title, icon, label, kicker, className, tabIndex, inMap = true, children }: Readonly<PageSectionProps>) {
     const titleId = `${id}-title`;
 
     return (
         <section id={id} className={className ? `${styles.block} ${className}` : styles.block} aria-labelledby={titleId} tabIndex={tabIndex}>
-            <MapEntry id={id} label={label ?? title} icon={icon} />
+            {inMap && <MapEntry id={id} label={label ?? title} icon={icon} />}
             {kicker && <p className={styles.kicker}>{kicker}</p>}
             <h2 id={titleId} className={styles.title}>
                 <SectionIcon name={icon} />
